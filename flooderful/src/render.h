@@ -4,22 +4,7 @@
 
 enum render_textureId : size_t
 {
-  rTI_default,
-  rTI_dingu,
-  rTI_pupu,
-  rTI_numbers,
-  rTI_spaceship,
-  rTI_projectile,
-  rTI_asteroid,
-  rTI_space,
-  rTI_laser,
-  rTI_laserHit,
-  rTI_galaxy,
-  rTI_stone,
-  rTI_copper,
-  rTI_salt,
-  rTI_smoke,
-  rTI_spaceshipExhaustColorRamp,
+  rTI_default
 };
 
 lsResult render_init(lsAppState *pAppState);
@@ -35,22 +20,6 @@ void render_setTicksSinceOrigin(const float_t ticksSinceOrigin);
 void render_drawQuad(const matrix &model, const render_textureId textureIndex);
 void render_draw2DQuad(const matrix &model, const render_textureId textureIndex);
 void render_draw3DQuad(const matrix &model, const render_textureId textureIndex);
-
-void render_drawPlayer(const vec2f position, const float_t rotation);
-void render_drawProjectile(const vec2f position, const float_t rotation);
-void render_drawAsteroidStone(const size_t index, const vec2f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawAsteroidStone(const size_t index, const vec3f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawAsteroidCopper(const size_t index, const vec2f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawAsteroidCopper(const size_t index, const vec3f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawAsteroidSalt(const size_t index, const vec2f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawAsteroidSalt(const size_t index, const vec3f position, const enum gameObject_asteroidSize asteroidSize);
-void render_drawLaser(const vec2f startPosition, const float_t rotation, const float_t length, const bool hit);
-void render_drawLaser(const vec3f startPosition, const float_t rotation, const float_t length, const bool hit);
-void render_drawScore(const size_t score);
-void render_drawRessourceCount(const vec2f position, const render_textureId textureIndex, const size_t resourceCount);
-void render_drawIntegerAt(const size_t value, const vec2f positionFirstNumber);
-void render_drawStars();
-void render_drawParticles(const vec3f *pPositionAlpha, const size_t count, const render_textureId particleTexture, const render_textureId alphaTexture, const vec2f size, const float_t sizeAlphaFactor);
 
 void render_flushRenderQueue();
 

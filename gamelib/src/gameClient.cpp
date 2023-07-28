@@ -57,11 +57,9 @@ lsResult game_connect_client(const ipAddress *pAddress, const uint16_t port)
   LS_ERROR_CHECK(tcpClient_receive(&_Client.socket, response, sizeof(response)));
 
   LS_ERROR_IF(response[0] != 'O' || response[1] != 'K', lsR_ResourceIncompatible);
-  memcpy(&_Client.playerIndex, response + 2, sizeof(_Client.playerIndex));
 
   _Client.communicationThread = std::thread(_CommunicateWithServerLoop);
 
-  game_set_authority(false);
   game_set_local(false);
 
   _Client.connected = true;
@@ -93,110 +91,6 @@ lsResult  game_observe_client(_Out_ game *pGame)
 epilogue:
   _Client.gameMutex.unlock();
   return result;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
-void game_spaceship_thruster_set_state_client(const size_t playerIndex, const size_t thrusterIndex, const bool enabled)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-  
-  msg.type = gmt_spaceship_thruster;
-  msg.data.thruster.index = (uint8_t)thrusterIndex;
-  msg.data.thruster.enabled = enabled;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-void game_spaceship_fire_client(const size_t playerIndex)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-
-  msg.type = gmt_spaceship_fire;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-void game_projectile_thruster_set_state_client(const size_t playerIndex, const size_t thrusterIndex, const bool enabled)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-
-  msg.type = gmt_projectile_thruster;
-  msg.data.thruster.index = (uint8_t)thrusterIndex;
-  msg.data.thruster.enabled = enabled;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-void game_projectile_trigger_client(const size_t playerIndex)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-
-  msg.type = gmt_projectile_trigger;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-void game_switch_client(const size_t playerIndex)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-
-  msg.type = gmt_switch;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-void game_spaceship_laser_set_state_client(const size_t playerIndex, const bool laserOn)
-{
-  lsAssert(_Client.connected);
-  lsAssert(playerIndex == _Client.playerIndex);
-
-  game_message msg;
-  lsZeroMemory(&msg);
-
-  msg.type = gmt_laser;
-  msg.data.laser.enabled = laserOn;
-
-  _Client.messageMutex.lock();
-  queue_pushBack(&_Client.messages, &msg);
-  _Client.messageMutex.unlock();
-}
-
-size_t game_getPlayerIndex_client()
-{
-  lsAssert(_Client.connected);
-
-  return _Client.playerIndex;
 }
 
 //////////////////////////////////////////////////////////////////////////
