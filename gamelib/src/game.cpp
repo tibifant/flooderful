@@ -60,43 +60,25 @@ lsResult game_observe(_Out_ game *pGame)
 lsResult game_clone(const game *pOrigin, game *pDst)
 {
   lsResult result = lsR_Success;
-
-  game *pSrc = const_cast<game *>(pOrigin);
-
-  pDst->gameStartTimeNs = pSrc->gameStartTimeNs;
-  pDst->lastUpdateTimeNs = pDst->lastPredictTimeNs = pSrc->lastUpdateTimeNs;
-
-  pool_clear(&pDst->entities);
-
-  for (auto e : pSrc->entities)
-    LS_ERROR_CHECK(pool_insertAt(&pDst->entities, e.pItem, e.index, true));
-
-  lsAssert(pSrc->entities.count == pDst->entities.count);
-
-  pool_clear(&pDst->gameObjects);
-
-  for (auto o : pSrc->gameObjects)
-    LS_ERROR_CHECK(pool_insertAt(&pDst->gameObjects, o.pItem, o.index, true));
-
-  lsAssert(pSrc->gameObjects.count == pDst->gameObjects.count);
-
-  // Copy over newer events.
-  {
-    for (size_t i = 0; i < pSrc->events.count; i++)
-    {
-      gameEvent *pEvnt = nullptr;
-      LS_ERROR_CHECK(queue_getPtr(&pSrc->events, i, &pEvnt));
-
-      if (pEvnt->index > pDst->eventUpdateCutoffIndex)
-        LS_ERROR_CHECK(queue_pushBack(&pDst->events, pEvnt));
-    }
-  }
-
-  pDst->movementFriction = pSrc->movementFriction;
-  pDst->turnFriction = pSrc->turnFriction;
-  pDst->tickRate = pSrc->tickRate;
-
-epilogue:
+//  
+//
+//  // Copy over newer events.
+//  {
+//    for (size_t i = 0; i < pSrc->events.count; i++)
+//    {
+//      gameEvent *pEvnt = nullptr;
+//      LS_ERROR_CHECK(queue_getPtr(&pSrc->events, i, &pEvnt));
+//
+//      if (pEvnt->index > pDst->eventUpdateCutoffIndex)
+//        LS_ERROR_CHECK(queue_pushBack(&pDst->events, pEvnt));
+//    }
+//  }
+//
+//  pDst->movementFriction = pSrc->movementFriction;
+//  pDst->turnFriction = pSrc->turnFriction;
+//  pDst->tickRate = pSrc->tickRate;
+//
+//epilogue:
   return result;
 }
 
@@ -122,19 +104,6 @@ void game_set_local(const bool isLocal)
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-size_t game_getFirstComponentIndex(game *pGame, const size_t entityIndex, const component_type compoenent)
-{
-  entity *pEntity = pool_get(&pGame->entities, entityIndex);
-
-  for (size_t i = 0; i < LS_ARRAYSIZE(pEntity->components); i++)
-    if (pEntity->components[i] == compoenent)
-      return pEntity->ids[i];
-
-  lsAssert(false);
-
-  return (size_t)-1;
-}
 
 bool game_hasAnyEvent(game *pGame)
 {
@@ -260,20 +229,8 @@ lsResult game_serialize(_Out_ dataBlob *pBlob)
   dataBlob_reset(pBlob);
 
   LS_ERROR_CHECK(dataBlob_appendValue(pBlob, (uint64_t)0)); // size.
-
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.lastUpdateTimeNs));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.gameStartTimeNs));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.lastPredictTimeNs));
-
-  LS_ERROR_CHECK(pool_serialize(pBlob, &_Game.entities));
-  LS_ERROR_CHECK(pool_serialize(pBlob, &_Game.gameObjects));
-  LS_ERROR_CHECK(queue_serialize(pBlob, &_Game.events));
-
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.movementFriction));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.turnFriction));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.tickRate));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.lastEventIndex));
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, _Game.eventUpdateCutoffIndex));
+  
+  // Append dataBlobs / Serialize pools.
 
   *reinterpret_cast<uint64_t *>(pBlob->pData) = pBlob->size; // replace size.
 
@@ -297,19 +254,7 @@ lsResult game_deserialze(game *pGame, const void *pData, const size_t size)
   LS_ERROR_IF(actualSize > size, lsR_ResourceInvalid);
   blob.size = actualSize;
 
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->lastUpdateTimeNs));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->gameStartTimeNs));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->lastPredictTimeNs));
-
-  LS_ERROR_CHECK(pool_deserialize(&blob, &pGame->entities));
-  LS_ERROR_CHECK(pool_deserialize(&blob, &pGame->gameObjects));
-  LS_ERROR_CHECK(queue_deserialize(&blob, &pGame->events));
-
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->movementFriction));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->turnFriction));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->tickRate));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->lastEventIndex));
-  LS_ERROR_CHECK(dataBlob_read(&blob, &pGame->eventUpdateCutoffIndex));
+  // Read dataBlobs / Deserialize pools.
 
 epilogue:
   return result;
@@ -321,19 +266,11 @@ lsResult game_init_local()
 {
   lsResult result = lsR_Success;
 
-  entity nullEntity;
-  lsZeroMemory(&nullEntity);
-
-  gameObject nullGameObject;
-  lsZeroMemory(&nullGameObject);
+  // Create NullEntity / NullObject.
   
   size_t zero;
 
-  LS_ERROR_CHECK(pool_add(&_Game.entities, &nullEntity, &zero));
-  lsAssert(zero == 0);
-
-  LS_ERROR_CHECK(pool_add(&_Game.gameObjects, &nullGameObject, &zero));
-  lsAssert(zero == 0);
+  // Add them to their pools.
 
   if constexpr (UseBox2DPhysics)
   {
@@ -369,6 +306,7 @@ lsResult game_tick_local()
     }
   }
 
+  // stuff.
   // process player interactions.
   {
     
@@ -392,20 +330,7 @@ void game_removeEntity_internal(const size_t entityIndex)
 
 void game_addComponentToEntity_internal(const size_t entityIndex, component_type component, const size_t index)
 {
-  entity *pEntity = pool_get(&_Game.entities, entityIndex);
-
-  for (size_t i = 0; i < LS_ARRAYSIZE(pEntity->components); i++)
-  {
-    if (pEntity->components[i] == ct_none)
-    {
-      pEntity->components[i] = component;
-      pEntity->ids[i] = index;
-
-      return;
-    }
-  }
-
-  lsAssert(false);
+  
 }
 
 void game_addEvent_internal(gameEvent *pEvent)
@@ -420,63 +345,63 @@ void game_addEvent_internal(gameEvent *pEvent)
 
 void game_phys_addVelocity(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f force)
 {
-  if (pObj == nullptr)
-    pObj = pool_get(&_Game.gameObjects, entityIndex);
-
-  pObj->velocity += force;
-
-  if constexpr (UseBox2DPhysics)
-  {
-    b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-    pBody->ApplyLinearImpulseToCenter(b2Vec2(force.x, force.y), true);
-  }
+  //if (pObj == nullptr)
+  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+  //
+  //pObj->velocity += force;
+  //
+  //if constexpr (UseBox2DPhysics)
+  //{
+  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+  //  pBody->ApplyLinearImpulseToCenter(b2Vec2(force.x, force.y), true);
+  //}
 }
 
 void game_phys_addAngularForce(const size_t entityIndex, OPTIONAL gameObject *pObj, const float_t force)
 {
-  if (pObj == nullptr)
-    pObj = pool_get(&_Game.gameObjects, entityIndex);
-
-  pObj->angularVelocity += force;
-
-  if constexpr (UseBox2DPhysics)
-  {
-    b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-    pBody->ApplyAngularImpulse(force, true);
-  }
+  //if (pObj == nullptr)
+  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+  //
+  //pObj->angularVelocity += force;
+  //
+  //if constexpr (UseBox2DPhysics)
+  //{
+  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+  //  pBody->ApplyAngularImpulse(force, true);
+  //}
 }
 
 void game_phys_setTransform(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation)
 {
-  if (pObj == nullptr)
-    pObj = pool_get(&_Game.gameObjects, entityIndex);
-
-  pObj->position = position;
-  pObj->rotation = rotation;
-
-  if constexpr (UseBox2DPhysics)
-  {
-    b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-    pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
-  }
+  //if (pObj == nullptr)
+  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+  //
+  //pObj->position = position;
+  //pObj->rotation = rotation;
+  //
+  //if constexpr (UseBox2DPhysics)
+  //{
+  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
+  //}
 }
 
 void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation, const vec2f velocity, const float_t angularVelocity)
 {
-  if (pObj == nullptr)
-    pObj = pool_get(&_Game.gameObjects, entityIndex);
-
-  pObj->position = position;
-  pObj->rotation = rotation;
-  pObj->velocity = velocity;
-  pObj->angularVelocity = angularVelocity;
-
-  if constexpr (UseBox2DPhysics)
-  {
-    b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-    pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
-    pBody->SetLinearVelocity(b2Vec2(velocity.x, velocity.y));
-    pBody->SetAngularVelocity(angularVelocity);
-    pBody->SetAwake(true);
-  }
+  //if (pObj == nullptr)
+  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+  //
+  //pObj->position = position;
+  //pObj->rotation = rotation;
+  //pObj->velocity = velocity;
+  //pObj->angularVelocity = angularVelocity;
+  //
+  //if constexpr (UseBox2DPhysics)
+  //{
+  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
+  //  pBody->SetLinearVelocity(b2Vec2(velocity.x, velocity.y));
+  //  pBody->SetAngularVelocity(angularVelocity);
+  //  pBody->SetAwake(true);
+  //}
 }
