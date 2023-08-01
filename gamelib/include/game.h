@@ -82,7 +82,6 @@ void game_predict(game *pGame);
 void game_set_local(const bool isLocal);
 size_t game_addPlayer();
 
-size_t game_getFirstComponentIndex(game *pGame, const size_t entityIndex, const component_type compoenent);
 bool game_hasAnyEvent(game *pGame);
 gameEvent game_getNextEvent(game *pGame);
 size_t game_getTickRate();
