@@ -59,6 +59,9 @@ lsResult game_observe(_Out_ game *pGame)
 
 lsResult game_clone(const game *pOrigin, game *pDst)
 {
+  (void)pOrigin;
+  (void)pDst;
+
   lsResult result = lsR_Success;
 //  
 //
@@ -84,18 +87,20 @@ lsResult game_clone(const game *pOrigin, game *pDst)
 
 void game_predict(game *pGame)
 {
-  const int64_t now = lsGetCurrentTimeNs();
-  const float_t predictingTicks = (float_t)(now - pGame->lastPredictTimeNs) / (1e+9f / (float_t)pGame->tickRate);
-  pGame->lastPredictTimeNs = now;
+  (void)pGame;
 
-  for (auto o : pGame->gameObjects)
-  {
-    o.pItem->position += o.pItem->velocity * predictingTicks;
-    o.pItem->rotation += o.pItem->angularVelocity * predictingTicks;
+  //const int64_t now = lsGetCurrentTimeNs();
+  //const float_t predictingTicks = (float_t)(now - pGame->lastPredictTimeNs) / (1e+9f / (float_t)pGame->tickRate);
+  //pGame->lastPredictTimeNs = now;
 
-    //o.pItem->velocity *= powf(_Game.movementFriction, predictingTicks);
-    o.pItem->angularVelocity *= powf(_Game.turnFriction, predictingTicks);
-  }
+  //for (auto o : pGame->gameObjects)
+  //{
+  //  o.pItem->position += o.pItem->velocity * predictingTicks;
+  //  o.pItem->rotation += o.pItem->angularVelocity * predictingTicks;
+  //
+  //  //o.pItem->velocity *= powf(_Game.movementFriction, predictingTicks);
+  //  o.pItem->angularVelocity *= powf(_Game.turnFriction, predictingTicks);
+  //}
 }
 
 void game_set_local(const bool isLocal)
@@ -290,9 +295,9 @@ lsResult game_tick_local()
 {
   lsResult result = lsR_Success;
 
-  const int64_t lastTick = _Game.lastUpdateTimeNs;
+  //const int64_t lastTick = _Game.lastUpdateTimeNs;
   const int64_t tick = lsGetCurrentTimeNs();
-  const float_t simFactor = (float_t)(tick - lastTick) / (1e+9f / (float_t)_Game.tickRate);
+  //const float_t simFactor = (float_t)(tick - lastTick) / (1e+9f / (float_t)_Game.tickRate);
   _Game.lastUpdateTimeNs = tick;
 
   // Remove old events.
@@ -328,10 +333,10 @@ void game_removeEntity_internal(const size_t entityIndex)
   pool_remove_safe(&_Game.entities, entityIndex, &entity);
 }
 
-void game_addComponentToEntity_internal(const size_t entityIndex, component_type component, const size_t index)
-{
-  
-}
+//void game_addComponentToEntity_internal(const size_t entityIndex, component_type component, const size_t index)
+//{
+//  
+//}
 
 void game_addEvent_internal(gameEvent *pEvent)
 {
@@ -343,65 +348,65 @@ void game_addEvent_internal(gameEvent *pEvent)
 
 //////////////////////////////////////////////////////////////////////////
 
-void game_phys_addVelocity(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f force)
-{
-  //if (pObj == nullptr)
-  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
-  //
-  //pObj->velocity += force;
-  //
-  //if constexpr (UseBox2DPhysics)
-  //{
-  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-  //  pBody->ApplyLinearImpulseToCenter(b2Vec2(force.x, force.y), true);
-  //}
-}
+//void game_phys_addVelocity(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f force)
+//{
+//  //if (pObj == nullptr)
+//  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+//  //
+//  //pObj->velocity += force;
+//  //
+//  //if constexpr (UseBox2DPhysics)
+//  //{
+//  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+//  //  pBody->ApplyLinearImpulseToCenter(b2Vec2(force.x, force.y), true);
+//  //}
+//}
 
-void game_phys_addAngularForce(const size_t entityIndex, OPTIONAL gameObject *pObj, const float_t force)
-{
-  //if (pObj == nullptr)
-  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
-  //
-  //pObj->angularVelocity += force;
-  //
-  //if constexpr (UseBox2DPhysics)
-  //{
-  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-  //  pBody->ApplyAngularImpulse(force, true);
-  //}
-}
+//void game_phys_addAngularForce(const size_t entityIndex, OPTIONAL gameObject *pObj, const float_t force)
+//{
+//  //if (pObj == nullptr)
+//  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+//  //
+//  //pObj->angularVelocity += force;
+//  //
+//  //if constexpr (UseBox2DPhysics)
+//  //{
+//  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+//  //  pBody->ApplyAngularImpulse(force, true);
+//  //}
+//}
 
-void game_phys_setTransform(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation)
-{
-  //if (pObj == nullptr)
-  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
-  //
-  //pObj->position = position;
-  //pObj->rotation = rotation;
-  //
-  //if constexpr (UseBox2DPhysics)
-  //{
-  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
-  //}
-}
+//void game_phys_setTransform(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation)
+//{
+//  //if (pObj == nullptr)
+//  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+//  //
+//  //pObj->position = position;
+//  //pObj->rotation = rotation;
+//  //
+//  //if constexpr (UseBox2DPhysics)
+//  //{
+//  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+//  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
+//  //}
+//}
 
-void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation, const vec2f velocity, const float_t angularVelocity)
-{
-  //if (pObj == nullptr)
-  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
-  //
-  //pObj->position = position;
-  //pObj->rotation = rotation;
-  //pObj->velocity = velocity;
-  //pObj->angularVelocity = angularVelocity;
-  //
-  //if constexpr (UseBox2DPhysics)
-  //{
-  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
-  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
-  //  pBody->SetLinearVelocity(b2Vec2(velocity.x, velocity.y));
-  //  pBody->SetAngularVelocity(angularVelocity);
-  //  pBody->SetAwake(true);
-  //}
-}
+//void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation, const vec2f velocity, const float_t angularVelocity)
+//{
+//  //if (pObj == nullptr)
+//  //  pObj = pool_get(&_Game.gameObjects, entityIndex);
+//  //
+//  //pObj->position = position;
+//  //pObj->rotation = rotation;
+//  //pObj->velocity = velocity;
+//  //pObj->angularVelocity = angularVelocity;
+//  //
+//  //if constexpr (UseBox2DPhysics)
+//  //{
+//  //  b2Body *pBody = *pool_get(&_Box2DObjects, entityIndex);
+//  //  pBody->SetTransform(b2Vec2(position.x, position.y), rotation);
+//  //  pBody->SetLinearVelocity(b2Vec2(velocity.x, velocity.y));
+//  //  pBody->SetAngularVelocity(angularVelocity);
+//  //  pBody->SetAwake(true);
+//  //}
+//}

@@ -80,7 +80,7 @@ lsResult game_clone(const game *pSrc, _Out_ game *pDst);
 void game_predict(game *pGame);
 
 void game_set_local(const bool isLocal);
-size_t game_addPlayer();
+//size_t game_addPlayer();
 
 bool game_hasAnyEvent(game *pGame);
 gameEvent game_getNextEvent(game *pGame);

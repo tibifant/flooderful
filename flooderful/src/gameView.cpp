@@ -58,12 +58,12 @@ lsResult gameView_init(_Out_ lsAppView **ppView, lsAppState *pAppState)
     Sleep(1);
   }
 
-  size_t playerEntityIndex; // is identical to the game object index.
-  gameObject *pGameObject = pool_get(&pView->game.gameObjects, playerEntityIndex);
+  //size_t playerEntityIndex; // is identical to the game object index.
+  //gameObject *pGameObject = pool_get(&pView->game.gameObjects, playerEntityIndex);
 
-  pView->lookAtPos = pGameObject->position;
-  pView->lookAtRotation = pGameObject->rotation;
-  pView->lookAtDistance = 35.f;
+  //pView->lookAtPos = pGameObject->position;
+  //pView->lookAtRotation = pGameObject->rotation;
+  //pView->lookAtDistance = 35.f;
 
 epilogue:
   if (LS_FAILED(result))
@@ -102,9 +102,6 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   // Draw Scene
   {
-    render_drawStars();
-    render_drawParticles(reinterpret_cast<const vec3f *>(pView->particles), LS_ARRAYSIZE(pView->particles), rTI_smoke, rTI_spaceshipExhaustColorRamp, vec2f(1.5), 2.5f);
-
     const float_t ticksSinceOrigin = (pView->game.lastPredictTimeNs - pView->game.gameStartTimeNs) / (1e9f / pView->game.tickRate);
 
     render_setTicksSinceOrigin(ticksSinceOrigin);
