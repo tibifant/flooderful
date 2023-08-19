@@ -33,6 +33,15 @@ void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObj
 
 //////////////////////////////////////////////////////////////////////////
 
+// needed for floodfill:
+// map:         pointer auf terrainType
+// terrainType: enum    -> which terrain
+// entityType:  struct? -> which destination (collidible?? dann nicht enum)
+// entity:      struct  -> entityType, position, maybe here destination? -> do  we want new entities everytime they get assigned to a new type, would be good if we need every entity of one type to be in a pool/queue/whatever? better: type gets changed, so no destination in entity...
+// look-up of directions to destinations: one for each possible dest? -> pointer uint16_t? 6 bits for directions, 
+
+//////////////////////////////////////////////////////////////////////////
+
 lsResult game_init()
 {
   if (_IsLocal)
