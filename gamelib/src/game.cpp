@@ -36,9 +36,105 @@ void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObj
 // needed for floodfill:
 // map:         pointer auf terrainType
 // terrainType: enum    -> which terrain
-// entityType:  struct? -> which destination (collidible?? dann nicht enum)
-// entity:      struct  -> entityType, position, maybe here destination? -> do  we want new entities everytime they get assigned to a new type, would be good if we need every entity of one type to be in a pool/queue/whatever? better: type gets changed, so no destination in entity...
-// look-up of directions to destinations: one for each possible dest? -> pointer uint16_t? 6 bits for directions, 
+// entityType:  enum    -> which type of Actor, (which destination (collidible?? dann nicht enum))
+// entity:      struct  -> entityType, position, collides with what terrainTypes, (destination, better: type gets changed, so no destination in entity...)
+// look-up of directions to destinations: one for each possible dest? -> pointer uint8_t? 6 werte for directions, 8 werte 1 fuer nicht erreichbar + 1 war schon jmd hier, passen in 3 bit -> uint64: 21 ziele    2 look-ups: wechelsn immer welcher aktualisiert wird
+
+
+// ziele die in die map floodfillen wie man zum naechsten ziel des typen kommt
+// floodfill look-up map -> sagt pro kachel pro ziel welche richtung
+
+
+enum terrain_type
+{
+  tT_mountain,
+  tT_grass,
+  tT_water,
+  tT_sand,
+
+  tT_Count,
+};
+
+struct lookUp
+{
+  uint64_t directionsLookUp;
+};
+
+enum direction
+{
+  d_topLeft,
+  d_right,
+  d_bottomRight,
+  d_bottomLeft,
+  d_left,
+  d_topLeft,
+};
+
+struct floodFillObject
+{
+  vec2i position;
+  direction direction;
+};
+
+void mapInit(const size_t width, const size_t height);
+void floodfill(uint64_t lookUp, terrain_type destination);
+
+size_t _MapHeight;
+size_t _MapWidth;
+terrain_type *_pMap = nullptr;
+
+//////////////////////////////////////////////////////////////////////////
+
+void mapInit(const size_t width, const size_t height)
+{
+  _MapHeight = height;
+  _MapWidth = width;
+  
+  lsAllocZero(&_pMap, _MapHeight * _MapWidth);
+}
+
+void floodfill(uint64_t lookUp, terrain_type destination)
+{
+  queue<floodFillObject> q;
+
+  // TODO: Put all tiles that match the destination in the queue
+
+  // TODO: Queue-Loop: PushBack queue, Check for all neighbouring tiles if they are non-collidible and haven't been visited yet
+  // TODO: Put matching neighbouring Tiles on queue
+
+  // TODO: End if all have been visited
+
+  // TODO: Write direction in matching spot in lookUp
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void main()
+{
+  mapInit(10, 10);
+
+  bool *pCollidibleMask;
+  lsAllocZero(&pCollidibleMask, _MapHeight * _MapWidth);
+
+  for (size_t i = 0; i < _MapHeight * _MapWidth; i++)
+  {
+    _pMap[i] = (terrain_type)(lsGetRand() % (tT_Count + 1));
+
+    if (_pMap[i] == tT_mountain)
+      pCollidibleMask[i] = 1;
+  }
+
+  lsMemset(_pMap, _MapWidth, tT_mountain);
+  lsMemset(_pMap + (_MapHeight * _MapWidth - _MapWidth), _MapWidth, tT_mountain);
+
+  // TODO: set vertical border tiles to mountain
+  // TODO: put setting of `pCollidible` down below to get all the border tiles - or just skip bordertiles when setting terrain_type and set border terraintype before
+  
+  uint64_t directionsLookUp = 0;
+
+  for (size_t i = 0; i < tT_Count; i++)
+    floodfill(directionsLookUp, (terrain_type)i);
+}
 
 //////////////////////////////////////////////////////////////////////////
 
