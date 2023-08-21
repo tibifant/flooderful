@@ -62,22 +62,24 @@ struct lookUp
 
 enum direction
 {
-  d_topLeft,
+  d_topRight,
   d_right,
   d_bottomRight,
   d_bottomLeft,
   d_left,
   d_topLeft,
+
+  d_atDestination,
 };
 
-struct floodFillObject
+struct floodfillObject
 {
   vec2i position;
   direction direction;
 };
 
 void mapInit(const size_t width, const size_t height);
-void floodfill(uint64_t lookUp, terrain_type destination);
+void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2i> *pDestinations, const bool *pCollidibleMask);
 
 size_t _MapHeight;
 size_t _MapWidth;
@@ -85,7 +87,7 @@ terrain_type *_pMap = nullptr;
 
 //////////////////////////////////////////////////////////////////////////
 
-void mapInit(const size_t width, const size_t height)
+void mapInit(const size_t width, const size_t height, bool *pCollidibleMask)
 {
   _MapHeight = height;
   _MapWidth = width;
@@ -93,18 +95,69 @@ void mapInit(const size_t width, const size_t height)
   lsAllocZero(&_pMap, _MapHeight * _MapWidth);
 }
 
-void floodfill(uint64_t lookUp, terrain_type destination)
+void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2i> *pDestinations, const bool *pCollidibleMask)
 {
-  queue<floodFillObject> q;
+  // TODO: add second pPathFindMap where this gets called.
 
-  // TODO: Put all tiles that match the destination in the queue
+  queue<floodfillObject> q;
 
-  // TODO: Queue-Loop: PushBack queue, Check for all neighbouring tiles if they are non-collidible and haven't been visited yet
-  // TODO: Put matching neighbouring Tiles on queue
+  // Enqueue all targets.
+  for (const auto &_pos : *pDestinations)
+    queue_pushBack(&q, { _pos, d_atDestination });
 
-  // TODO: End if all have been visited
+  bool visitedAll = false;
 
-  // TODO: Write direction in matching spot in lookUp
+  while (!visitedAll) // TODO: Write Check for that
+  {
+    floodfillObject current;
+    queue_popFront(&q, &current);
+
+    size_t index = current.position.y * _MapWidth + current.position.x;
+
+    // TODO: Write direction in matching spot in lookUp
+    // TODO! Add direction, nonReachable, alreadyVisited to pPathFindMap
+
+    size_t nextIndex = 0;
+
+    // TopRight
+    nextIndex = current.position.y % 2 == 0 ? index - (_MapWidth - 1) : index - _MapWidth;
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_topRight });
+
+    // Right
+    nextIndex = index + 1;
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_right });
+
+    // Bottom Right
+    nextIndex = current.position.y % 2 == 0 ? index + _MapWidth + 1 : index + _MapWidth;
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_bottomRight });
+
+    // Bottom Left
+    nextIndex = current.position.y % 2 == 0 ? index + _MapWidth : index + (_MapWidth - 1);
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_bottomLeft });
+
+    // Left
+    nextIndex = index - 1;
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_left });
+
+    // Top Left
+    nextIndex = current.position.y % 2 == 0 ? index - (_MapWidth + 1) : index - _MapWidth;
+
+    if (!pCollidibleMask[nextIndex])
+      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_topLeft });
+
+
+    // TODO: Check if all have been visited
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,16 +177,41 @@ void main()
       pCollidibleMask[i] = 1;
   }
 
-  lsMemset(_pMap, _MapWidth, tT_mountain);
-  lsMemset(_pMap + (_MapHeight * _MapWidth - _MapWidth), _MapWidth, tT_mountain);
+  // Setting borders to tT_mountain, so they're collidible
+  {
+    lsMemset(_pMap, _MapWidth, tT_mountain);
+    lsMemset(_pMap + (_MapHeight * _MapWidth - _MapWidth), _MapWidth, tT_mountain);
 
-  // TODO: set vertical border tiles to mountain
-  // TODO: put setting of `pCollidible` down below to get all the border tiles - or just skip bordertiles when setting terrain_type and set border terraintype before
+    for (size_t i = _MapWidth; i < _MapHeight * _MapWidth - _MapWidth; i += _MapWidth)
+    {
+      _pMap[i] = tT_mountain;
+      pCollidibleMask[i] = 1;
+    }
+
+    for (size_t i = _MapWidth - 1; i < _MapHeight * _MapWidth; i += _MapWidth)
+    {
+      _pMap[i] = tT_mountain;
+      pCollidibleMask[i] = 1;
+    }
+  }
   
-  uint64_t directionsLookUp = 0;
+  uint64_t *pPathFindMap;
+  lsAlloc(&pPathFindMap, _MapHeight * _MapWidth * sizeof(uint64_t));
 
-  for (size_t i = 0; i < tT_Count; i++)
-    floodfill(directionsLookUp, (terrain_type)i);
+  std::vector<vec2i> destinations;
+
+  // TODO: Should get destinations that can be different from terrain_type
+  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
+  {
+    for (size_t j = 0; j < _MapHeight * _MapWidth; j++)
+    {
+      if (_pMap[j] == i)
+        destinations.push_back(vec2i(j % _MapWidth, j / _MapWidth));
+    }
+
+    floodfill(pPathFindMap, i, &destinations, pCollidibleMask);
+    destinations.clear();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
