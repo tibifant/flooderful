@@ -55,10 +55,13 @@ enum terrain_type
   tT_Count,
 };
 
-struct lookUp
+struct pathFindLookUp
 {
-  uint64_t directionsLookUp;
+  uint64_t *pDirectionsLookUpA;
+  uint64_t *pDirectionsLookUpB;
 };
+
+// 21 different targets possible atm. If more are needed, change uint64_t `pPathfindMap` to something bigger.
 
 enum direction
 {
@@ -99,16 +102,19 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec
 {
   // TODO: add second pPathFindMap where this gets called.
 
+  lsZeroMemory(pPathFindMap, _MapHeight * _MapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
+
   queue<floodfillObject> q;
 
   // Enqueue all targets.
   for (const auto &_pos : *pDestinations)
     queue_pushBack(&q, { _pos, d_atDestination });
 
-  bool visitedAll = false;
+  bool noNewNeighbours = false;
 
-  while (!visitedAll) // TODO: Write Check for that
+  while (!noNewNeighbours) // TODO: Write Check for that
   {
+
     floodfillObject current;
     queue_popFront(&q, &current);
 
@@ -117,6 +123,7 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec
     // TODO: Write direction in matching spot in lookUp
     // TODO! Add direction, nonReachable, alreadyVisited to pPathFindMap
 
+    //pPathFindMap[index] = 
     size_t nextIndex = 0;
 
     // TopRight
