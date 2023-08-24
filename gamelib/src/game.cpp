@@ -55,16 +55,18 @@ enum terrain_type
   tT_Count,
 };
 
-struct pathFindLookUp
+struct pathFindMaps
 {
-  uint64_t *pDirectionsLookUpA;
-  uint64_t *pDirectionsLookUpB;
+  uint64_t *pPathFindMapA;
+  uint64_t *pPathFindMapB;
 };
 
 // 21 different targets possible atm. If more are needed, change uint64_t `pPathfindMap` to something bigger.
 
-enum direction
+enum direction : uint64_t
 {
+  d_unreachable,
+
   d_topRight,
   d_right,
   d_bottomRight,
@@ -77,20 +79,22 @@ enum direction
 
 struct floodfillObject
 {
-  vec2i position;
+  size_t index;
   direction direction;
 };
 
 void mapInit(const size_t width, const size_t height);
-void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2i> *pDestinations, const bool *pCollidibleMask);
+void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
 
 size_t _MapHeight;
 size_t _MapWidth;
 terrain_type *_pMap = nullptr;
 
+//bool pathFindMapA = true;
+
 //////////////////////////////////////////////////////////////////////////
 
-void mapInit(const size_t width, const size_t height, bool *pCollidibleMask)
+void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
 {
   _MapHeight = height;
   _MapWidth = width;
@@ -98,7 +102,7 @@ void mapInit(const size_t width, const size_t height, bool *pCollidibleMask)
   lsAllocZero(&_pMap, _MapHeight * _MapWidth);
 }
 
-void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2i> *pDestinations, const bool *pCollidibleMask)
+void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
 
@@ -110,60 +114,50 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec
   for (const auto &_pos : *pDestinations)
     queue_pushBack(&q, { _pos, d_atDestination });
 
-  bool noNewNeighbours = false;
-
-  while (!noNewNeighbours) // TODO: Write Check for that
+  while (q.count)
   {
-
     floodfillObject current;
     queue_popFront(&q, &current);
 
-    size_t index = current.position.y * _MapWidth + current.position.x;
+    pPathFindMap[current.index] = current.direction << (targetIndex * 3);
 
-    // TODO: Write direction in matching spot in lookUp
-    // TODO! Add direction, nonReachable, alreadyVisited to pPathFindMap
-
-    //pPathFindMap[index] = 
-    size_t nextIndex = 0;
+    size_t nextIndex;
 
     // TopRight
-    nextIndex = current.position.y % 2 == 0 ? index - (_MapWidth - 1) : index - _MapWidth;
+    nextIndex = current.index - _MapWidth + ((current.index / _MapWidth) & 1); // TODO: kann man das schlauer machen - ohne geteilt?
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_topRight });
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3)) // TODO: check if already visited!
+      queue_pushBack(&q, { nextIndex, d_topRight });
 
     // Right
-    nextIndex = index + 1;
+    nextIndex = current.index + 1;
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_right });
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
+      queue_pushBack(&q, { nextIndex, d_right });
 
     // Bottom Right
-    nextIndex = current.position.y % 2 == 0 ? index + _MapWidth + 1 : index + _MapWidth;
+    nextIndex = current.index + _MapWidth + ((current.index / _MapWidth) & 1);
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_bottomRight });
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
+      queue_pushBack(&q, { nextIndex, d_bottomRight });
 
     // Bottom Left
-    nextIndex = current.position.y % 2 == 0 ? index + _MapWidth : index + (_MapWidth - 1);
+    nextIndex = current.index + _MapWidth + ((~current.index / _MapWidth) & 1);
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_bottomLeft });
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
+      queue_pushBack(&q, { nextIndex, d_bottomLeft });
 
     // Left
-    nextIndex = index - 1;
+    nextIndex = current.index - 1;
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_left });
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
+      queue_pushBack(&q, { nextIndex, d_left });
 
     // Top Left
-    nextIndex = current.position.y % 2 == 0 ? index - (_MapWidth + 1) : index - _MapWidth;
+    nextIndex = current.index - _MapWidth + ((~current.index / _MapWidth) & 1);
 
-    if (!pCollidibleMask[nextIndex])
-      queue_pushBack(&q, { vec2i(nextIndex % _MapWidth, nextIndex / _MapWidth), d_topLeft });
-
-
-    // TODO: Check if all have been visited
+    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
+      queue_pushBack(&q, { nextIndex, d_topLeft });
   }
 }
 
@@ -202,10 +196,10 @@ void main()
     }
   }
   
-  uint64_t *pPathFindMap;
+  uint64_t *pPathFindMap; // TODO: We need two lookUps.
   lsAlloc(&pPathFindMap, _MapHeight * _MapWidth * sizeof(uint64_t));
 
-  std::vector<vec2i> destinations;
+  std::vector<size_t> destinations;
 
   // TODO: Should get destinations that can be different from terrain_type
   for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
@@ -213,11 +207,15 @@ void main()
     for (size_t j = 0; j < _MapHeight * _MapWidth; j++)
     {
       if (_pMap[j] == i)
-        destinations.push_back(vec2i(j % _MapWidth, j / _MapWidth));
+        destinations.push_back(j);
     }
 
-    floodfill(pPathFindMap, i, &destinations, pCollidibleMask);
+    //if (pathFindMapA)
+    floodfill(pPathFindMap, i - 1, &destinations, pCollidibleMask);
     destinations.clear();
+
+    //if (i == tT_Count - 1)
+    //  pathFindMapA = !pathFindMapA;
   }
 }
 
