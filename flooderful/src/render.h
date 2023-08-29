@@ -20,6 +20,7 @@ void render_setTicksSinceOrigin(const float_t ticksSinceOrigin);
 void render_drawQuad(const matrix &model, const render_textureId textureIndex);
 void render_draw2DQuad(const matrix &model, const render_textureId textureIndex);
 void render_draw3DQuad(const matrix &model, const render_textureId textureIndex);
+void render_drawMap(const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight);
 
 void render_flushRenderQueue();
 

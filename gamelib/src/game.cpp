@@ -45,15 +45,6 @@ void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObj
 // floodfill look-up map -> sagt pro kachel pro ziel welche richtung
 
 
-enum terrain_type
-{
-  tT_mountain,
-  tT_grass,
-  tT_water,
-  tT_sand,
-
-  tT_Count,
-};
 
 struct pathFindMaps
 {
@@ -86,9 +77,6 @@ struct floodfillObject
 void mapInit(const size_t width, const size_t height);
 void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
 
-size_t _MapHeight;
-size_t _MapWidth;
-terrain_type *_pMap = nullptr;
 
 //bool pathFindMapA = true;
 
@@ -96,17 +84,17 @@ terrain_type *_pMap = nullptr;
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
 {
-  _MapHeight = height;
-  _MapWidth = width;
+  _Game.mapHeight = height;
+  _Game.mapWidth = width;
   
-  lsAllocZero(&_pMap, _MapHeight * _MapWidth);
+  lsAllocZero(&_Game.pMap, _Game.mapHeight * _Game.mapWidth);
 }
 
 void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
 
-  lsZeroMemory(pPathFindMap, _MapHeight * _MapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
+  lsZeroMemory(pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
 
   queue<floodfillObject> q;
 
@@ -124,7 +112,7 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<siz
     size_t nextIndex;
 
     // TopRight
-    nextIndex = current.index - _MapWidth + ((current.index / _MapWidth) & 1); // TODO: kann man das schlauer machen - ohne geteilt?
+    nextIndex = current.index - _Game.mapWidth + ((current.index / _Game.mapWidth) & 1); // TODO: kann man das schlauer machen - ohne geteilt?
 
     if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3)) // TODO: check if already visited!
       queue_pushBack(&q, { nextIndex, d_topRight });
@@ -136,13 +124,13 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<siz
       queue_pushBack(&q, { nextIndex, d_right });
 
     // Bottom Right
-    nextIndex = current.index + _MapWidth + ((current.index / _MapWidth) & 1);
+    nextIndex = current.index + _Game.mapWidth + ((current.index / _Game.mapWidth) & 1);
 
     if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
       queue_pushBack(&q, { nextIndex, d_bottomRight });
 
     // Bottom Left
-    nextIndex = current.index + _MapWidth + ((~current.index / _MapWidth) & 1);
+    nextIndex = current.index + _Game.mapWidth + ((~current.index / _Game.mapWidth) & 1);
 
     if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
       queue_pushBack(&q, { nextIndex, d_bottomLeft });
@@ -154,7 +142,7 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<siz
       queue_pushBack(&q, { nextIndex, d_left });
 
     // Top Left
-    nextIndex = current.index - _MapWidth + ((~current.index / _MapWidth) & 1);
+    nextIndex = current.index - _Game.mapWidth + ((~current.index / _Game.mapWidth) & 1);
 
     if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
       queue_pushBack(&q, { nextIndex, d_topLeft });
@@ -168,45 +156,45 @@ void main()
   mapInit(10, 10);
 
   bool *pCollidibleMask;
-  lsAllocZero(&pCollidibleMask, _MapHeight * _MapWidth);
+  lsAllocZero(&pCollidibleMask, _Game.mapHeight * _Game.mapWidth);
 
-  for (size_t i = 0; i < _MapHeight * _MapWidth; i++)
+  for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
-    _pMap[i] = (terrain_type)(lsGetRand() % (tT_Count + 1));
+    _Game.pMap[i] = (terrain_type)(lsGetRand() % (tT_Count + 1));
 
-    if (_pMap[i] == tT_mountain)
+    if (_Game.pMap[i] == tT_mountain)
       pCollidibleMask[i] = 1;
   }
 
   // Setting borders to tT_mountain, so they're collidible
   {
-    lsMemset(_pMap, _MapWidth, tT_mountain);
-    lsMemset(_pMap + (_MapHeight * _MapWidth - _MapWidth), _MapWidth, tT_mountain);
+    lsMemset(_Game.pMap, _Game.mapWidth, tT_mountain);
+    lsMemset(_Game.pMap + (_Game.mapHeight * _Game.mapWidth - _Game.mapWidth), _Game.mapWidth, tT_mountain);
 
-    for (size_t i = _MapWidth; i < _MapHeight * _MapWidth - _MapWidth; i += _MapWidth)
+    for (size_t i = _Game.mapWidth; i < _Game.mapHeight * _Game.mapWidth - _Game.mapWidth; i += _Game.mapWidth)
     {
-      _pMap[i] = tT_mountain;
+      _Game.pMap[i] = tT_mountain;
       pCollidibleMask[i] = 1;
     }
 
-    for (size_t i = _MapWidth - 1; i < _MapHeight * _MapWidth; i += _MapWidth)
+    for (size_t i = _Game.mapWidth - 1; i < _Game.mapHeight * _Game.mapWidth; i += _Game.mapWidth)
     {
-      _pMap[i] = tT_mountain;
+      _Game.pMap[i] = tT_mountain;
       pCollidibleMask[i] = 1;
     }
   }
   
   uint64_t *pPathFindMap; // TODO: We need two lookUps.
-  lsAlloc(&pPathFindMap, _MapHeight * _MapWidth * sizeof(uint64_t));
+  lsAlloc(&pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 
   std::vector<size_t> destinations;
 
   // TODO: Should get destinations that can be different from terrain_type
   for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
   {
-    for (size_t j = 0; j < _MapHeight * _MapWidth; j++)
+    for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
     {
-      if (_pMap[j] == i)
+      if (_Game.pMap[j] == i)
         destinations.push_back(j);
     }
 

@@ -213,6 +213,13 @@ void render_draw3DQuad(const matrix &model, const render_textureId textureIndex)
   render_drawQuad(model * _Render.vp, textureIndex);
 }
 
+void render_drawMap(const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight)
+{
+  float_t tileWidth = mapWidth / _Render.windowSize.x;
+
+  // TODO: how to duuuuu this?
+}
+
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
 //{
 //  render_setDepthTestEnabled(false);

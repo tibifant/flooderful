@@ -61,12 +61,26 @@ struct gameEvent
   gameEvent_type type;
 };
 
+enum terrain_type
+{
+  tT_mountain,
+  tT_grass,
+  tT_water,
+  tT_sand,
+
+  tT_Count,
+};
+
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
   pool<entity> entities; // every entity must have a game object with the same index.
   pool<gameObject> gameObjects; // every game object must have a entity with the same index.
   queue<gameEvent> events;
+
+  size_t mapHeight;
+  size_t mapWidth;
+  terrain_type *pMap = nullptr;
   
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

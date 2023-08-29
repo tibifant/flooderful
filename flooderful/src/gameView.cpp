@@ -108,6 +108,8 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
 
+    render_drawMap(pView->game.pMap, pView->game.mapWidth, pView->game.mapHeight);
+
     render_flushRenderQueue();
   }
 
