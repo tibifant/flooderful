@@ -71,11 +71,14 @@ enum direction : uint64_t
 struct floodfillObject
 {
   size_t index;
-  direction direction;
 };
 
+void initializeFloodfill();
 void mapInit(const size_t width, const size_t height);
 void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
+
+void floodfill_suggestNextTarget(const bool *pCollidibleMask, const size_t &nextIndex, uint64_t *pPathFindMap, const size_t &targetIndex, queue<floodfillObject> &q);
+
 
 
 //bool pathFindMapA = true;
@@ -90,68 +93,60 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
   lsAllocZero(&_Game.pMap, _Game.mapHeight * _Game.mapWidth);
 }
 
+#ifndef _DEBUG
+__declspec(__forceinline)
+#endif
+void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextIndex, const bool *pCollidibleMask, uint64_t *pPathFindMap, const size_t targetIndexShift, const direction dir)
+{  
+  if (!pCollidibleMask[nextIndex] && !((pPathFindMap[nextIndex] >> targetIndexShift) & 7))
+  {
+    pPathFindMap[nextIndex] |= (dir << targetIndexShift);
+    queue_pushBack(&q, { nextIndex });
+  }
+}
+
 void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
 
   lsZeroMemory(pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
 
-  queue<floodfillObject> q;
+  static queue<floodfillObject> q;
+  const size_t targetIndexShift = targetIndex * 3;
 
   // Enqueue all targets.
   for (const auto &_pos : *pDestinations)
-    queue_pushBack(&q, { _pos, d_atDestination });
+  {
+    if (pCollidibleMask[_pos])
+      continue;
+
+    pPathFindMap[_pos] |= d_atDestination << targetIndexShift;
+    queue_pushBack(&q, { _pos });
+  }
+
+  floodfillObject current;
 
   while (q.count)
   {
-    floodfillObject current;
     queue_popFront(&q, &current);
+    lsAssert(current.index >= 0 && current.index < _Game.mapHeight *_Game.mapWidth);
 
-    pPathFindMap[current.index] = current.direction << (targetIndex * 3);
+    const size_t isOddBit = (current.index / _Game.mapWidth) & 1;
+    const size_t topLeftIndex = current.index - _Game.mapWidth - isOddBit;
+    const size_t bottomLeftIndex = current.index + _Game.mapWidth - isOddBit;
 
-    size_t nextIndex;
-
-    // TopRight
-    nextIndex = current.index - _Game.mapWidth + ((current.index / _Game.mapWidth) & 1); // TODO: kann man das schlauer machen - ohne geteilt?
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3)) // TODO: check if already visited!
-      queue_pushBack(&q, { nextIndex, d_topRight });
-
-    // Right
-    nextIndex = current.index + 1;
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
-      queue_pushBack(&q, { nextIndex, d_right });
-
-    // Bottom Right
-    nextIndex = current.index + _Game.mapWidth + ((current.index / _Game.mapWidth) & 1);
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
-      queue_pushBack(&q, { nextIndex, d_bottomRight });
-
-    // Bottom Left
-    nextIndex = current.index + _Game.mapWidth + ((~current.index / _Game.mapWidth) & 1);
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
-      queue_pushBack(&q, { nextIndex, d_bottomLeft });
-
-    // Left
-    nextIndex = current.index - 1;
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
-      queue_pushBack(&q, { nextIndex, d_left });
-
-    // Top Left
-    nextIndex = current.index - _Game.mapWidth + ((~current.index / _Game.mapWidth) & 1);
-
-    if (!pCollidibleMask[nextIndex] && pPathFindMap[nextIndex] >> (targetIndex * 3))
-      queue_pushBack(&q, { nextIndex, d_topLeft });
+    floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_left);
+    floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_right);
+    floodfill_suggestNextTarget(q, bottomLeftIndex, pCollidibleMask, pPathFindMap, targetIndexShift, d_bottomLeft);
+    floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_bottomRight);
+    floodfill_suggestNextTarget(q, topLeftIndex, pCollidibleMask, pPathFindMap, targetIndexShift, d_topLeft);
+    floodfill_suggestNextTarget(q, topLeftIndex + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_topRight);
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
 
-void main()
+void initializeFloodfill()
 {
   mapInit(10, 10);
 
@@ -168,24 +163,25 @@ void main()
 
   // Setting borders to tT_mountain, so they're collidible
   {
-    lsMemset(_Game.pMap, _Game.mapWidth, tT_mountain);
-    lsMemset(_Game.pMap + (_Game.mapHeight * _Game.mapWidth - _Game.mapWidth), _Game.mapWidth, tT_mountain);
-
-    for (size_t i = _Game.mapWidth; i < _Game.mapHeight * _Game.mapWidth - _Game.mapWidth; i += _Game.mapWidth)
+    for (size_t y = 0; y < _Game.mapHeight; y++)
     {
-      _Game.pMap[i] = tT_mountain;
-      pCollidibleMask[i] = 1;
+      _Game.pMap[y * _Game.mapWidth] = tT_mountain;
+      _Game.pMap[(y + 1) * _Game.mapWidth - 1] = tT_mountain;
+      pCollidibleMask[y * _Game.mapWidth] = true;
+      pCollidibleMask[(y + 1) * _Game.mapWidth - 1] = true;
     }
 
-    for (size_t i = _Game.mapWidth - 1; i < _Game.mapHeight * _Game.mapWidth; i += _Game.mapWidth)
+    for (size_t x = 0; x < _Game.mapWidth; x++)
     {
-      _Game.pMap[i] = tT_mountain;
-      pCollidibleMask[i] = 1;
+      _Game.pMap[x] = tT_mountain;
+      _Game.pMap[x + (_Game.mapHeight - 1) * _Game.mapWidth] = tT_mountain;
+      pCollidibleMask[x] = true;
+      pCollidibleMask[x + (_Game.mapHeight - 1) * _Game.mapWidth] = true;
     }
   }
   
   uint64_t *pPathFindMap; // TODO: We need two lookUps.
-  lsAlloc(&pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+  lsAllocZero(&pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 
   std::vector<size_t> destinations;
 
@@ -239,6 +235,10 @@ lsResult game_clone(const game *pOrigin, game *pDst)
   (void)pDst;
 
   lsResult result = lsR_Success;
+
+  pDst->pMap = pOrigin->pMap;
+  pDst->mapHeight = pOrigin->mapHeight;
+  pDst->mapWidth = pOrigin->mapWidth;
 //  
 //
 //  // Copy over newer events.
@@ -256,8 +256,8 @@ lsResult game_clone(const game *pOrigin, game *pDst)
 //  pDst->movementFriction = pSrc->movementFriction;
 //  pDst->turnFriction = pSrc->turnFriction;
 //  pDst->tickRate = pSrc->tickRate;
-//
-//epilogue:
+
+epilogue:
   return result;
 }
 
@@ -446,6 +446,8 @@ epilogue:
 lsResult game_init_local()
 {
   lsResult result = lsR_Success;
+
+  initializeFloodfill();
 
   // Create NullEntity / NullObject.
   

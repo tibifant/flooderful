@@ -31,10 +31,16 @@ static struct
 
   struct
   {
-    shader shader, blurShader;
-    vertexBuffer<vb_attribute_float<2, _Attrib_Pos>> buffer, blurBuffer;
-    framebuffer framebuffer, tiny;
+    shader shader;
+    vertexBuffer<vb_attribute_float<2, _Attrib_Pos>> buffer;
+    framebuffer framebuffer;
   } screenQuad;
+
+  struct
+  {
+    shader shader;
+    vertexBuffer<vb_attribute_float<2, _Attrib_Pos>> buffer;
+  } hex;
 
   pool<texture> textures;
   vec3f lookAt, up, cameraDistance;
@@ -59,16 +65,12 @@ lsResult render_init(lsAppState *pAppState)
   // Create Screen Quad.
   {
     LS_ERROR_CHECK(shader_createFromFile(&_Render.screenQuad.shader, "shaders/screen.vert", "shaders/screen.frag"));
-    LS_ERROR_CHECK(shader_createFromFile(&_Render.screenQuad.blurShader, "shaders/blur.vert", "shaders/blur.frag"));
 
     float_t renderData[] = { 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0 };
     LS_ERROR_CHECK(vertexBuffer_create(&_Render.screenQuad.buffer, &_Render.screenQuad.shader));
     LS_ERROR_CHECK(vertexBuffer_setVertexBuffer(&_Render.screenQuad.buffer, renderData, LS_ARRAYSIZE(renderData)));
-    LS_ERROR_CHECK(vertexBuffer_create(&_Render.screenQuad.blurBuffer, &_Render.screenQuad.blurShader));
-    LS_ERROR_CHECK(vertexBuffer_setVertexBuffer(&_Render.screenQuad.blurBuffer, renderData, LS_ARRAYSIZE(renderData)));
 
     LS_ERROR_CHECK(framebuffer_create(&_Render.screenQuad.framebuffer, _Render.windowSize, 8, true));
-    LS_ERROR_CHECK(framebuffer_create(&_Render.screenQuad.tiny, _Render.windowSize, 0, false));
   }
 
   // Create Plane.
@@ -92,6 +94,15 @@ lsResult render_init(lsAppState *pAppState)
     LS_ERROR_CHECK(pool_add(&_Render.textures, defaultTexture, &_unused));
   }
 
+  // Create Hexagon.
+  {
+    LS_ERROR_CHECK(shader_createFromFile(&_Render.hex.shader, "shaders/hex.vert", "shaders/hex.frag"));
+
+    float_t renderData[] = { 0.5f, -0.5f, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0.5, 1.5, 0, 1, 0, 0 };
+    LS_ERROR_CHECK(vertexBuffer_create(&_Render.hex.buffer, &_Render.hex.shader));
+    LS_ERROR_CHECK(vertexBuffer_setVertexBuffer(&_Render.hex.buffer, renderData, LS_ARRAYSIZE(renderData)));
+  }
+
   // Load textures.
   {
     texture tex;
@@ -113,46 +124,17 @@ void render_startFrame(lsAppState *pAppState)
 
   render_clearColor(vec4f(0, 0, 0, 1));
   render_clearDepth();
-
-  framebuffer_setResolution(&_Render.screenQuad.framebuffer, _Render.windowSize);
-  framebuffer_setResolution(&_Render.screenQuad.tiny, _Render.windowSize / 16);
-  framebuffer_bind(&_Render.screenQuad.framebuffer);
-  
-  render_clearColor(vec4f(0, 0, 0, 1));
-  render_clearDepth();
   
   render_setDepthMode(rCR_Less);
   render_setBlendEnabled(false);
   render_setDepthTestEnabled(false);
 
   render_setLookAt(_Render.lookAt, _Render.up);
-
-  // Clear all Instance Data Blobs.
 }
 
 void render_endFrame(lsAppState *pAppState)
 {
   (void)pAppState;
-  
-  framebuffer_unbind();
-  
-  render_setDepthTestEnabled(false);
-
-  // Draw FX.
-  {
-    texture_bind(&_Render.screenQuad.framebuffer, 0);
-    texture_bindDepthStencil(&_Render.screenQuad.framebuffer, 1);
-    texture_bind(&_Render.screenQuad.tiny, 2);
-    shader_bind(&_Render.screenQuad.shader);
-  
-    shader_setUniform(&_Render.screenQuad.shader, "sampleCount", (int32_t)_Render.screenQuad.framebuffer.sampleCount);
-    shader_setUniform(&_Render.screenQuad.shader, "texture", &_Render.screenQuad.framebuffer);
-    shader_setUniformDepthStencil(&_Render.screenQuad.shader, "depth", &_Render.screenQuad.framebuffer);
-    shader_setUniform(&_Render.screenQuad.shader, "tiny", &_Render.screenQuad.tiny);
-    shader_setUniform(&_Render.screenQuad.shader, "invTinySize", vec2f(1) / (vec2f)_Render.screenQuad.tiny.size);
-    
-    vertexBuffer_render(&_Render.screenQuad.buffer);
-  }
 }
 
 void render_destroy()
@@ -213,9 +195,32 @@ void render_draw3DQuad(const matrix &model, const render_textureId textureIndex)
   render_drawQuad(model * _Render.vp, textureIndex);
 }
 
+void render_drawHex(const matrix &model, const vec4f color)
+{
+  shader_bind(&_Render.hex.shader);
+  shader_setUniform(&_Render.hex.shader, "color", color);
+  shader_setUniform(&_Render.hex.shader, "matrix", model);
+  vertexBuffer_render(&_Render.hex.buffer);
+}
+
+void render_drawHex2D(const matrix &model, const vec4f color)
+{
+  render_drawHex(model * matrix::Scale(2.f / _Render.windowSize.x, 2.f / _Render.windowSize.y, 0) * matrix::Translation(-1.f, -1.f, 0) * matrix::Scale(1, -1, 0), color);
+}
+
+void render_drawHex3D(const matrix &model, const vec4f color)
+{
+  render_drawHex(model * _Render.vp, color);
+}
+
 void render_drawMap(const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight)
 {
-  float_t tileWidth = mapWidth / _Render.windowSize.x;
+  const float_t tileWidth = mapWidth / (float_t)_Render.windowSize.x;
+
+  (void)pMap;
+  (void)mapWidth;
+  (void)mapHeight;
+  (void)tileWidth;
 
   // TODO: how to duuuuu this?
 }
