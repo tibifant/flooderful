@@ -81,6 +81,7 @@ struct game
   size_t mapHeight;
   size_t mapWidth;
   terrain_type *pMap = nullptr;
+  uint64_t *pPathFindMap;
   
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

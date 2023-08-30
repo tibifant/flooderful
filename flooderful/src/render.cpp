@@ -213,16 +213,26 @@ void render_drawHex3D(const matrix &model, const vec4f color)
   render_drawHex(model * _Render.vp, color);
 }
 
-void render_drawMap(const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight)
+void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight)
 {
-  const float_t tileWidth = mapWidth / (float_t)_Render.windowSize.x;
+  (void)pPathFindMap;
 
+  vec4f colors[tT_Count] = {  }; // fill this!
+
+  for (size_t y = 0; y < mapHeight; y++)
+  {
+    for (size_t x = 0; x < mapWidth; x++)
+    {
+      if (y % 2 == 0)
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.2f + (float_t)(pMap[y * mapWidth + x] * 0.1f), 0, 0.5f, 0));
+      else
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.2f + (float_t)(pMap[y * mapWidth + x] * 0.1f), 0, 0.5f, 0));
+    }
+  }
+  
   (void)pMap;
   (void)mapWidth;
   (void)mapHeight;
-  (void)tileWidth;
-
-  // TODO: how to duuuuu this?
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)

@@ -52,11 +52,11 @@ lsResult gameView_init(_Out_ lsAppView **ppView, lsAppState *pAppState)
   LS_ERROR_CHECK(game_init());
   // added players here
 
-  while (pView->game.entities.count == 0)
-  {
-    LS_ERROR_CHECK(game_observe(&pView->game));
-    Sleep(1);
-  }
+  //while (pView->game.entities.count == 0)
+  //{
+  //  LS_ERROR_CHECK(game_observe(&pView->game));
+  //  Sleep(1);
+  //}
 
   //size_t playerEntityIndex; // is identical to the game object index.
   //gameObject *pGameObject = pool_get(&pView->game.gameObjects, playerEntityIndex);
@@ -108,7 +108,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
 
-    render_drawMap(pView->game.pMap, pView->game.mapWidth, pView->game.mapHeight);
+    render_drawMap(pView->game.pPathFindMap, pView->game.pMap, pView->game.mapWidth, pView->game.mapHeight);
 
     render_flushRenderQueue();
   }

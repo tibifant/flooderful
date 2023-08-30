@@ -75,10 +75,9 @@ struct floodfillObject
 
 void initializeFloodfill();
 void mapInit(const size_t width, const size_t height);
-void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
 
-void floodfill_suggestNextTarget(const bool *pCollidibleMask, const size_t &nextIndex, uint64_t *pPathFindMap, const size_t &targetIndex, queue<floodfillObject> &q);
-
+void floodfill(const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
+void floodfill_suggestNextTarget(const bool *pCollidibleMask, const size_t &nextIndex, const size_t &targetIndex, queue<floodfillObject> &q);
 
 
 //bool pathFindMapA = true;
@@ -96,20 +95,20 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextIndex, const bool *pCollidibleMask, uint64_t *pPathFindMap, const size_t targetIndexShift, const direction dir)
+void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextIndex, const bool *pCollidibleMask, const size_t targetIndexShift, const direction dir)
 {  
-  if (!pCollidibleMask[nextIndex] && !((pPathFindMap[nextIndex] >> targetIndexShift) & 7))
+  if (!pCollidibleMask[nextIndex] && !((_Game.pPathFindMap[nextIndex] >> targetIndexShift) & 7))
   {
-    pPathFindMap[nextIndex] |= (dir << targetIndexShift);
+    _Game.pPathFindMap[nextIndex] |= (dir << targetIndexShift);
     queue_pushBack(&q, { nextIndex });
   }
 }
 
-void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
+void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
 
-  lsZeroMemory(pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
+  lsZeroMemory(_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
 
   static queue<floodfillObject> q;
   const size_t targetIndexShift = targetIndex * 3;
@@ -120,7 +119,7 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<siz
     if (pCollidibleMask[_pos])
       continue;
 
-    pPathFindMap[_pos] |= d_atDestination << targetIndexShift;
+    _Game.pPathFindMap[_pos] |= d_atDestination << targetIndexShift;
     queue_pushBack(&q, { _pos });
   }
 
@@ -135,12 +134,12 @@ void floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<siz
     const size_t topLeftIndex = current.index - _Game.mapWidth - isOddBit;
     const size_t bottomLeftIndex = current.index + _Game.mapWidth - isOddBit;
 
-    floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_left);
-    floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_right);
-    floodfill_suggestNextTarget(q, bottomLeftIndex, pCollidibleMask, pPathFindMap, targetIndexShift, d_bottomLeft);
-    floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_bottomRight);
-    floodfill_suggestNextTarget(q, topLeftIndex, pCollidibleMask, pPathFindMap, targetIndexShift, d_topLeft);
-    floodfill_suggestNextTarget(q, topLeftIndex + 1, pCollidibleMask, pPathFindMap, targetIndexShift, d_topRight);
+    floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, targetIndexShift, d_left);
+    floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, targetIndexShift, d_right);
+    floodfill_suggestNextTarget(q, bottomLeftIndex, pCollidibleMask, targetIndexShift, d_bottomLeft);
+    floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, targetIndexShift, d_bottomRight);
+    floodfill_suggestNextTarget(q, topLeftIndex, pCollidibleMask, targetIndexShift, d_topLeft);
+    floodfill_suggestNextTarget(q, topLeftIndex + 1, pCollidibleMask, targetIndexShift, d_topRight);
   }
 }
 
@@ -179,9 +178,8 @@ void initializeFloodfill()
       pCollidibleMask[x + (_Game.mapHeight - 1) * _Game.mapWidth] = true;
     }
   }
-  
-  uint64_t *pPathFindMap; // TODO: We need two lookUps.
-  lsAllocZero(&pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+
+  lsAllocZero(&_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 
   std::vector<size_t> destinations;
 
@@ -195,7 +193,7 @@ void initializeFloodfill()
     }
 
     //if (pathFindMapA)
-    floodfill(pPathFindMap, i - 1, &destinations, pCollidibleMask);
+    floodfill(i - 1, &destinations, pCollidibleMask);
     destinations.clear();
 
     //if (i == tT_Count - 1)
@@ -231,14 +229,12 @@ lsResult game_observe(_Out_ game *pGame)
 
 lsResult game_clone(const game *pOrigin, game *pDst)
 {
-  (void)pOrigin;
-  (void)pDst;
-
   lsResult result = lsR_Success;
 
   pDst->pMap = pOrigin->pMap;
   pDst->mapHeight = pOrigin->mapHeight;
   pDst->mapWidth = pOrigin->mapWidth;
+  pDst->pPathFindMap = pOrigin->pPathFindMap;
 //  
 //
 //  // Copy over newer events.
@@ -256,8 +252,8 @@ lsResult game_clone(const game *pOrigin, game *pDst)
 //  pDst->movementFriction = pSrc->movementFriction;
 //  pDst->turnFriction = pSrc->turnFriction;
 //  pDst->tickRate = pSrc->tickRate;
-
-epilogue:
+//
+//epilogue:
   return result;
 }
 

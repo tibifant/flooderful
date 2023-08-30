@@ -23,7 +23,7 @@ void render_draw3DQuad(const matrix &model, const render_textureId textureIndex)
 void render_drawHex(const matrix &model, const vec4f color);
 void render_drawHex2D(const matrix &model, const vec4f color);
 void render_drawHex3D(const matrix &model, const vec4f color);
-void render_drawMap(const enum terrain_type *pMap, const size_t mapWidth, const size_t mapHeight);
+void render_drawMap(const uint64_t *pPathFindMap, const enum terrain_type *pMap, const size_t mapWidth, const size_t mapHeight);
 
 void render_flushRenderQueue();
 
