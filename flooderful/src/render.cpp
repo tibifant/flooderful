@@ -217,22 +217,36 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
 {
   (void)pPathFindMap;
 
-  vec4f colors[tT_Count] = {  }; // fill this!
+  const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
 
   for (size_t y = 0; y < mapHeight; y++)
   {
     for (size_t x = 0; x < mapWidth; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.2f + (float_t)(pMap[y * mapWidth + x] * 0.1f), 0, 0.5f, 0));
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[pMap[y * mapWidth + x]]);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.2f + (float_t)(pMap[y * mapWidth + x] * 0.1f), 0, 0.5f, 0));
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[pMap[y * mapWidth + x]]);
     }
   }
-  
-  (void)pMap;
-  (void)mapWidth;
-  (void)mapHeight;
+
+  int mouseX, mouseY = 0;
+  SDL_GetMouseState(&mouseX, &mouseY); // ehhh this is not how this works. we need to get the positon more than once. lol.
+  // uuh this returns the position in relation to the desktop.
+  // ask mau what to use else?
+
+  // TODO: is mouse at any tile?
+  if (mouseX > 60 + 31 && mouseX < 60 + mapWidth * 61 - 30 && mouseY > 40 + 21 && mouseY < 40 + 41 * mapHeight - 20)
+  {
+    if (// mouse1 down)
+      {
+        // not on mountain plz
+        // remember start
+      }
+  }
+  // TODO: set start by klicking on tile
+  // TODO: get hovered mous position as target
+  // TODO: show path to target by coloring tiles
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)

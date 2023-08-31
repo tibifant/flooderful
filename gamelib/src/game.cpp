@@ -154,7 +154,7 @@ void initializeFloodfill()
 
   for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
-    _Game.pMap[i] = (terrain_type)(lsGetRand() % (tT_Count + 1));
+    _Game.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
 
     if (_Game.pMap[i] == tT_mountain)
       pCollidibleMask[i] = 1;
