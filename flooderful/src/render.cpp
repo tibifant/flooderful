@@ -213,7 +213,7 @@ void render_drawHex3D(const matrix &model, const vec4f color)
   render_drawHex(model * _Render.vp, color);
 }
 
-void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight)
+void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight, lsAppState *pAppState)
 {
   (void)pPathFindMap;
 
@@ -230,23 +230,35 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
     }
   }
 
-  int mouseX, mouseY = 0;
-  SDL_GetMouseState(&mouseX, &mouseY); // ehhh this is not how this works. we need to get the positon more than once. lol.
-  // uuh this returns the position in relation to the desktop.
-  // ask mau what to use else?
+  size_t index = 0;
+  size_t x = 0;
+  size_t y = 0;
+  size_t startIndex = 0;
 
-  // TODO: is mouse at any tile?
-  if (mouseX > 60 + 31 && mouseX < 60 + mapWidth * 61 - 30 && mouseY > 40 + 21 && mouseY < 40 + 41 * mapHeight - 20)
+  if (pAppState->mousePos.x > 0 && pAppState->mousePos.y > 0)
   {
-    if (// mouse1 down)
+    index = (pAppState->mousePos.y / mapHeight / 10) * mapWidth + (pAppState->mousePos.x / mapWidth / 10);
+    x = index % mapWidth;
+    y = index / mapWidth;
+
+    if (index > 0 && index < mapWidth * mapHeight)
+    {
+      if (y % 2 == 0)
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
+      else
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
+    }
+
+    if (pAppState->leftMouseDown)
+    {
+      if (pMap[index] != tT_mountain)
       {
-        // not on mountain plz
-        // remember start
+        startIndex = index;
       }
+    }
   }
-  // TODO: set start by klicking on tile
-  // TODO: get hovered mous position as target
-  // TODO: show path to target by coloring tiles
+
+  
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
