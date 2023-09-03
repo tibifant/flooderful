@@ -54,19 +54,6 @@ struct pathFindMaps
 
 // 21 different targets possible atm. If more are needed, change uint64_t `pPathfindMap` to something bigger.
 
-enum direction : uint64_t
-{
-  d_unreachable,
-
-  d_topRight,
-  d_right,
-  d_bottomRight,
-  d_bottomLeft,
-  d_left,
-  d_topLeft,
-
-  d_atDestination,
-};
 
 struct floodfillObject
 {
@@ -99,7 +86,8 @@ void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextInd
 {  
   if (!pCollidibleMask[nextIndex] && !((_Game.pPathFindMap[nextIndex] >> targetIndexShift) & 7))
   {
-    _Game.pPathFindMap[nextIndex] |= (dir << targetIndexShift);
+    _Game.pPathFindMap[nextIndex] |= ((uint64_t)dir << targetIndexShift);
+    lsAssert(_Game.pPathFindMap[nextIndex] < ((uint64_t)0b1000 << targetIndexShift));
     queue_pushBack(&q, { nextIndex });
   }
 }
@@ -107,8 +95,6 @@ void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextInd
 void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
-
-  lsZeroMemory(_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // Set everything to 0 to be able to check for zeros later.
 
   static queue<floodfillObject> q;
   const size_t targetIndexShift = targetIndex * 3;
@@ -118,10 +104,13 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
   {
     if (pCollidibleMask[_pos])
       continue;
-
-    _Game.pPathFindMap[_pos] |= d_atDestination << targetIndexShift;
+  
+    _Game.pPathFindMap[_pos] |= ((uint64_t)d_atDestination << targetIndexShift);
     queue_pushBack(&q, { _pos });
   }
+
+  //lsAssert(!pCollidibleMask[13]);
+  //queue_pushBack(&q, { pDestinations->at(13) });
 
   floodfillObject current;
 
@@ -151,6 +140,7 @@ void initializeFloodfill()
 
   bool *pCollidibleMask;
   lsAllocZero(&pCollidibleMask, _Game.mapHeight * _Game.mapWidth);
+  lsAllocZero(&_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 
   for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
@@ -168,6 +158,9 @@ void initializeFloodfill()
       _Game.pMap[(y + 1) * _Game.mapWidth - 1] = tT_mountain;
       pCollidibleMask[y * _Game.mapWidth] = true;
       pCollidibleMask[(y + 1) * _Game.mapWidth - 1] = true;
+
+      //_Game.pPathFindMap[y * _Game.mapWidth] = (uint64_t)1 << 63;
+      //_Game.pPathFindMap[(y + 1) * _Game.mapWidth - 1] = (uint64_t)1 << 63;
     }
 
     for (size_t x = 0; x < _Game.mapWidth; x++)
@@ -176,10 +169,11 @@ void initializeFloodfill()
       _Game.pMap[x + (_Game.mapHeight - 1) * _Game.mapWidth] = tT_mountain;
       pCollidibleMask[x] = true;
       pCollidibleMask[x + (_Game.mapHeight - 1) * _Game.mapWidth] = true;
+
+      //_Game.pPathFindMap[x] = (uint64_t)1 << 63;
+      //_Game.pPathFindMap[x + (_Game.mapHeight - 1) * _Game.mapWidth] = (uint64_t)1 << 63;
     }
   }
-
-  lsAllocZero(&_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 
   std::vector<size_t> destinations;
 
@@ -192,12 +186,8 @@ void initializeFloodfill()
         destinations.push_back(j);
     }
 
-    //if (pathFindMapA)
     floodfill(i - 1, &destinations, pCollidibleMask);
     destinations.clear();
-
-    //if (i == tT_Count - 1)
-    //  pathFindMapA = !pathFindMapA;
   }
 }
 

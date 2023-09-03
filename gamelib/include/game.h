@@ -71,6 +71,20 @@ enum terrain_type
   tT_Count,
 };
 
+enum direction : uint64_t
+{
+  d_unreachable,
+
+  d_topRight,
+  d_right,
+  d_bottomRight,
+  d_bottomLeft,
+  d_left,
+  d_topLeft,
+
+  d_atDestination,
+};
+
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -81,7 +95,7 @@ struct game
   size_t mapHeight;
   size_t mapWidth;
   terrain_type *pMap = nullptr;
-  uint64_t *pPathFindMap;
+  uint64_t *pPathFindMap = nullptr;
   
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

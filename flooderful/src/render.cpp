@@ -215,8 +215,6 @@ void render_drawHex3D(const matrix &model, const vec4f color)
 
 void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight, lsAppState *pAppState)
 {
-  (void)pPathFindMap;
-
   const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
 
   for (size_t y = 0; y < mapHeight; y++)
@@ -230,16 +228,14 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
     }
   }
 
-  size_t index = 0;
-  size_t x = 0;
-  size_t y = 0;
-  size_t startIndex = 0;
+  std::vector<vec2i> path;
+  size_t newIndex = 0;
 
   if (pAppState->mousePos.x > 0 && pAppState->mousePos.y > 0)
   {
-    index = (pAppState->mousePos.y / mapHeight / 10) * mapWidth + (pAppState->mousePos.x / mapWidth / 10);
-    x = index % mapWidth;
-    y = index / mapWidth;
+    size_t index = (pAppState->mousePos.y / mapHeight / 10) * mapWidth + (pAppState->mousePos.x / mapWidth / 10);
+    size_t x = index % mapWidth;
+    size_t y = index / mapWidth;
 
     if (index > 0 && index < mapWidth * mapHeight)
     {
@@ -253,12 +249,88 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
     {
       if (pMap[index] != tT_mountain)
       {
-        startIndex = index;
+        newIndex = index;
       }
     }
   }
 
-  
+  if (newIndex != 0)
+  {
+    uint64_t dir = 0;
+
+    do
+    {
+      dir = pPathFindMap[newIndex] & (uint64_t)7;
+
+      lsAssert(dir != d_unreachable);
+
+      size_t isOddBit = (newIndex / mapWidth) & 1;
+      size_t topLeftIndex = newIndex - mapWidth - isOddBit;
+      size_t bottomLeftIndex = newIndex + mapWidth - isOddBit;
+
+      switch (dir)
+      {
+      case d_unreachable:
+      case d_atDestination:
+      {
+        continue;
+        break;
+      }
+      case d_right:
+      {
+        newIndex -= 1;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      case d_left:
+      {
+        newIndex += 1;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      case d_topLeft:
+      {
+        newIndex = bottomLeftIndex + 1;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      case d_bottomRight:
+      {
+        newIndex = topLeftIndex;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      case d_topRight:
+      {
+        newIndex = bottomLeftIndex;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      case d_bottomLeft:
+      {
+        newIndex = topLeftIndex + 1;
+        path.push_back(vec2i(newIndex % mapWidth, newIndex / mapWidth));
+        break;
+      }
+      }
+
+      lsAssert(newIndex >= 0 && newIndex < mapWidth *mapHeight);
+      lsAssert(path.size() < 10);
+
+    } while (dir != d_atDestination);
+
+    printf("pathlength: %" PRIu64 "\n", path.size());
+
+    for (const auto &tile : path)
+    {
+      if (tile.y % 2 == 0)
+        render_drawHex2D(matrix::Translation(1.f + tile.x * 1.1f, 2.f + tile.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, 1.f));
+      else
+        render_drawHex2D(matrix::Translation(1.55f + tile.x * 1.1f, 2.f + tile.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, 1.f));
+    }
+
+    path.clear();
+  }
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
