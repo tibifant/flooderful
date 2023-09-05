@@ -4,7 +4,8 @@
 
 enum render_textureId : size_t
 {
-  rTI_default
+  rTI_default,
+  rTI_arrow,
 };
 
 lsResult render_init(lsAppState *pAppState);

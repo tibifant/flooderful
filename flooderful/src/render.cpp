@@ -106,6 +106,10 @@ lsResult render_init(lsAppState *pAppState)
   // Load textures.
   {
     texture tex;
+
+    LS_ERROR_CHECK(texture_create(&tex, "textures/arrow.png"));
+    LS_ERROR_CHECK(pool_insertAt(&_Render.textures, tex, rTI_arrow));
+    lsZeroMemory(&tex);
   }
 
 epilogue:
@@ -213,8 +217,20 @@ void render_drawHex3D(const matrix &model, const vec4f color)
   render_drawHex(model * _Render.vp, color);
 }
 
+void render_drawArrow(size_t index, direction dir, size_t mapWidth)
+{
+  (void)dir;
+
+  if ((index / mapWidth) % 2 == 0)
+    render_draw2DQuad(matrix::Scale(30.f, 30.f, 0) * matrix::Translation(75.f + (float_t)(index % mapWidth) * 66.f, 80.f + (float_t)(index / mapWidth) * 66.f, 0), rTI_arrow);
+  else
+    render_draw2DQuad(matrix::Scale(30.f, 30.f, 0) * matrix::Translation(110.f + (float_t)(index % mapWidth) * 66.f, 80.f + (float_t)(index / mapWidth) * 66.f, 0), rTI_arrow);
+}
+
 void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight, lsAppState *pAppState)
 {
+  (void)pPathFindMap;
+
   const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
 
   for (size_t y = 0; y < mapHeight; y++)
@@ -228,36 +244,10 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
     }
   }
 
-  if (pAppState->mousePos.x > 0 && pAppState->mousePos.y > 0)
+  if (pAppState->leftMouseDown)
   {
-    size_t index = (pAppState->mousePos.y / mapHeight / 10) * mapWidth + (pAppState->mousePos.x / mapWidth / 10);
-    size_t x = index % mapWidth;
-    size_t y = index / mapWidth;
-
-    if (index > 0 && index < mapWidth * mapHeight)
-    {
-      if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
-      else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
-    }
-
-    if (pAppState->leftMouseDown)
-    {
-      if (pMap[index] != tT_mountain)
-      {
-        uint64_t dir = pPathFindMap[index] & (uint64_t)7;
-
-        printf("direction: %" PRIu64 "\n", dir);
-
-        const vec4f directionColors[8] = { vec4f(0.8f, 0.8f, 0.8f, 0), vec4f(0, 0, 1.f, 0), vec4f(0, 0, 0.6f, 0), vec4f(0, 0, 0.3f, 0), vec4f(0, 0.3f, 0, 0), vec4f(0, 0.6f, 0, 0), vec4f(0, 1.f, 0, 0), vec4f(1.f, 1.f, 0 , 0) };
-
-        if (y % 2 == 0)
-          render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), directionColors[dir]);
-        else
-          render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), directionColors[dir]);
-      }
-    }
+    for (size_t i = 0; i < 100; i++)
+      render_drawArrow(i, d_bottomLeft, mapWidth);
   }
 }
 
