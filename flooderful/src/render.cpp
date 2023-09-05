@@ -248,7 +248,7 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
   {
     for (size_t i = 0; i < mapWidth * mapHeight; i++)
     {
-      const direction dir = (direction)(pPathFindMap[i] & 7);
+      const direction dir = (direction)((pPathFindMap[i] >> 2 * 3) & 7);
 
       if (dir != d_atDestination && dir != d_unreachable)
         render_drawArrow(i % mapWidth, i / mapWidth, dir);

@@ -104,7 +104,7 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
   {
     if (pCollidibleMask[_pos])
       continue;
-  
+
     _Game.pPathFindMap[_pos] |= ((uint64_t)d_atDestination << targetIndexShift);
     queue_pushBack(&q, { _pos });
   }
@@ -122,8 +122,8 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
 
     floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, targetIndexShift, d_left);
     floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, targetIndexShift, d_right);
+    floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, targetIndexShift, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
     floodfill_suggestNextTarget(q, bottomLeftIndex, pCollidibleMask, targetIndexShift, d_bottomLeft);
-    floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, targetIndexShift, d_bottomRight);
     floodfill_suggestNextTarget(q, topLeftIndex, pCollidibleMask, targetIndexShift, d_topLeft);
     floodfill_suggestNextTarget(q, topLeftIndex + 1, pCollidibleMask, targetIndexShift, d_topRight);
   }
@@ -142,7 +142,7 @@ void initializeFloodfill()
   for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
     _Game.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.pMap[i] = tT_sand;
+    //_Game.pMap[i] = tT_grass;
 
     if (_Game.pMap[i] == tT_mountain)
       pCollidibleMask[i] = 1;
@@ -156,9 +156,6 @@ void initializeFloodfill()
       _Game.pMap[(y + 1) * _Game.mapWidth - 1] = tT_mountain;
       pCollidibleMask[y * _Game.mapWidth] = true;
       pCollidibleMask[(y + 1) * _Game.mapWidth - 1] = true;
-
-      //_Game.pPathFindMap[y * _Game.mapWidth] = (uint64_t)1 << 63;
-      //_Game.pPathFindMap[(y + 1) * _Game.mapWidth - 1] = (uint64_t)1 << 63;
     }
 
     for (size_t x = 0; x < _Game.mapWidth; x++)
@@ -167,9 +164,6 @@ void initializeFloodfill()
       _Game.pMap[x + (_Game.mapHeight - 1) * _Game.mapWidth] = tT_mountain;
       pCollidibleMask[x] = true;
       pCollidibleMask[x + (_Game.mapHeight - 1) * _Game.mapWidth] = true;
-
-      //_Game.pPathFindMap[x] = (uint64_t)1 << 63;
-      //_Game.pPathFindMap[x + (_Game.mapHeight - 1) * _Game.mapWidth] = (uint64_t)1 << 63;
     }
   }
 
