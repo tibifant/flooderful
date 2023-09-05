@@ -217,19 +217,19 @@ void render_drawHex3D(const matrix &model, const vec4f color)
   render_drawHex(model * _Render.vp, color);
 }
 
-void render_drawArrow(size_t index, direction dir, size_t mapWidth)
+void render_drawArrow(size_t x, size_t y, direction dir)
 {
-  (void)dir;
+  const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::RotationZ((-1.f - 3.f + 2 * dir) / 6.f * lsPIf) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 30.f, 0);
 
-  if ((index / mapWidth) % 2 == 0)
-    render_draw2DQuad(matrix::Scale(30.f, 30.f, 0) * matrix::Translation(75.f + (float_t)(index % mapWidth) * 66.f, 80.f + (float_t)(index / mapWidth) * 66.f, 0), rTI_arrow);
+  if (y % 2 == 0)
+    render_draw2DQuad(mat * matrix::Translation(75.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
   else
-    render_draw2DQuad(matrix::Scale(30.f, 30.f, 0) * matrix::Translation(110.f + (float_t)(index % mapWidth) * 66.f, 80.f + (float_t)(index / mapWidth) * 66.f, 0), rTI_arrow);
+    render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
 void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight, lsAppState *pAppState)
 {
-  (void)pPathFindMap;
+  (void)pAppState;
 
   const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
 
@@ -243,11 +243,16 @@ void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, cons
         render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[pMap[y * mapWidth + x]]);
     }
   }
-
-  if (pAppState->leftMouseDown)
+  
+  // Draw Debug Arrows.
   {
-    for (size_t i = 0; i < 100; i++)
-      render_drawArrow(i, d_bottomLeft, mapWidth);
+    for (size_t i = 0; i < mapWidth * mapHeight; i++)
+    {
+      const direction dir = (direction)(pPathFindMap[i] & 7);
+
+      if (dir != d_atDestination && dir != d_unreachable)
+        render_drawArrow(i % mapWidth, i / mapWidth, dir);
+    }
   }
 }
 

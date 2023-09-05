@@ -109,19 +109,16 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
     queue_pushBack(&q, { _pos });
   }
 
-  //lsAssert(!pCollidibleMask[13]);
-  //queue_pushBack(&q, { pDestinations->at(13) });
-
   floodfillObject current;
-
+  
   while (q.count)
   {
     queue_popFront(&q, &current);
     lsAssert(current.index >= 0 && current.index < _Game.mapHeight *_Game.mapWidth);
 
     const size_t isOddBit = (current.index / _Game.mapWidth) & 1;
-    const size_t topLeftIndex = current.index - _Game.mapWidth - isOddBit;
-    const size_t bottomLeftIndex = current.index + _Game.mapWidth - isOddBit;
+    const size_t topLeftIndex = current.index - _Game.mapWidth - (size_t)!isOddBit;
+    const size_t bottomLeftIndex = current.index + _Game.mapWidth - (size_t)!isOddBit;
 
     floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, targetIndexShift, d_left);
     floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, targetIndexShift, d_right);
@@ -136,7 +133,7 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
 
 void initializeFloodfill()
 {
-  mapInit(10, 10);
+  mapInit(16, 16);
 
   bool *pCollidibleMask;
   lsAllocZero(&pCollidibleMask, _Game.mapHeight * _Game.mapWidth);
@@ -145,6 +142,7 @@ void initializeFloodfill()
   for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
     _Game.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    //_Game.pMap[i] = tT_sand;
 
     if (_Game.pMap[i] == tT_mountain)
       pCollidibleMask[i] = 1;
@@ -181,12 +179,12 @@ void initializeFloodfill()
   for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
   {
     for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
-    {
       if (_Game.pMap[j] == i)
         destinations.push_back(j);
-    }
 
-    floodfill(i - 1, &destinations, pCollidibleMask);
+    if (destinations.size())
+      floodfill(i - 1, &destinations, pCollidibleMask);
+
     destinations.clear();
   }
 }
