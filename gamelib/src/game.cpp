@@ -44,30 +44,33 @@ void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObj
 // ziele die in die map floodfillen wie man zum naechsten ziel des typen kommt
 // floodfill look-up map -> sagt pro kachel pro ziel welche richtung
 
-
-
-struct pathFindMaps
-{
-  uint64_t *pPathFindMapA;
-  uint64_t *pPathFindMapB;
-};
-
-// 21 different targets possible atm. If more are needed, change uint64_t `pPathfindMap` to something bigger.
-
-
 struct floodfillObject
 {
   size_t index;
 };
 
+constexpr uint8_t _DirectionsBits = 4;
+
 void initializeFloodfill();
 void mapInit(const size_t width, const size_t height);
+void updatePathFinding();
+void setTerrain(bool *pCollidibleMask);
 
-void floodfill(const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
-void floodfill_suggestNextTarget(const bool *pCollidibleMask, const size_t &nextIndex, const size_t &targetIndex, queue<floodfillObject> &q);
+size_t _FloodFillSteps = 10;
+
+bool floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
+void floodfill_suggestNextTarget(uint64_t *pPathFindMap, const bool *pCollidibleMask, const size_t &nextIndex, const size_t &targetIndex, queue<floodfillObject> &q);
 
 
-//bool pathFindMapA = true;
+//////////////////////////////////////////////////////////////////////////
+
+// fillterrain and switch maps:
+// fill terrain map with enums
+// per ressource:
+//  either: floodfill for x steps
+//  or: if floodfill is ready: fill queue with targets, reset other map to not been there + collidible
+
+// in floodfill: only need to check for not been there -> is the same as checking for !collidible && !alreadyBeenThere
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -82,9 +85,9 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextIndex, const bool *pCollidibleMask, const size_t targetIndexShift, const direction dir)
+void floodfill_suggestNextTarget(uint64_t *pPathFindMap, queue<floodfillObject> &q, const size_t nextIndex, const bool *pCollidibleMask, const size_t targetIndexShift, const direction dir)
 {  
-  if (!pCollidibleMask[nextIndex] && !((_Game.pPathFindMap[nextIndex] >> targetIndexShift) & 7))
+  if (!pCollidibleMask[nextIndex] && !((_Game.pPathFindMap[nextIndex] >> targetIndexShift) & d_atDestination))
   {
     _Game.pPathFindMap[nextIndex] |= ((uint64_t)dir << targetIndexShift);
     lsAssert(_Game.pPathFindMap[nextIndex] < ((uint64_t)0b1000 << targetIndexShift));
@@ -92,12 +95,14 @@ void floodfill_suggestNextTarget(queue<floodfillObject> &q, const size_t nextInd
   }
 }
 
-void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
+bool floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<size_t> *pDestinations, const bool *pCollidibleMask)
 {
   // TODO: add second pPathFindMap where this gets called.
 
+  // FIXME! the queue needs to stay consistent and can't be filled everytime we call this.
+
   static queue<floodfillObject> q;
-  const size_t targetIndexShift = targetIndex * 3;
+  const size_t targetIndexShift = targetIndex * _DirectionsBits;
 
   // Enqueue all targets.
   for (const auto &_pos : *pDestinations)
@@ -106,13 +111,17 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
       continue;
 
     _Game.pPathFindMap[_pos] |= ((uint64_t)d_atDestination << targetIndexShift);
-    queue_pushBack(&q, { _pos });
+    queue_pushBack(&q, { _pos }); //!!!
   }
 
   floodfillObject current;
+  size_t stepCount = 0;
   
   while (q.count)
   {
+    if (stepCount > _FloodFillSteps)
+      return false;
+    
     queue_popFront(&q, &current);
     lsAssert(current.index >= 0 && current.index < _Game.mapHeight *_Game.mapWidth);
 
@@ -120,13 +129,20 @@ void floodfill(const size_t targetIndex, std::vector<size_t> *pDestinations, con
     const size_t topLeftIndex = current.index - _Game.mapWidth - (size_t)!isOddBit;
     const size_t bottomLeftIndex = current.index + _Game.mapWidth - (size_t)!isOddBit;
 
+    // shouldn't we only check the neighbours where we haven't been yet to not quadruple check everything?
+
     floodfill_suggestNextTarget(q, current.index - 1, pCollidibleMask, targetIndexShift, d_left);
     floodfill_suggestNextTarget(q, current.index + 1, pCollidibleMask, targetIndexShift, d_right);
     floodfill_suggestNextTarget(q, bottomLeftIndex + 1, pCollidibleMask, targetIndexShift, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
     floodfill_suggestNextTarget(q, bottomLeftIndex, pCollidibleMask, targetIndexShift, d_bottomLeft);
     floodfill_suggestNextTarget(q, topLeftIndex, pCollidibleMask, targetIndexShift, d_topLeft);
     floodfill_suggestNextTarget(q, topLeftIndex + 1, pCollidibleMask, targetIndexShift, d_topRight);
+
+    stepCount++;
   }
+
+  // if queue is empty: floodfill completed
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -135,10 +151,64 @@ void initializeFloodfill()
 {
   mapInit(16, 16);
 
+  lsAllocZero(&_Game.pathFindMaps.pPathFindMapA, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+  lsAllocZero(&_Game.pathFindMaps.pPathFindMapB, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+
+  _Game.writePathFindMapA = true;
+}
+
+void updatePathFinding()
+{
   bool *pCollidibleMask;
   lsAllocZero(&pCollidibleMask, _Game.mapHeight * _Game.mapWidth);
-  lsAllocZero(&_Game.pPathFindMap, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+  
+  // FIXME! this implies that terrain can be changed every tick whilst the destinations only get updated, when the floodfill is finished!
+  setTerrain(pCollidibleMask);
 
+  std::vector<size_t> destinations; // FIXME: your damn destinations will be overwritten everytime like this. come on use yout damn brain!
+
+  // TODO: Should get destinations that can be different from terrain_type
+  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
+  {
+    // TODO: handle floodfill queue outside of floodfill() or somehow mark in the floodfillmap that we've been to the destination already
+
+    // TODO: fix whole floodfill situation, fix that we don't search for every destination but only for the one's we haven't been to yet.
+    // maybe i'm dumb, but if we change the map and therefore the destinations every tick even when we didn't finish our floodfill yet. we won't every finish it.
+
+    // switch maps
+    if (_Game.writePathFindMapA)
+    {
+      if (!destinations.size() || floodfill(_Game.pathFindMaps.pPathFindMapA, i - 1, &destinations, pCollidibleMask))
+      {
+        destinations.clear();
+
+        for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
+          if (_Game.pMap[j] == i)
+            destinations.push_back(j);
+
+        _Game.writePathFindMapA = false;
+        lsZeroMemory(&_Game.pathFindMaps.pPathFindMapB, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+      }
+    }
+    else
+    {
+      if (!destinations.size() || floodfill(_Game.pathFindMaps.pPathFindMapB, i - 1, &destinations, pCollidibleMask))
+      {
+        destinations.clear();
+
+        for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
+          if (_Game.pMap[j] == i)
+            destinations.push_back(j);
+
+        _Game.writePathFindMapA = true;
+        lsZeroMemory(&_Game.pathFindMaps.pPathFindMapA, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
+      }
+    }
+  }
+}
+
+void setTerrain(bool *pCollidibleMask)
+{
   for (size_t i = 0; i < _Game.mapHeight * _Game.mapWidth; i++)
   {
     _Game.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
@@ -165,21 +235,6 @@ void initializeFloodfill()
       pCollidibleMask[x] = true;
       pCollidibleMask[x + (_Game.mapHeight - 1) * _Game.mapWidth] = true;
     }
-  }
-
-  std::vector<size_t> destinations;
-
-  // TODO: Should get destinations that can be different from terrain_type
-  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
-  {
-    for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
-      if (_Game.pMap[j] == i)
-        destinations.push_back(j);
-
-    if (destinations.size())
-      floodfill(i - 1, &destinations, pCollidibleMask);
-
-    destinations.clear();
   }
 }
 

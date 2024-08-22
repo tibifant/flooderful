@@ -73,6 +73,7 @@ enum terrain_type
 
 enum direction : uint64_t
 {
+  d_unchecked,
   d_unreachable,
 
   d_topRight,
@@ -85,6 +86,13 @@ enum direction : uint64_t
   d_atDestination,
 };
 
+// 16 different targets possible atm. If more are needed, change uint64_t `pPathfindMap` to something bigger.
+struct pathFindMaps
+{
+  uint64_t *pPathFindMapA;
+  uint64_t *pPathFindMapB;
+};
+
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -95,7 +103,8 @@ struct game
   size_t mapHeight;
   size_t mapWidth;
   terrain_type *pMap = nullptr;
-  uint64_t *pPathFindMap = nullptr;
+  pathFindMaps pathFindMaps;
+  bool writePathFindMapA;
   
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;
