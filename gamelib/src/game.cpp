@@ -53,15 +53,14 @@ constexpr uint8_t _DirectionsBits = 4;
 
 void initializeFloodfill();
 void mapInit(const size_t width, const size_t height);
-void updatePathfinding();
+void updateFloodfill();
 void setTerrain(bool *pCollidibleMask);
-void arrangeFloodfillMap();
 
 local_list<queue<floodfillObject>, tT_Count> ressourceQueues;
 size_t _FloodFillSteps = 10;
 bool firstRun = true;
 
-bool floodfill(uint64_t *pPathFindMap, const size_t targetIndex, std::vector<vec2u32> *pDestinations, const bool *pCollidibleMask);
+bool floodfill(uint64_t *pPathFindMap, const size_t targetIndex, queue<floodfillObject> *pDestinations, const bool *pCollidibleMask);
 void floodfill_suggestNextTarget(uint64_t *pPathFindMap, const bool *pCollidibleMask, const size_t &nextIndex, const size_t &targetIndex, queue<floodfillObject> &q);
 
 
@@ -160,42 +159,7 @@ void initializeFloodfill()
   lsAllocZero(&_Game.pathFindMap.pPathFindMapB, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
 }
 
-void arrangeFloodfillMap(bool *pCollidableMask)
-{
-  for (size_t i = 1; i < tT_Count; i++)
-  {
-    if (_Game.pathFindMap.writingToA)
-    {
-      for (size_t j = 0; j < _Game.mapWidth * _Game.mapHeight; j++)
-      {
-        if (_Game.pMap[j] == i)
-        {
-          _Game.pathFindMap.pPathFindMapA[j] = d_atDestination;
-          queue_pushBack(&ressourceQueues[i], { j });
-        }
-
-        if (pCollidableMask[j])
-          _Game.pathFindMap.pPathFindMapA[j] = d_collidable;
-      }
-    }
-    else
-    {
-      for (size_t j = 0; j < _Game.mapWidth * _Game.mapHeight; j++)
-      {
-        if (_Game.pMap[j] == i)
-        {
-          _Game.pathFindMap.pPathFindMapB[j] = d_atDestination;
-          queue_pushBack(&ressourceQueues[i], { j });
-        }
-
-        if (pCollidableMask[j])
-          _Game.pathFindMap.pPathFindMapB[j] = d_collidable;
-      }
-    }
-  }
-}
-
-void updatePathfinding()
+void updateFloodfill()
 {
   // Step 1: Set terrain
   bool *pCollidableMask;
@@ -204,121 +168,67 @@ void updatePathfinding()
   // FIXME! this implies that terrain can be changed every tick whilst the destinations only get updated, when the floodfill is finished!
   setTerrain(pCollidableMask);
 
+  bool anyRessourceIncomplete = false;
+
   if (!firstRun)
   {
     // iterate Ressources
-    // callFloodfill with targetIndexShift
-    // if not complete: anyRessourceIncomplete = true;
+    for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+    {
+      if (_Game.pathFindMap.writingToA) // maybe just have one map in `Game` and have the double map thingy just here. Then move the pointer in `Game` whenever switching maps. less error prone.
+      {
+        if (!floodfill(_Game.pathFindMap.pPathFindMapA, i - 1, &ressourceQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
+          anyRessourceIncomplete = true;
+      }
+      else
+      {
+        if (!floodfill(_Game.pathFindMap.pPathFindMapB, i - 1, &ressourceQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
+          anyRessourceIncomplete = true;
+      }
+    }
   }
 
   if (firstRun || !anyRessourceIncomplete)
   {
-    // if (mapA)
-    // zeroMem(mapB)
-    //map.writingToA = false;
 
-    //else
-    // zeroMem(mapA)
-    //map.writingToA = true;
-
-    arrangeFloodfillMap(pCollidableMask);
-  }
-
-
-
-
-
-
-
-
-
-
-
-  // Step 2: Floodfill:
-  // 1: iterate ressources
-
-  bool anyRessourceIncomplete = false;
-
-  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidible stuff atm.
-  {
     if (_Game.pathFindMap.writingToA)
     {
-      if (floodfill(&_Game.pathFindMap.pPathFindMapA,))
+      _Game.pathFindMap.writingToA = false;
+      lsZeroMemory(&_Game.pathFindMap.pPathFindMapB, _Game.mapHeight * _Game.mapWidth);
+
+      for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
       {
-        anyRessourceIncomplete = true;
+        for (size_t j = 0; j < _Game.mapWidth * _Game.mapHeight; j++)
+        {
+          if (_Game.pMap[j] == i)
+          {
+            _Game.pathFindMap.pPathFindMapB[j] = d_atDestination;
+            queue_pushBack(&ressourceQueues[i], { j });
+          }
+
+          if (pCollidableMask[j])
+            _Game.pathFindMap.pPathFindMapB[j] = d_collidable;
+        }
       }
     }
     else
     {
+      _Game.pathFindMap.writingToA = true;;
+      lsZeroMemory(&_Game.pathFindMap.pPathFindMapA, _Game.mapHeight * _Game.mapWidth);
 
-
-
-  // 2: check if floodfill is ready
-  // a) if is ready: switch maps for this ressource, refill destinations queue, init other floodfillmap, fill queue with floodfill items
-      if (floodfill(...))
+      for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
       {
-
-      }
-    }
-  }
-  //            b) if not: coninue to floodfill -> floodfill map cannot be reset whilst floodfill is not finished
-  //         or:
-  //            set bool if any ressource isn't ready
-  //            if all are ready:
-  //            switch map, refill destiantions queue, init other floodfillmap, fill queue with floodfill items -> iterate ressources again...
-  //            else: continue with floodfill
-
-
-
-
-
-
-  std::vector<size_t> destinations; // FIXME: your damn destinations will be overwritten everytime like this. come on use yout damn brain!
-
-  // TODO: Should get destinations that can be different from terrain_type
-  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain for now as it is our collidible border
-  {
-    // TODO: handle floodfill queue outside of floodfill() or somehow mark in the floodfillmap that we've been to the destination already
-
-    // TODO: fix whole floodfill situation, fix that we don't search for every destination but only for the one's we haven't been to yet.
-    // maybe i'm dumb, but if we change the map and therefore the destinations every tick even when we didn't finish our floodfill yet. we won't every finish it.
-
-    // TODO: write to pathFindMaps here: set destinations, collidible
-    // TODO: enqueue all destinations as floodfill objects and give them to floodfill
-
-    // switch maps
-    if (_Game.writePathFindMapA)
-    {
-      if (!destinations.size() || floodfill(_Game.pathFindMaps.pPathFindMapA, i - 1, &destinations, pCollidableMask))
-      {
-        // option a: a pathfind map for every ressurce as coc said
-
-        // option b: leave the pathfindmap as is, check for every ressource if we've finished path finding, switch maps, when all are finished!
-
-        // dumby dumb....... this only needs to happen, when we finished pathfinding for all destinations or we need to have seperate pathFindMaps for all destinations!
-        destinations.clear();
-
-        for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
+        for (size_t j = 0; j < _Game.mapWidth * _Game.mapHeight; j++)
+        {
           if (_Game.pMap[j] == i)
-            destinations.push_back(j);
+          {
+            _Game.pathFindMap.pPathFindMapA[j] = d_atDestination;
+            queue_pushBack(&ressourceQueues[i], { j });
+          }
 
-        _Game.writePathFindMapA = false;
-
-        lsZeroMemory(&_Game.pathFindMaps.pPathFindMapB, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // ahh now we zero memory for every destination, that's not what we want!
-      }
-    }
-    else
-    {
-      if (!destinations.size() || floodfill(_Game.pathFindMaps.pPathFindMapB, i - 1, &destinations, pCollidableMask))
-      {
-        destinations.clear();
-
-        for (size_t j = 0; j < _Game.mapHeight * _Game.mapWidth; j++)
-          if (_Game.pMap[j] == i)
-            destinations.push_back(j);
-
-        _Game.writePathFindMapA = true;
-        lsZeroMemory(&_Game.pathFindMaps.pPathFindMapA, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t)); // see above... insert function here and stuff! why is this so hard? 
+          if (pCollidableMask[j])
+            _Game.pathFindMap.pPathFindMapA[j] = d_collidable;
+        }
       }
     }
   }
