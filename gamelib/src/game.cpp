@@ -58,8 +58,7 @@ void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain(bool *pCollidableMask);
 
-//local_list<queue<floodfillObject>, tT_Count> _FloodfillQueues;
-queue<floodfillObject> _FloodfillQueues[tT_Count];
+local_list<queue<floodfillObject>*, tT_Count> _FloodfillQueues; // I'm too dumb right now, what's the right way to have queues for all resssources?
 constexpr size_t _FloodFillSteps = 10;
 bool _FirstRun = true;
 
@@ -149,8 +148,7 @@ void initializeFloodfill()
   for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
     queue<floodfillObject> q;
-    //local_list_add(&_FloodfillQueues, &q);
-    _FloodfillQueues[i - 1] = q;
+    local_list_add(&_FloodfillQueues, &q);
   }
 }
 
@@ -172,12 +170,12 @@ void updateFloodfill()
     {
       if (_Game.pathFindMaps.writingToA) // maybe just have one map in `Game` and have the double map thingy just here. Then move the pointer in `Game` whenever switching maps. less error prone.
       {
-        if (!floodfill(_Game.pathFindMaps.pPathFindMapA, i - 1, _FloodfillQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
+        if (!floodfill(_Game.pathFindMaps.pPathFindMapA, i - 1, *_FloodfillQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
           anyRessourceIncomplete = true;
       }
       else
       {
-        if (!floodfill(_Game.pathFindMaps.pPathFindMapB, i - 1, _FloodfillQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
+        if (!floodfill(_Game.pathFindMaps.pPathFindMapB, i - 1, *_FloodfillQueues[i - 1], pCollidableMask)) // i - 1 needs to be changed when we don't start iterating from 1 anymore!
           anyRessourceIncomplete = true;
       }
     }
