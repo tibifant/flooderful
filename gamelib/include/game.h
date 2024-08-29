@@ -4,7 +4,6 @@
 #include "pool.h"
 #include "queue.h"
 #include "dataBlob.h"
-#include "local_list.h"
 
 enum gameObject_type
 {
@@ -72,12 +71,16 @@ enum terrain_type
   tT_Count,
 };
 
-constexpr size_t _RessourceCount = tT_Count - 1; // adjust once there are actual ressources. For now: all terrain types beside mountain.
+struct pathFindMapObject
+{
+  uint64_t *pPathFindMapA = nullptr;
+  uint64_t *pPathFindMapB = nullptr;
+  bool writingToA = true;
+};
 
 enum direction : uint64_t
 {
-  d_notReached,
-
+  d_unreachable,
   d_collidable,
 
   d_topRight,
@@ -90,13 +93,6 @@ enum direction : uint64_t
   d_atDestination,
 };
 
-struct pathFindMap
-{
-  uint64_t *pPathFindMapA;
-  uint64_t *pPathFindMapB;
-  bool writingToA = true;
-};
-
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -107,9 +103,7 @@ struct game
   size_t mapHeight;
   size_t mapWidth;
   terrain_type *pMap = nullptr;
-  //uint64_t *pPathFindMap = nullptr;
-  //local_list<pathFindMap, _RessourceCount> pathFindMaps;
-  pathFindMap pathFindMap;
+  pathFindMapObject pathFindMaps;
   
 
   float_t movementFriction = 0.965, turnFriction = 0.9;

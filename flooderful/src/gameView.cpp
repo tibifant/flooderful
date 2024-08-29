@@ -108,7 +108,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
 
-    render_drawMap(pView->game.pPathFindMap, pView->game.pMap, pView->game.mapWidth, pView->game.mapHeight, pAppState);
+    render_drawMap(pView->game.pathFindMaps.writingToA ? pView->game.pathFindMaps.pPathFindMapB : pView->game.pathFindMaps.pPathFindMapA, pView->game.pMap, pView->game.mapWidth, pView->game.mapHeight, pAppState);
 
     render_flushRenderQueue();
   }
