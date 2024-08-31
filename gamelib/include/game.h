@@ -71,11 +71,22 @@ enum terrain_type
   tT_Count,
 };
 
-struct pathFindMapObject
+struct fill_step
 {
-  uint64_t *pPathFindMapA = nullptr;
-  uint64_t *pPathFindMapB = nullptr;
-  bool writingToA = true;
+  size_t index;
+};
+
+struct level_info
+{
+  struct resource_info
+  {
+    queue<fill_step> pathfinding_queue;
+    uint8_t *pDirectionLookup[2] = {};
+    size_t active_direction_idx = 0;
+  } resources[tT_Count - 1]; // change to ressources once they exist
+
+  terrain_type *pMap = nullptr;
+  vec2s map_size;
 };
 
 enum direction : uint64_t
@@ -100,11 +111,7 @@ struct game
   pool<gameObject> gameObjects; // every game object must have a entity with the same index.
   queue<gameEvent> events;
 
-  size_t mapHeight;
-  size_t mapWidth;
-  terrain_type *pMap = nullptr;
-  pathFindMapObject pathFindMaps;
-  
+  level_info levelInfo;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

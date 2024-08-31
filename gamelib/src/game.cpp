@@ -38,18 +38,13 @@ void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObj
 // needed for floodfill:
 // map:         pointer auf terrainType
 // terrainType: enum    -> which terrain
-// entityType:  enum    -> which type of Actor, (which destination (collidible?? dann nicht enum))
+// entityType:  enum    -> which type of Actor, (which destination (collidable?? dann nicht enum))
 // entity:      struct  -> entityType, position, collides with what terrainTypes, (destination, better: type gets changed, so no destination in entity...)
 // look-up of directions to destinations: one for each possible dest? -> pointer uint8_t? 6 werte for directions, 8 werte 1 fuer nicht erreichbar + 1 war schon jmd hier, passen in 3 bit -> uint64: 21 ziele    2 look-ups: wechelsn immer welcher aktualisiert wird
 
 
 // ziele die in die map floodfillen wie man zum naechsten ziel des typen kommt
 // floodfill look-up map -> sagt pro kachel pro ziel welche richtung
-
-struct floodfillObject
-{
-  size_t index;
-};
 
 constexpr uint8_t _DirectionsBits = 4;
 
@@ -58,7 +53,6 @@ void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain(bool *pCollidableMask);
 
-local_list<queue<floodfillObject>*, tT_Count> _FloodfillQueues; // I'm too dumb right now, what's the right way to have queues for all resssources?
 constexpr size_t _FloodFillSteps = 10;
 bool _FirstRun = true;
 
@@ -72,18 +66,17 @@ void floodfill_suggestNextTarget(uint64_t *pPathFindMap, queue<floodfillObject> 
 // fill terrain map with enums
 // per ressource:
 //  either: floodfill for x steps
-//  or: if floodfill is ready: fill queue with targets, reset other map to not been there + collidible
+//  or: if floodfill is ready: fill queue with targets, reset other map to not been there + collidable
 
-// in floodfill: only need to check for not been there -> is the same as checking for !collidible && !alreadyBeenThere
+// in floodfill: only need to check for not been there -> is the same as checking for !collidable && !alreadyBeenThere
 
 //////////////////////////////////////////////////////////////////////////
 
-void mapInit(const size_t width, const size_t height/*, bool *pCollidibleMask*/)
+void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
-  _Game.mapHeight = height;
-  _Game.mapWidth = width;
+  _Game.levelInfo.map_size = { width, height };
   
-  lsAllocZero(&_Game.pMap, _Game.mapHeight * _Game.mapWidth);
+  lsAllocZero(&_Game.levelInfo.pMap, height * width);
 }
 
 #ifndef _DEBUG
@@ -136,19 +129,16 @@ bool floodfill(uint64_t *pPathFindMap, const size_t targetIndex, queue<floodfill
 
 //////////////////////////////////////////////////////////////////////////
 
-// tT_atDestiantion and tT_collidible can be the same value, as we won't ever be able to stand on a collidible tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidible)
+// tT_atDestiantion and tT_collidable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
 
 void initializeFloodfill()
 {
   mapInit(16, 16);
 
-  lsAllocZero(&_Game.pathFindMaps.pPathFindMapA, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
-  lsAllocZero(&_Game.pathFindMaps.pPathFindMapB, _Game.mapHeight * _Game.mapWidth * sizeof(uint64_t));
-
   for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
-    queue<floodfillObject> q;
-    local_list_add(&_FloodfillQueues, &q);
+    lsAllocZero(&_Game.levelInfo.resources->pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    lsAllocZero(&_Game.levelInfo.resources->pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   }
 }
 
