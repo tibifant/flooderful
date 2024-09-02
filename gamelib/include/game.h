@@ -82,10 +82,11 @@ struct level_info
   {
     queue<fill_step> pathfinding_queue;
     uint8_t *pDirectionLookup[2] = {};
-    size_t active_direction_idx = 0;
-  } resources[tT_Count - 1]; // change to ressources once they exist
+    size_t write_direction_idx = 0;
+  } resources[tT_Count - 1]; // change to ressource-count once they exist
 
   terrain_type *pMap = nullptr;
+  bool *pCollidableMask;
   vec2s map_size;
 };
 

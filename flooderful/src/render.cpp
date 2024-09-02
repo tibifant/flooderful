@@ -7,7 +7,6 @@
 #include "shader.h"
 #include "objReader.h"
 #include "dataBlob.h"
-#include "game.h"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -227,31 +226,34 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const uint64_t *pPathFindMap, const terrain_type *pMap, const size_t mapWidth, const size_t mapHeight, lsAppState *pAppState)
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
 {
   (void)pAppState;
 
   const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
 
-  for (size_t y = 0; y < mapHeight; y++)
+  for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {
-    for (size_t x = 0; x < mapWidth; x++)
+    for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[pMap[y * mapWidth + x]]);
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x]]);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[pMap[y * mapWidth + x]]);
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x]]);
     }
   }
   
   // Draw Debug Arrows.
   {
-    for (size_t i = 0; i < mapWidth * mapHeight; i++)
+    //for (size_t i = 0; i < tT_Count - 1; i++) // TODO: change when introducing actual ressources!
     {
-      const direction dir = (direction)((pPathFindMap[i] >> 2 * 3) & 7);
+      for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
+      {
+        const direction dir = (direction)((levelInfo.resources[tT_grass - 1].pDirectionLookup[1 - levelInfo.resources[tT_grass - 1].write_direction_idx][j] >> 2 * 3) & 7);
 
-      if (dir != d_atDestination && dir != d_unreachable)
-        render_drawArrow(i % mapWidth, i / mapWidth, dir);
+        if (dir != d_atDestination && dir != d_unreachable)
+          render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
+      }
     }
   }
 }
