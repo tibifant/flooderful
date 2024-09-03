@@ -143,8 +143,6 @@ bool floodfill(size_t ressourceIndex)
     const size_t topLeftIndex = current.index - _Game.levelInfo.map_size.x - (size_t)!isOddBit;
     const size_t bottomLeftIndex = current.index + _Game.levelInfo.map_size.x - (size_t)!isOddBit;
 
-    // shouldn't we only check the neighbours where we haven't been yet to not quadruple check everything?
-
     floodfill_suggestNextTarget(ressourceIndex, current.index - 1, d_left);
     floodfill_suggestNextTarget(ressourceIndex, current.index + 1, d_right);
     floodfill_suggestNextTarget(ressourceIndex, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
@@ -182,7 +180,7 @@ void updateFloodfill()
     // iterate Ressources
   for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
-    if (floodfill(i)) // i - 1 needsto be changed when we don't start iterating from 1 anymore! 
+    if (floodfill(i))
     {
       lsAssert(!_Game.levelInfo.resources[i].pathfinding_queue.count);
 
