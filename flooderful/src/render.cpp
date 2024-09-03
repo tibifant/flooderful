@@ -249,7 +249,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
     {
       for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
       {
-        const direction dir = (direction)((levelInfo.resources[tT_grass - 1].pDirectionLookup[1 - levelInfo.resources[tT_grass - 1].write_direction_idx][j] >> 2 * 3) & 7);
+        const direction dir = (direction)levelInfo.resources[tT_sand - 1].pDirectionLookup[1 - levelInfo.resources[tT_sand - 1].write_direction_idx][j];
 
         if (dir != d_atDestination && dir != d_unreachable)
           render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);

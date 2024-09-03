@@ -53,11 +53,10 @@ void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain();
 
-constexpr size_t _FloodFillSteps = 10;
-bool _FirstRun = true;
+constexpr size_t _FloodFillSteps = 100;
 
-bool floodfill(uint8_t *pPathFindMap, queue<fill_step> &q);
-void floodfill_suggestNextTarget(uint8_t *pPathFindMap, queue<fill_step> &q, const size_t nextIndex, const direction dir);
+bool floodfill(size_t ressourceIndex);
+void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -85,7 +84,7 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = tT_grass;
 
     if (_Game.levelInfo.pMap[i] == tT_mountain)
       _Game.levelInfo.pCollidableMask[i] = 1;
@@ -114,26 +113,30 @@ void setTerrain()
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(uint8_t *pPathFindMap, queue<fill_step> &q, const size_t nextIndex, const direction dir)
+void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir)
 {  
-  if (!_Game.levelInfo.pCollidableMask[nextIndex] && !(pPathFindMap[nextIndex] & d_atDestination))
+  direction nextTile = (direction)_Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex];
+
+  if (!_Game.levelInfo.pCollidableMask[nextIndex] && nextTile != d_atDestination && nextTile == d_unreachable)
   {
-    pPathFindMap[nextIndex] = (uint8_t)dir;
-    queue_pushBack(&q, { nextIndex });
+    _Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex] = dir;
+    queue_pushBack(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, { nextIndex });
   }
 }
 
-bool floodfill(uint8_t *pPathFindMap, queue<fill_step> &q)
+// tT_atDestiantion and tT_unreachable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
+
+bool floodfill(size_t ressourceIndex)
 {
   fill_step current;
   size_t stepCount = 0;
   
-  while (q.count)
+  while (_Game.levelInfo.resources[ressourceIndex].pathfinding_queue.count)
   {
     if (stepCount > _FloodFillSteps)
       return false;
     
-    queue_popFront(&q, &current);
+    queue_popFront(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, &current);
     lsAssert(current.index >= 0 && current.index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
     const size_t isOddBit = (current.index / _Game.levelInfo.map_size.x) & 1;
@@ -142,12 +145,12 @@ bool floodfill(uint8_t *pPathFindMap, queue<fill_step> &q)
 
     // shouldn't we only check the neighbours where we haven't been yet to not quadruple check everything?
 
-    floodfill_suggestNextTarget(pPathFindMap, q, current.index - 1, d_left);
-    floodfill_suggestNextTarget(pPathFindMap, q, current.index + 1, d_right);
-    floodfill_suggestNextTarget(pPathFindMap, q, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
-    floodfill_suggestNextTarget(pPathFindMap, q, bottomLeftIndex, d_bottomLeft);
-    floodfill_suggestNextTarget(pPathFindMap, q, topLeftIndex, d_topLeft);
-    floodfill_suggestNextTarget(pPathFindMap, q, topLeftIndex + 1, d_topRight);
+    floodfill_suggestNextTarget(ressourceIndex, current.index - 1, d_left);
+    floodfill_suggestNextTarget(ressourceIndex, current.index + 1, d_right);
+    floodfill_suggestNextTarget(ressourceIndex, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
+    floodfill_suggestNextTarget(ressourceIndex, bottomLeftIndex, d_bottomLeft);
+    floodfill_suggestNextTarget(ressourceIndex, topLeftIndex, d_topLeft);
+    floodfill_suggestNextTarget(ressourceIndex, topLeftIndex + 1, d_topRight);
 
     stepCount++;
   }
@@ -158,44 +161,43 @@ bool floodfill(uint8_t *pPathFindMap, queue<fill_step> &q)
 
 //////////////////////////////////////////////////////////////////////////
 
-// tT_atDestiantion and tT_collidable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
-
 void initializeLevel()
 {
   mapInit(16, 16);
   setTerrain();
 
-  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
-    lsAllocZero(&_Game.levelInfo.resources[i - 1].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-    lsAllocZero(&_Game.levelInfo.resources[i - 1].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+    for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
+      if (_Game.levelInfo.pMap[j] == i + 1) // i+1 because we skip tT_mountain
+        queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
   }
 }
 
 void updateFloodfill()
 {
     // iterate Ressources
-  for (size_t i = 1; i < tT_Count; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
-    if (floodfill(_Game.levelInfo.resources[i - 1].pDirectionLookup[_Game.levelInfo.resources[i - 1].write_direction_idx], _Game.levelInfo.resources[i - 1].pathfinding_queue)) // i - 1needsto be changed when we don't start iterating from 1 anymore! 
+    if (floodfill(i)) // i - 1 needsto be changed when we don't start iterating from 1 anymore! 
     {
-      lsAssert(!_Game.levelInfo.resources[i - 1].pathfinding_queue.count);
+      lsAssert(!_Game.levelInfo.resources[i].pathfinding_queue.count);
 
-      size_t newDirectionIndex = 1 - _Game.levelInfo.resources[i - 1].write_direction_idx;
-      _Game.levelInfo.resources[i - 1].write_direction_idx = newDirectionIndex;
+      size_t newDirectionIndex = 1 - _Game.levelInfo.resources[i].write_direction_idx;
+      _Game.levelInfo.resources[i].write_direction_idx = newDirectionIndex;
 
-      lsZeroMemory(&_Game.levelInfo.resources[i - 1].pDirectionLookup[newDirectionIndex]);
+      lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
       
       for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
       {
-        if (_Game.levelInfo.pMap[j] == i)
+        if (_Game.levelInfo.pMap[j] == i + 1) // i+1 because we skip tT_mountain
         {
-          _Game.levelInfo.resources[i - 1].pDirectionLookup[newDirectionIndex][j] = d_atDestination; // THAT'S WRONG!!!
-          queue_pushBack(&_Game.levelInfo.resources[i - 1].pathfinding_queue, { j });
+          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_atDestination;
+          queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
         }
-
-        if (_Game.levelInfo.pCollidableMask[j])
-          _Game.levelInfo.resources[i - 1].pDirectionLookup[newDirectionIndex][j] = d_collidable;
       }
     }
   }

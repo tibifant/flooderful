@@ -90,10 +90,9 @@ struct level_info
   vec2s map_size;
 };
 
-enum direction : uint64_t
+enum direction : uint8_t
 {
   d_unreachable,
-  d_collidable,
 
   d_topRight,
   d_right,
