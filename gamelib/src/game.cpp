@@ -211,10 +211,19 @@ void updateFloodfill()
 
 //////////////////////////////////////////////////////////////////////////
   
-//void player_setTerrain(vec2s mousePos, vec2s windowSize)
-//{
-//  size_t x = mousePos
-//}
+void player_setTerrain(vec2s mouse, vec2s tileSize, vec2s offset)
+{
+  (void)offset;
+  size_t y = (mouse.y - offset.y) / tileSize.y;
+  size_t x = 0;;
+  
+  if (y % 2 == 0)
+    x = (mouse.x - offset.x) / tileSize.x;
+  else
+    x = (size_t)((mouse.x - offset.x) - tileSize.x * 0.5) / tileSize.x;
+
+  _Game.levelInfo.pMap[x * y] = tT_sand;
+}
   
 //////////////////////////////////////////////////////////////////////////
 
@@ -500,6 +509,7 @@ lsResult game_tick_local()
   // stuff.
   // process player interactions.
   {
+    // tilesize.x = 60, tilesize.y = 40 ehh da kommen noch faktoren mit drauf... 
     updateFloodfill();
 
     goto epilogue;
