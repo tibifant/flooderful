@@ -53,7 +53,7 @@ void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain();
 
-constexpr size_t _FloodFillSteps = 100;
+constexpr size_t _FloodFillSteps = 1;
 
 bool floodfill(size_t ressourceIndex);
 void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir);
@@ -159,6 +159,9 @@ bool floodfill(size_t ressourceIndex)
 
 //////////////////////////////////////////////////////////////////////////
 
+// TODO: have a special map for rendering to know if something needs to be rotated etc.
+// TODO: Check how pathfinding works by watching the map that is being filled.
+
 void initializeLevel()
 {
   mapInit(16, 16);
@@ -170,8 +173,13 @@ void initializeLevel()
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
     for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
-      if (_Game.levelInfo.pMap[j] == i + 1) // i+1 because we skip tT_mountain
+    {
+      if (_Game.levelInfo.pMap[j] == i)
+      {
         queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
+        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_atDestination;
+      }
+    }
   }
 }
 
@@ -191,7 +199,7 @@ void updateFloodfill()
       
       for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
       {
-        if (_Game.levelInfo.pMap[j] == i + 1) // i+1 because we skip tT_mountain
+        if (_Game.levelInfo.pMap[j] == i)
         {
           _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_atDestination;
           queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
@@ -201,6 +209,13 @@ void updateFloodfill()
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+  
+//void player_setTerrain(vec2s mousePos, vec2s windowSize)
+//{
+//  size_t x = mousePos
+//}
+  
 //////////////////////////////////////////////////////////////////////////
 
 lsResult game_init()

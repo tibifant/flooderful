@@ -63,10 +63,10 @@ struct gameEvent
 
 enum terrain_type
 {
-  tT_mountain,
   tT_grass,
   tT_water,
   tT_sand,
+  tT_mountain, // is used as collidable
 
   tT_Count,
 };

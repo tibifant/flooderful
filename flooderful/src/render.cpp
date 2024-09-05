@@ -230,7 +230,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
 {
   (void)pAppState;
 
-  const vec4f colors[tT_Count] = { vec4f(0.25f, 0.25f, 0.25f, 0), vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0) };
+  const vec4f colors[tT_Count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
 
   for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {
@@ -245,15 +245,12 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
   
   // Draw Debug Arrows.
   {
-    //for (size_t i = 0; i < tT_Count - 1; i++) // TODO: change when introducing actual ressources!
+    for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
-      {
-        const direction dir = (direction)levelInfo.resources[tT_sand - 1].pDirectionLookup[1 - levelInfo.resources[tT_sand - 1].write_direction_idx][j];
+      const direction dir = (direction)levelInfo.resources[tT_sand].pDirectionLookup[/*1 - */levelInfo.resources[tT_sand].write_direction_idx][j];
 
-        if (dir != d_atDestination && dir != d_unreachable)
-          render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
-      }
+      if (dir != d_atDestination && dir != d_unreachable)
+        render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
     }
   }
 }
