@@ -83,12 +83,14 @@ void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    _Game.levelInfo.pMap[i] = tT_grass;
 
     if (_Game.levelInfo.pMap[i] == tT_mountain)
       _Game.levelInfo.pCollidableMask[i] = 1;
   }
+
+  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
 
   // Setting borders to tT_mountain, so they're collidable
   {
@@ -210,19 +212,29 @@ void updateFloodfill()
 }
 
 //////////////////////////////////////////////////////////////////////////
-  
-void player_setTerrain(vec2s mouse, vec2s tileSize, vec2s offset)
-{
-  (void)offset;
-  size_t y = (mouse.y - offset.y) / tileSize.y;
-  size_t x = 0;;
-  
-  if (y % 2 == 0)
-    x = (mouse.x - offset.x) / tileSize.x;
-  else
-    x = (size_t)((mouse.x - offset.x) - tileSize.x * 0.5) / tileSize.x;
 
-  _Game.levelInfo.pMap[x * y] = tT_sand;
+size_t playerMapIndex = 0;
+
+void game_playerSwitchTiles(terrain_type terrainType)
+{
+  lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(terrainType < tT_Count);
+
+  _Game.levelInfo.pMap[playerMapIndex] = terrainType;
+}
+
+void game_setPlayerMapIndex(player_dir dir)
+{
+  if (dir == pd_left)
+  {
+    if (playerMapIndex > 0)
+      playerMapIndex--;
+  }
+  else
+  {
+    if (playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)
+      playerMapIndex++;
+  }
 }
   
 //////////////////////////////////////////////////////////////////////////

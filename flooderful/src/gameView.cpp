@@ -100,6 +100,24 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   // Update events.
 
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_LEFT))
+    game_setPlayerMapIndex(pd_left);
+
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_RIGHT))
+    game_setPlayerMapIndex(pd_right);
+
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_0))
+    game_playerSwitchTiles(terrain_type(0));
+
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
+    game_playerSwitchTiles(terrain_type(1));
+
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_2))
+    game_playerSwitchTiles(terrain_type::tT_sand);
+
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_3))
+    game_playerSwitchTiles(terrain_type(3));
+
   // Draw Scene
   {
     const float_t ticksSinceOrigin = (pView->game.lastPredictTimeNs - pView->game.gameStartTimeNs) / (1e9f / pView->game.tickRate);
