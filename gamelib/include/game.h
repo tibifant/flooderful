@@ -104,12 +104,6 @@ enum direction : uint8_t
   d_atDestination,
 };
 
-enum player_dir
-{
-  pd_right,
-  pd_left,
-};
-
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -133,7 +127,7 @@ void game_predict(game *pGame);
 void game_set_local(const bool isLocal);
 //size_t game_addPlayer();
 
-void game_setPlayerMapIndex(player_dir dir);
+void game_setPlayerMapIndex(bool left);
 void game_playerSwitchTiles(terrain_type terrainType);
 
 bool game_hasAnyEvent(game *pGame);

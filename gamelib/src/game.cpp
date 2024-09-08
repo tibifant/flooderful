@@ -126,7 +126,7 @@ void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, 
   }
 }
 
-// tT_atDestiantion and tT_unreachable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
+// tT_atDestiantion and tT_collidable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
 
 bool floodfill(size_t ressourceIndex)
 {
@@ -221,11 +221,14 @@ void game_playerSwitchTiles(terrain_type terrainType)
   lsAssert(terrainType < tT_Count);
 
   _Game.levelInfo.pMap[playerMapIndex] = terrainType;
+
+  if (terrainType == tT_mountain)
+    _Game.levelInfo.pCollidableMask[playerMapIndex] = true;
 }
 
-void game_setPlayerMapIndex(player_dir dir)
+void game_setPlayerMapIndex(bool left)
 {
-  if (dir == pd_left)
+  if (left)
   {
     if (playerMapIndex > 0)
       playerMapIndex--;
