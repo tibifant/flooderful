@@ -53,11 +53,15 @@ void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain();
 
-constexpr size_t _FloodFillSteps = 1;
+constexpr size_t _FloodFillSteps = 10;
 
 bool floodfill(size_t ressourceIndex);
 void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir);
 
+
+//////////////////////////////////////////////////////////////////////////
+
+void movementActor_move();
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -116,8 +120,6 @@ void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, 
   }
 }
 
-// tT_atDestiantion and tT_collidable can be the same value, as we won't ever be able to stand on a collidable tile and both can be treated equally whilst floodfilling: you don't want to go there (either because that's where you came from, or it's collidable)
-
 bool floodfill(size_t ressourceIndex)
 {
   fill_step current;
@@ -152,7 +154,6 @@ bool floodfill(size_t ressourceIndex)
 //////////////////////////////////////////////////////////////////////////
 
 // TODO: have a special map for rendering to know if something needs to be rotated etc.
-// TODO: Check how pathfinding works by watching the map that is being filled.
 
 void initializeLevel()
 {
@@ -176,11 +177,19 @@ void initializeLevel()
         _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
     }
   }
+
+  // Spawn Actors
+  vec2i32 pos = { 1, 1 };
+  terrain_type target = tT_sand;
+  lsAssert(_Game.levelInfo.pMap[pos.y * _Game.levelInfo.map_size.x + pos.x] != tT_mountain);
+  lsAssert(_Game.levelInfo.pMap[pos.y * _Game.levelInfo.map_size.x + pos.x] != target);
+
+  //_Game.movementActors.push_back({ pos, target, false });
+  _Game.actor = { pos, target, false };
 }
 
 void updateFloodfill()
 {
-    // iterate Ressources
   for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
     if (floodfill(i))
@@ -203,6 +212,59 @@ void updateFloodfill()
         if (_Game.levelInfo.pMap[j] == tT_mountain)
           _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_unfillable;
       }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+// size_t renderPosToTile(vec2f pos)
+
+void movementActor_move()
+{
+  //for (movementActor actor : _Game.movementActors)
+  {
+    // Check if arrived at Target
+    if (_Game.levelInfo.pMap[_Game.actor.pos.x * _Game.actor.pos.y] == _Game.actor.target)
+    {
+      //actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
+      _Game.actor.atDestination = true;
+    }
+
+    // Move to Target
+    switch (_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][_Game.actor.pos.y * _Game.levelInfo.map_size.x + _Game.actor.pos.x])
+    {
+    case d_left:
+      _Game.actor.pos.x++;
+      break;
+
+    case d_right:
+      _Game.actor.pos.x--;
+      break;
+
+    case d_bottomLeft:
+      _Game.actor.pos.x += _Game.actor.pos.y & 1;
+      _Game.actor.pos.y--;
+      break;
+
+    case d_bottomRight:
+      _Game.actor.pos.x -= (size_t)!(_Game.actor.pos.y & 1);
+      _Game.actor.pos.y--;
+      break;
+
+    case d_topLeft:
+      _Game.actor.pos.x += _Game.actor.pos.y & 1;
+      _Game.actor.pos.y++;
+      break;
+
+    case d_topRight:
+      _Game.actor.pos.x -= (size_t)!(_Game.actor.pos.y & 1);
+      _Game.actor.pos.y++;
+      break;
+
+    default:
+      //lsAssert(false);
+      break;
     }
   }
 }
@@ -266,6 +328,8 @@ lsResult game_clone(const game *pOrigin, game *pDst)
   lsResult result = lsR_Success;
 
   pDst->levelInfo = pOrigin->levelInfo;
+  //pDst->movementActors = pOrigin->movementActors;
+  pDst->actor = pOrigin->actor;
 //  
 //
 //  // Copy over newer events.
@@ -519,8 +583,8 @@ lsResult game_tick_local()
   // stuff.
   // process player interactions.
   {
-    // tilesize.x = 60, tilesize.y = 40 ehh da kommen noch faktoren mit drauf... 
     updateFloodfill();
+    movementActor_move();
 
     goto epilogue;
   epilogue:

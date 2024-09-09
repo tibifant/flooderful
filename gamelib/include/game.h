@@ -103,6 +103,13 @@ enum direction : uint8_t
   d_unfillable,
 };
 
+struct movementActor
+{
+  vec2i32 pos;
+  terrain_type target;
+  bool atDestination;
+};
+
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -111,6 +118,9 @@ struct game
   queue<gameEvent> events;
 
   level_info levelInfo;
+
+  //std::vector<movementActor> movementActors;
+  movementActor actor;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

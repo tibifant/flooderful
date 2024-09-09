@@ -126,7 +126,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
 
-    render_drawMap(pView->game.levelInfo, pAppState);
+    render_drawMap(pView->game.levelInfo, /*pView->game.movementActors*/ pView->game.actor, pAppState);
 
     render_flushRenderQueue();
   }

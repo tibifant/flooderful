@@ -226,7 +226,7 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
+void render_drawMap(const level_info &levelInfo, /*const std::vector<movementActor> actors*/ movementActor actor, lsAppState *pAppState) // Maybe just give game...
 {
   (void)pAppState;
 
@@ -247,10 +247,21 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState)
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      const direction dir = (direction)levelInfo.resources[tT_sand].pDirectionLookup[/*1 -*/ levelInfo.resources[tT_sand].write_direction_idx][j];
-
+      const direction dir = (direction)levelInfo.resources[tT_sand].pDirectionLookup[1 - levelInfo.resources[tT_sand].write_direction_idx][j];
+  
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
+    }
+  }
+
+  // Draw Actor.
+  {
+    //for (movementActor actor : actors)
+    {
+      if (actor.pos.y % 2 == 0)
+        render_drawHex2D(matrix::Translation(1.f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
+      else
+        render_drawHex2D(matrix::Translation(1.55f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.8f, 0, 0, 0));
     }
   }
 }

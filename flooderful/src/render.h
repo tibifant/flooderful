@@ -25,7 +25,7 @@ void render_draw3DQuad(const matrix &model, const render_textureId textureIndex)
 void render_drawHex(const matrix &model, const vec4f color);
 void render_drawHex2D(const matrix &model, const vec4f color);
 void render_drawHex3D(const matrix &model, const vec4f color);
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState);
+void render_drawMap(const level_info &levelInfo, /*const std::vector<movementActor> actors*/ movementActor actor, lsAppState *pAppState);
 
 void render_flushRenderQueue();
 
