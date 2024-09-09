@@ -86,7 +86,6 @@ struct level_info
   } resources[tT_Count - 1]; // change to ressource-count once they exist
 
   terrain_type *pMap = nullptr;
-  bool *pCollidableMask;
   vec2s map_size;
 };
 
@@ -101,7 +100,7 @@ enum direction : uint8_t
   d_left,
   d_topLeft,
 
-  d_atDestination,
+  d_unfillable,
 };
 
 struct game

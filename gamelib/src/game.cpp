@@ -76,19 +76,13 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   _Game.levelInfo.map_size = { width, height };
   
   lsAllocZero(&_Game.levelInfo.pMap, height * width);
-  lsAllocZero(&_Game.levelInfo.pCollidableMask, height * width);
 }
 
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-  {
     //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
     _Game.levelInfo.pMap[i] = tT_grass;
-
-    if (_Game.levelInfo.pMap[i] == tT_mountain)
-      _Game.levelInfo.pCollidableMask[i] = 1;
-  }
 
   _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
 
@@ -98,16 +92,12 @@ void setTerrain()
     {
       _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x] = tT_mountain;
       _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1] = tT_mountain;
-      _Game.levelInfo.pCollidableMask[y * _Game.levelInfo.map_size.x] = true;
-      _Game.levelInfo.pCollidableMask[(y + 1) * _Game.levelInfo.map_size.x - 1] = true;
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
       _Game.levelInfo.pMap[x] = tT_mountain;
       _Game.levelInfo.pMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x] = tT_mountain;
-      _Game.levelInfo.pCollidableMask[x] = true;
-      _Game.levelInfo.pCollidableMask[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x] = true;
     }
   }
 }
@@ -119,7 +109,7 @@ void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, 
 {  
   direction nextTile = (direction)_Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex];
 
-  if (!_Game.levelInfo.pCollidableMask[nextIndex] && nextTile != d_atDestination && nextTile == d_unreachable)
+  if (nextTile != d_unfillable && nextTile == d_unreachable)
   {
     _Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex] = dir;
     queue_pushBack(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, { nextIndex });
@@ -179,8 +169,11 @@ void initializeLevel()
       if (_Game.levelInfo.pMap[j] == i)
       {
         queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
-        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_atDestination;
+        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
       }
+
+      if (_Game.levelInfo.pMap[j] == tT_mountain)
+        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
     }
   }
 }
@@ -203,15 +196,20 @@ void updateFloodfill()
       {
         if (_Game.levelInfo.pMap[j] == i)
         {
-          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_atDestination;
+          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_unfillable;
           queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
         }
+
+        if (_Game.levelInfo.pMap[j] == tT_mountain)
+          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_unfillable;
       }
     }
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+// changing tiles for debugging
 
 size_t playerMapIndex = 0;
 
@@ -221,9 +219,6 @@ void game_playerSwitchTiles(terrain_type terrainType)
   lsAssert(terrainType < tT_Count);
 
   _Game.levelInfo.pMap[playerMapIndex] = terrainType;
-
-  if (terrainType == tT_mountain)
-    _Game.levelInfo.pCollidableMask[playerMapIndex] = true;
 }
 
 void game_setPlayerMapIndex(bool left)
