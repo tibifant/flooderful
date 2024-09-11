@@ -51,13 +51,12 @@ lsResult texture_set(texture *pTexture, const char *filename)
 
   uint8_t *pFile = nullptr;
   stbi_uc *pImage = nullptr;
+  size_t fileBytes = 0;
+  int32_t x, y, originalChannelCount;
 
   LS_ERROR_IF(pTexture == nullptr || filename == nullptr, lsR_ArgumentNull);
-
-  size_t fileBytes = 0;
   LS_ERROR_CHECK(lsReadFile(filename, &pFile, &fileBytes));
 
-  int32_t x, y, originalChannelCount;
   pImage = stbi_load_from_memory(pFile, (int32_t)fileBytes, &x, &y, &originalChannelCount, 4);
 
   LS_ERROR_IF(pImage == nullptr, lsR_InternalError);

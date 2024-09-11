@@ -1,8 +1,8 @@
-#include "dataBlob.h"
+#include "data_blob.h"
 
 //////////////////////////////////////////////////////////////////////////
 
-void dataBlob_createFromForeign(dataBlob *pBlob, const void *pData, const size_t bytes)
+void data_blob_createFromForeign(data_blob *pBlob, const void *pData, const size_t bytes)
 {
   if (pBlob == nullptr)
     return;
@@ -13,7 +13,7 @@ void dataBlob_createFromForeign(dataBlob *pBlob, const void *pData, const size_t
   pBlob->readPosition = 0;
 }
 
-lsResult dataBlob_reserve(dataBlob *pBlob, const size_t minimumSize)
+lsResult data_blob_reserve(data_blob *pBlob, const size_t minimumSize)
 {
   lsResult result = lsR_Success;
 
@@ -30,7 +30,7 @@ epilogue:
   return result;
 }
 
-void dataBlob_destroy(dataBlob *pBlob)
+void data_blob_destroy(data_blob *pBlob)
 {
   if (!pBlob->isForeign)
     lsFreePtr(&pBlob->pData);
@@ -39,7 +39,7 @@ void dataBlob_destroy(dataBlob *pBlob)
   pBlob->capacity = 0;
 }
 
-void dataBlob_reset(dataBlob *pBlob)
+void data_blob_reset(data_blob *pBlob)
 {
   if (pBlob == nullptr)
     return;
@@ -48,4 +48,9 @@ void dataBlob_reset(dataBlob *pBlob)
 
   if (!pBlob->isForeign)
     pBlob->size = 0;
+}
+
+data_blob::~data_blob()
+{
+  data_blob_destroy(this);
 }

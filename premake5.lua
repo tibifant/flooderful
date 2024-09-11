@@ -6,4 +6,3 @@ solution "flooderful"
 
   dofile "flooderful/project.lua"
   dofile "gamelib/project.lua"
-  dofile "gamesrv/project.lua"

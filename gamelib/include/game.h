@@ -3,7 +3,7 @@
 #include "core.h"
 #include "pool.h"
 #include "queue.h"
-#include "dataBlob.h"
+#include "data_blob.h"
 
 enum gameObject_type
 {
@@ -22,7 +22,7 @@ struct gameObject
   float_t rotation, angularVelocity;
   gameObject_type type;
   gameObject_shape shape;
-  
+
   union
   {
 #pragma warning(push)
@@ -131,12 +131,6 @@ size_t worldPosToTileIndex(vec2f pos);
 
 lsResult game_init();
 lsResult game_tick();
-lsResult game_observe(_Out_ game *pGame);
-lsResult game_clone(const game *pSrc, _Out_ game *pDst);
-void game_predict(game *pGame);
-
-void game_set_local(const bool isLocal);
-//size_t game_addPlayer();
 
 void game_setPlayerMapIndex(bool left);
 void game_playerSwitchTiles(terrain_type terrainType);
@@ -146,5 +140,5 @@ gameEvent game_getNextEvent(game *pGame);
 size_t game_getTickRate();
 size_t game_getLevelSize();
 
-lsResult game_serialize(_Out_ dataBlob *pBlob);
+lsResult game_serialize(_Out_ data_blob *pBlob);
 lsResult game_deserialze(_Out_ game *pGame, _In_ const void *pData, const size_t size);

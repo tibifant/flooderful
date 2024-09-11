@@ -5,8 +5,8 @@
 #include "vertexBuffer.h"
 #include "framebuffer.h"
 #include "shader.h"
-#include "objReader.h"
-#include "dataBlob.h"
+#include "obj_reader.h"
+#include "data_blob.h"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +131,7 @@ void render_startFrame(lsAppState *pAppState)
 
   render_clearColor(vec4f(0, 0, 0, 1));
   render_clearDepth();
-  
+
   render_setDepthMode(rCR_Less);
   render_setBlendEnabled(false);
   render_setDepthTestEnabled(false);
@@ -148,7 +148,7 @@ void render_destroy()
 {
   for (auto _item : _Render.textures)
     texture_destroy(_item.pItem);
-  
+
   pool_destroy(&_Render.textures);
 
   vertexBuffer_destroy(&_Render.plane.buffer);
@@ -170,7 +170,7 @@ void render_setLookAt(const vec3f position, const vec3f up)
 {
   _Render.lookAt = position;
   _Render.up = up.Normalize();
-  
+
   const matrix v = matrix::LookAtLH(vec(_Render.lookAt - _Render.cameraDistance), vec(_Render.lookAt), vec(_Render.up));
 
   _Render.vp = v * matrix::PerspectiveFovLH(lsHALFPIf, vec2f(_Render.windowSize).AspectRatio(), 1, 50);
@@ -246,13 +246,13 @@ void render_drawMap(const level_info &levelInfo, /*const std::vector<movementAct
         render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x]]);
     }
   }
-  
+
   // Draw Debug Arrows.
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
       const direction dir = (direction)levelInfo.resources[tT_sand].pDirectionLookup[1 - levelInfo.resources[tT_sand].write_direction_idx][j];
-  
+
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
     }
@@ -311,7 +311,7 @@ void render_drawMap(const level_info &levelInfo, /*const std::vector<movementAct
 
 void render_flushRenderQueue()
 {
-  
+
 }
 
 //////////////////////////////////////////////////////////////////////////

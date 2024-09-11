@@ -80,7 +80,7 @@ struct vec
   inline vec &operator/=(const vec &a) { return *this = (*this / a); }
 
   inline vec operator*(const float_t a) const { return vec(DirectX::XMVectorScale(v, a)); }
-  inline vec operator/(const float_t a) const { return vec(DirectX::XMVectorScale(v, 1.0f / a)); }
+  inline vec operator/(const float_t a) const { return vec(DirectX::XMVectorDivide(v, _mm_set1_ps(a))); }
 
   inline vec &operator*=(const float_t a) { return *this = (*this * a); }
   inline vec &operator/=(const float_t a) { return *this = (*this / a); }
@@ -92,6 +92,20 @@ struct vec
     DirectX::XMFLOAT2 f;
     DirectX::XMStoreFloat2(&f, v);
     return vec2f(f.x, f.y);
+  }
+
+  inline operator vec3f() const
+  {
+    DirectX::XMFLOAT3 f;
+    DirectX::XMStoreFloat3(&f, v);
+    return vec3f(f.x, f.y, f.z);
+  }
+
+  inline operator vec4f() const
+  {
+    DirectX::XMFLOAT4 f;
+    DirectX::XMStoreFloat4(&f, v);
+    return vec4f(f.x, f.y, f.z, f.w);
   }
 
   inline operator DirectX::XMFLOAT2() const
@@ -130,7 +144,7 @@ struct vec
   inline vec AngleBetweenVectors2(const vec &a) const { return vec(DirectX::XMVector2AngleBetweenVectors(v, a.v)); }
   inline vec ClampLength2(const float_t min, const float_t max) const { return vec(DirectX::XMVector2ClampLength(v, min, max)); }
   inline vec ClampLengthVectors2(const vec &min, const vec &max) const { return vec(DirectX::XMVector2ClampLengthV(v, min.v, max.v)); }
-  inline float_t Dot2(const vec &a) const { return vec(DirectX::XMVector2Dot(v, a.v)).x; }
+  inline float_t Dot2(const vec &a) const { return _mm_cvtss_f32(DirectX::XMVector2Dot(v, a.v)); }
   inline vec Cross2(const vec &a) const { return vec(DirectX::XMVector2Cross(v, a.v)); }
   inline bool Equals2(const vec &a) const { return DirectX::XMVector2Equal(v, a.v); }
   inline bool NotEqualTo2(const vec &a) const { return DirectX::XMVector2NotEqual(v, a.v); }
@@ -154,11 +168,11 @@ struct vec
   inline static vec __vectorcall HermiteVector(const vec v1, const vec t1, const vec v2, const vec t2, const  vec &f) { return vec(DirectX::XMVectorHermiteV(v1.v, t1.v, v2.v, t2.v, f.v)); }
 
   inline static vec __vectorcall IntersectLine2(const vec line1Point1, const vec line1Point2, const vec line2Point1, const vec line2Point2) { return vec(DirectX::XMVector2IntersectLine(line1Point1.v, line1Point2.v, line2Point1.v, line2Point2.v)); }
-  inline static float_t __vectorcall LinePointDistance2(const vec line1Point1, const vec line1Point2, const vec point) { return vec(DirectX::XMVector2LinePointDistance(line1Point1.v, line1Point2.v, point.v)).x; }
+  inline static float_t __vectorcall LinePointDistance2(const vec line1Point1, const vec line1Point2, const vec point) { return _mm_cvtss_f32(DirectX::XMVector2LinePointDistance(line1Point1.v, line1Point2.v, point.v)); }
 
-  inline float_t Length2() const { return vec(DirectX::XMVector2Length(v)).x; }
-  inline float_t LengthEst2() const { return vec(DirectX::XMVector2LengthEst(v)).x; }
-  inline float_t LengthSquared2() const { return vec(DirectX::XMVector2LengthSq(v)).x; }
+  inline float_t Length2() const { return _mm_cvtss_f32(DirectX::XMVector2Length(v)); }
+  inline float_t LengthEst2() const { return _mm_cvtss_f32(DirectX::XMVector2LengthEst(v)); }
+  inline float_t LengthSquared2() const { return _mm_cvtss_f32(DirectX::XMVector2LengthSq(v)); }
   inline vec Normalize2() const { return vec(DirectX::XMVector2Normalize(v)); }
   inline vec NormalizeEst2() const { return vec(DirectX::XMVector2NormalizeEst(v)); }
   inline vec Orthogonal2() const { return vec(DirectX::XMVector2Orthogonal(v)); }
@@ -178,7 +192,7 @@ struct vec
   inline vec AngleBetweenVectors3(const vec &a) const { return vec(DirectX::XMVector3AngleBetweenVectors(v, a.v)); }
   inline vec ClampLength3(const float_t min, const float_t max) const { return vec(DirectX::XMVector3ClampLength(v, min, max)); }
   inline vec ClampLengthVectors3(const vec &min, const vec &max) const { return vec(DirectX::XMVector3ClampLengthV(v, min.v, max.v)); }
-  inline float_t Dot3(const vec &a) const { return vec(DirectX::XMVector3Dot(v, a.v)).x; }
+  inline float_t Dot3(const vec &a) const { return _mm_cvtss_f32(DirectX::XMVector3Dot(v, a.v)); }
   inline vec Cross3(const vec &a) const { return vec(DirectX::XMVector3Cross(v, a.v)); }
 
   inline bool Equals3(const vec &a) const { return DirectX::XMVector3Equal(v, a.v); }
@@ -190,11 +204,11 @@ struct vec
   inline bool LessOrEqual3(const vec &a) const { return DirectX::XMVector3LessOrEqual(v, a.v); }
   inline bool InBounds3(const vec &a) const { return DirectX::XMVector3InBounds(v, a.v); }
 
-  inline static float_t LinePointDistance3(const vec &line1Point1, const vec &line1Point2, const vec &point) { return vec(DirectX::XMVector3LinePointDistance(line1Point1.v, line1Point2.v, point.v)).x; }
+  inline static float_t LinePointDistance3(const vec &line1Point1, const vec &line1Point2, const vec &point) { return _mm_cvtss_f32(DirectX::XMVector3LinePointDistance(line1Point1.v, line1Point2.v, point.v)); }
 
-  inline float_t Length3() const { return vec(DirectX::XMVector3Length(v)).x; }
-  inline float_t LengthEst3() const { return vec(DirectX::XMVector3LengthEst(v)).x; }
-  inline float_t LengthSquared3() const { return vec(DirectX::XMVector3LengthSq(v)).x; }
+  inline float_t Length3() const { return _mm_cvtss_f32(DirectX::XMVector3Length(v)); }
+  inline float_t LengthEst3() const { return _mm_cvtss_f32(DirectX::XMVector3LengthEst(v)); }
+  inline float_t LengthSquared3() const { return _mm_cvtss_f32(DirectX::XMVector3LengthSq(v)); }
   inline vec Normalize3() const { return vec(DirectX::XMVector3Normalize(v)); }
   inline vec NormalizeEst3() const { return vec(DirectX::XMVector3NormalizeEst(v)); }
   inline vec Orthogonal3() const { return vec(DirectX::XMVector3Orthogonal(v)); }
@@ -216,7 +230,7 @@ struct vec
   inline vec AngleBetweenVectors4(const vec &a) const { return vec(DirectX::XMVector4AngleBetweenVectors(v, a.v)); }
   inline vec ClampLength4(const float_t min, const float_t max) const { return vec(DirectX::XMVector4ClampLength(v, min, max)); }
   inline vec ClampLengthVectors4(const vec &min, const vec &max) const { return vec(DirectX::XMVector4ClampLengthV(v, min.v, max.v)); }
-  inline float_t Dot4(const vec &a) const { return vec(DirectX::XMVector4Dot(v, a.v)).x; }
+  inline float_t Dot4(const vec &a) const { return _mm_cvtss_f32(DirectX::XMVector4Dot(v, a.v)); }
   inline vec Cross4(const vec &a, const vec &b) const { return vec(DirectX::XMVector4Cross(v, a.v, b.v)); }
   inline bool Equals4(const vec &a) const { return DirectX::XMVector4Equal(v, a.v); }
   inline bool NotEqualTo4(const vec &a) const { return DirectX::XMVector4NotEqual(v, a.v); }
@@ -226,9 +240,9 @@ struct vec
   inline bool Less4(const vec &a) const { return DirectX::XMVector4Less(v, a.v); }
   inline bool LessOrEqual4(const vec &a) const { return DirectX::XMVector4LessOrEqual(v, a.v); }
   inline bool InBounds4(const vec &a) const { return DirectX::XMVector4InBounds(v, a.v); }
-  inline float_t Length4() const { return vec(DirectX::XMVector4Length(v)).x; }
-  inline float_t LengthEst4() const { return vec(DirectX::XMVector4LengthEst(v)).x; }
-  inline float_t LengthSquared4() const { return vec(DirectX::XMVector4LengthSq(v)).x; }
+  inline float_t Length4() const { return _mm_cvtss_f32(DirectX::XMVector4Length(v)); }
+  inline float_t LengthEst4() const { return _mm_cvtss_f32(DirectX::XMVector4LengthEst(v)); }
+  inline float_t LengthSquared4() const { return _mm_cvtss_f32(DirectX::XMVector4LengthSq(v)); }
   inline vec Normalize4() const { return vec(DirectX::XMVector4Normalize(v)); }
   inline vec NormalizeEst4() const { return vec(DirectX::XMVector4NormalizeEst(v)); }
   inline vec Orthogonal4() const { return vec(DirectX::XMVector4Orthogonal(v)); }
@@ -238,6 +252,39 @@ struct vec
   inline static vec __vectorcall Reflect4(const vec &incident, const vec &normal) { return vec(DirectX::XMVector4Reflect(incident.v, normal.v)); }
   inline static vec __vectorcall Refract4(const vec &incident, const vec &normal, const float_t refractionIndex) { return vec(DirectX::XMVector4Refract(incident.v, normal.v, refractionIndex)); }
   inline static vec __vectorcall RefractVector4(const vec &incident, const vec &normal, const vec &refractionIndex) { return vec(DirectX::XMVector4RefractV(incident.v, normal.v, refractionIndex.v)); }
+
+  inline float_t InvLengthEst3() const
+  {
+#if defined(_XM_SSE4_INTRINSICS_)
+    DirectX::XMVECTOR vTemp = _mm_dp_ps(v, v, 0x7F);
+    DirectX::XMVECTOR vResult = _mm_rsqrt_ps(vTemp);
+    return _mm_cvtss_f32(vResult);
+#elif defined(_XM_SSE3_INTRINSICS_)
+    DirectX::XMVECTOR vDot = _mm_mul_ps(v, v);
+    vDot = _mm_and_ps(vDot, g_XMMask3);
+    vDot = _mm_hadd_ps(vDot, vDot);
+    vDot = _mm_hadd_ps(vDot, vDot);
+    vDot = _mm_rsqrt_ps(vDot);
+    return _mm_cvtss_f32(vDot);
+#elif defined(_XM_SSE_INTRINSICS_)
+    // Perform the dot product
+    DirectX::XMVECTOR vDot = _mm_mul_ps(v, v);
+    // x=Dot.y, y=Dot.z
+    DirectX::XMVECTOR vTemp = XM_PERMUTE_PS(vDot, _MM_SHUFFLE(2, 1, 2, 1));
+    // Result.x = x+y
+    vDot = _mm_add_ss(vDot, vTemp);
+    // x=Dot.z
+    vTemp = XM_PERMUTE_PS(vTemp, _MM_SHUFFLE(1, 1, 1, 1));
+    // Result.x = (x+y)+z
+    vDot = _mm_add_ss(vDot, vTemp);
+    // Splat x
+    vDot = XM_PERMUTE_PS(vDot, _MM_SHUFFLE(0, 0, 0, 0));
+    // Get the reciprocal
+    vDot = _mm_rsqrt_ps(vDot);
+
+    return _mm_cvtss_f32(vDot);
+#endif
+  }
 
   vec Transform4(const matrix &matrix) const;
 
@@ -261,6 +308,20 @@ struct vec
 
   static matrix OuterProduct4(const vec a, const vec b);
 };
+
+//////////////////////////////////////////////////////////////////////////
+
+inline size_t sformat_GetMaxBytes(const vec &, const sformatState &fs)
+{
+  constexpr size_t dimensions = 4;
+
+  return 1 + (size_t)fs.vectorSpaceAfterStart + dimensions * sformat_GetMaxBytes((float)0, fs) + (dimensions - 1) * ((size_t)fs.vectorSpaceAfterSeparator + 1) + (size_t)fs.vectorSpaceBeforeEnd + 1;
+}
+
+inline size_t _sformat_Append(const vec &value, const sformatState &fs, char *text)
+{
+  return _sformat_AppendVector(value._v, 4, fs, text);
+}
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -303,7 +364,7 @@ struct quaternion
 
   inline static quaternion Identity() { return quaternion(DirectX::XMQuaternionIdentity()); }
 
-  static quaternion __vectorcall quaternion::FromRotationMatrix(const matrix &m);
+  static quaternion __vectorcall FromRotationMatrix(const matrix &m);
 
   inline static quaternion __vectorcall FromRotationAxis(const vec axis, const float_t angle) { return quaternion(DirectX::XMQuaternionRotationAxis(axis.v, angle)); }
   inline static quaternion __vectorcall FromRotationNormal(const vec normalAxis, const float_t angle) { return quaternion(DirectX::XMQuaternionRotationNormal(normalAxis.v, angle)); }
@@ -395,6 +456,21 @@ struct matrix
   inline static matrix __vectorcall Translation(const float_t offsetX, const float_t offsetY, const float_t offsetZ) { return matrix(DirectX::XMMatrixTranslation(offsetX, offsetY, offsetZ)); }
   inline static matrix __vectorcall TranslationFromVector(const vec &offset) { return matrix(DirectX::XMMatrixTranslationFromVector(offset.v)); }
 
+  inline static matrix __vectorcall InverseViewProjection(const matrix &view, const matrix &proj)
+  {
+    matrix inverseView3 = view;
+    inverseView3._14 = 0;
+    inverseView3._24 = 0;
+    inverseView3._34 = 0;
+    inverseView3._41 = 0;
+    inverseView3._42 = 0;
+    inverseView3._43 = 0;
+    inverseView3._44 = 1;
+    inverseView3 = inverseView3.Transpose();
+
+    return proj.Inverse() * inverseView3;
+  }
+  
   inline static matrix __vectorcall Zero()
   {
     DirectX::XMVECTOR v[4];
@@ -408,26 +484,52 @@ struct matrix
   }
 
   inline matrix Transpose() const { return matrix(DirectX::XMMatrixTranspose(m)); }
-  inline vec __vectorcall Transforvec4(const vec vector4) { return vec(XMVector4Transform(vector4.v, m)); }
-  inline vec __vectorcall Transforvec3(const vec vector3) { return vec(XMVector3Transform(vector3.v, m)); }
+  inline vec __vectorcall TransformVector4(const vec vector4) const { return vec(XMVector4Transform(vector4.v, m)); }
+  inline vec __vectorcall TransformVector3(const vec vector3) const { return vec(XMVector3Transform(vector3.v, m)); }
 
   static matrix AddComponentWise(const matrix &a, const matrix &b);
   static matrix SubtractComponentWise(const matrix &a, const matrix &b);
   static matrix MultiplyComponentWise(const matrix &a, const matrix &b);
   static matrix DivideComponentWise(const matrix &a, const matrix &b);
+
+  inline static matrix RotateAlignVectors(const vec3f fromNormalized, const vec3f ontoNormalized)
+  {
+    vec3f axis = vec3f::Cross(ontoNormalized, fromNormalized);
+
+    const float_t cosA = vec3f::Dot(ontoNormalized, fromNormalized);
+    const float_t k = 1.0f / (1.0f + cosA);
+
+    matrix result;
+
+    result._11 = (axis.x * axis.x * k) + cosA;
+    result._12 = (axis.y * axis.x * k) - axis.z;
+    result._13 = (axis.z * axis.x * k) + axis.y;
+    result._21 = (axis.x * axis.y * k) + axis.z;
+    result._22 = (axis.y * axis.y * k) + cosA;
+    result._23 = (axis.z * axis.y * k) - axis.x;
+    result._31 = (axis.x * axis.z * k) - axis.y;
+    result._32 = (axis.y * axis.z * k) + axis.x;
+    result._33 = (axis.z * axis.z * k) + cosA;
+    result._44 = 1.f;
+
+    return result;
+  }
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-inline vec vec::Transform2(const matrix &matrix) const { return vec(DirectX::XMVector2Transform(v, (DirectX::FXMMATRIX)matrix.m)); }
+inline vec vec::Transform2(const matrix &matrix) const { return vec(DirectX::XMVector2Transform(v, (DirectX::XMMATRIX)matrix.m)); }
 inline vec vec::TransformCoord2(const matrix &matrix) const { return vec(DirectX::XMVector2TransformCoord(v, matrix.m)); }
 inline vec vec::TransformNormal2(const matrix &matrix) const { return vec(DirectX::XMVector2TransformNormal(v, matrix.m)); }
 
-inline vec vec::Transform3(const matrix &matrix) const { return vec(DirectX::XMVector3Transform(v, (DirectX::FXMMATRIX)matrix.m)); }
+inline vec vec::Transform3(const matrix &matrix) const { return vec(DirectX::XMVector3Transform(v, (DirectX::XMMATRIX)matrix.m)); }
 inline vec vec::TransformCoord3(const matrix &matrix) const { return vec(DirectX::XMVector3TransformCoord(v, matrix.m)); }
 inline vec vec::TransformNormal3(const matrix &matrix) const { return vec(DirectX::XMVector3TransformNormal(v, matrix.m)); }
 inline vec vec::Rotate3(const quaternion &quaternion) const { return vec(DirectX::XMVector3Rotate(v, quaternion.q)); }
 inline vec vec::RotateInverse3(const quaternion &quaternion) const { return vec(DirectX::XMVector3InverseRotate(v, quaternion.q)); }
 
-inline vec vec::Transform4(const matrix &matrix) const { return vec(DirectX::XMVector4Transform(v, (DirectX::FXMMATRIX)matrix.m)); };
+inline vec vec::Transform4(const matrix &matrix) const { return vec(DirectX::XMVector4Transform(v, (DirectX::XMMATRIX)matrix.m)); };
 
+//////////////////////////////////////////////////////////////////////////
+
+inline quaternion __vectorcall quaternion::FromRotationMatrix(const matrix &m) { return quaternion(DirectX::XMQuaternionRotationMatrix(m.m)); };

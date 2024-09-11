@@ -1,5 +1,4 @@
 #include "game.h"
-#include "gameClient.h"
 
 #include "box2d/box2d.h"
 
@@ -8,7 +7,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 static game _Game;
-static bool _IsLocal = true;
 static size_t _LevelSize = 175;
 static b2World *_pBox2DWorld = nullptr;
 static pool<b2Body *> _Box2DObjects;
@@ -19,19 +17,10 @@ constexpr bool UseBox2DPhysics = true;
 
 lsResult game_init_local();
 lsResult game_tick_local();
-lsResult game_observe_local(_Out_ game *pGame);
 
 //////////////////////////////////////////////////////////////////////////
 
-size_t game_addEntity_internal(entity *pEntity, gameObject *pGameObject);
 void game_addEvent_internal(gameEvent *pEvent);
-
-//////////////////////////////////////////////////////////////////////////
-
-void game_phys_addVelocity(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f force);
-void game_phys_addAngularForce(const size_t entityIndex, OPTIONAL gameObject *pObj, const float_t force);
-void game_phys_setTransform(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation);
-void game_phys_setTransformAndImpulse(const size_t entityIndex, OPTIONAL gameObject *pObj, const vec2f position, const float_t rotation, const vec2f velocity, const float_t angularVelocity);
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +67,7 @@ void movementActor_move();
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
-  
+
   lsAllocZero(&_Game.levelInfo.pMap, height * width);
 }
 
@@ -86,9 +75,9 @@ void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i] = tT_grass;
+  //_Game.levelInfo.pMap[i] = tT_grass;
 
-  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+//_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
   _Game.levelInfo.pMap[34] = tT_grass;
 
   // Setting borders to tT_mountain, so they're collidable
@@ -111,7 +100,7 @@ void setTerrain()
 __declspec(__forceinline)
 #endif
 void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir)
-{  
+{
   direction nextTile = (direction)_Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex];
 
   if (nextTile != d_unfillable && nextTile == d_unreachable)
@@ -125,12 +114,12 @@ bool floodfill(size_t ressourceIndex)
 {
   fill_step current;
   size_t stepCount = 0;
-  
+
   while (_Game.levelInfo.resources[ressourceIndex].pathfinding_queue.count)
   {
     if (stepCount > _FloodFillSteps)
       return false;
-    
+
     queue_popFront(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, &current);
     lsAssert(current.index >= 0 && current.index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
@@ -201,7 +190,7 @@ void updateFloodfill()
       _Game.levelInfo.resources[i].write_direction_idx = newDirectionIndex;
 
       lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-      
+
       for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
       {
         if (_Game.levelInfo.pMap[j] == i)
@@ -298,83 +287,17 @@ void game_setPlayerMapIndex(bool left)
       playerMapIndex++;
   }
 }
-  
+
 //////////////////////////////////////////////////////////////////////////
 
 lsResult game_init()
 {
-  if (_IsLocal)
-    return game_init_local();
-  else
-    return lsR_Success;
+  return game_init_local();
 }
 
 lsResult game_tick()
 {
-  if (_IsLocal)
-    return game_tick_local();
-  else
-    return lsR_Success;
-}
-
-lsResult game_observe(_Out_ game *pGame)
-{
-  if (_IsLocal)
-    return game_observe_local(pGame);
-  else
-    return game_observe_client(pGame);
-}
-
-lsResult game_clone(const game *pOrigin, game *pDst)
-{
-  lsResult result = lsR_Success;
-
-  pDst->levelInfo = pOrigin->levelInfo;
-  //pDst->movementActors = pOrigin->movementActors;
-  pDst->actor = pOrigin->actor;
-//  
-//
-//  // Copy over newer events.
-//  {
-//    for (size_t i = 0; i < pSrc->events.count; i++)
-//    {
-//      gameEvent *pEvnt = nullptr;
-//      LS_ERROR_CHECK(queue_getPtr(&pSrc->events, i, &pEvnt));
-//
-//      if (pEvnt->index > pDst->eventUpdateCutoffIndex)
-//        LS_ERROR_CHECK(queue_pushBack(&pDst->events, pEvnt));
-//    }
-//  }
-//
-//  pDst->movementFriction = pSrc->movementFriction;
-//  pDst->turnFriction = pSrc->turnFriction;
-//  pDst->tickRate = pSrc->tickRate;
-//
-//epilogue:
-  return result;
-}
-
-void game_predict(game *pGame)
-{
-  (void)pGame;
-
-  //const int64_t now = lsGetCurrentTimeNs();
-  //const float_t predictingTicks = (float_t)(now - pGame->lastPredictTimeNs) / (1e+9f / (float_t)pGame->tickRate);
-  //pGame->lastPredictTimeNs = now;
-
-  //for (auto o : pGame->gameObjects)
-  //{
-  //  o.pItem->position += o.pItem->velocity * predictingTicks;
-  //  o.pItem->rotation += o.pItem->angularVelocity * predictingTicks;
-  //
-  //  //o.pItem->velocity *= powf(_Game.movementFriction, predictingTicks);
-  //  o.pItem->angularVelocity *= powf(_Game.turnFriction, predictingTicks);
-  //}
-}
-
-void game_set_local(const bool isLocal)
-{
-  _IsLocal = isLocal;
+  return game_tick_local();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -409,18 +332,18 @@ size_t game_getLevelSize()
 //////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-lsResult pool_serialize(_Out_ dataBlob *pBlob, pool<T> *pPool)
+lsResult pool_serialize(_Out_ data_blob *pBlob, pool<T> *pPool)
 {
   lsResult result = lsR_Success;
 
   LS_ERROR_IF(pPool == nullptr || pBlob == nullptr, lsR_ArgumentNull);
 
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, pPool->count));
+  LS_ERROR_CHECK(data_blob_appendValue(pBlob, pPool->count));
 
   for (auto item : *pPool)
   {
-    LS_ERROR_CHECK(dataBlob_appendValue(pBlob, item.index));
-    LS_ERROR_CHECK(dataBlob_append(pBlob, item.pItem));
+    LS_ERROR_CHECK(data_blob_appendValue(pBlob, item.index));
+    LS_ERROR_CHECK(data_blob_append(pBlob, item.pItem));
   }
 
 epilogue:
@@ -428,7 +351,7 @@ epilogue:
 }
 
 template <typename T>
-lsResult pool_deserialize(dataBlob *pBlob, _Out_ pool<T> *pPool)
+lsResult pool_deserialize(data_blob *pBlob, _Out_ pool<T> *pPool)
 {
   lsResult result = lsR_Success;
 
@@ -437,15 +360,15 @@ lsResult pool_deserialize(dataBlob *pBlob, _Out_ pool<T> *pPool)
   pool_clear(pPool);
 
   size_t count;
-  LS_ERROR_CHECK(dataBlob_read(pBlob, &count));
+  LS_ERROR_CHECK(data_blob_read(pBlob, &count));
 
   for (size_t i = 0; i < count; i++)
   {
     uint64_t index;
-    LS_ERROR_CHECK(dataBlob_read(pBlob, &index));
+    LS_ERROR_CHECK(data_blob_read(pBlob, &index));
 
     T item;
-    LS_ERROR_CHECK(dataBlob_read(pBlob, &item));
+    LS_ERROR_CHECK(data_blob_read(pBlob, &item));
 
     LS_ERROR_CHECK(pool_insertAt(pPool, item, index));
   }
@@ -455,7 +378,7 @@ epilogue:
 }
 
 template <typename T>
-lsResult queue_serialize(_Out_ dataBlob *pBlob, queue<T> *pQueue)
+lsResult queue_serialize(_Out_ data_blob *pBlob, queue<T> *pQueue)
 {
   lsResult result = lsR_Success;
 
@@ -463,29 +386,29 @@ lsResult queue_serialize(_Out_ dataBlob *pBlob, queue<T> *pQueue)
 
   queue_clear(pQueue);
 
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, pQueue->count));
+  LS_ERROR_CHECK(data_blob_appendValue(pBlob, pQueue->count));
 
   for (size_t i = 0; i < pQueue->count; i++)
-    LS_ERROR_CHECK(dataBlob_appendValue(pBlob, queue_get(pQueue, i)));
+    LS_ERROR_CHECK(data_blob_appendValue(pBlob, queue_get(pQueue, i)));
 
 epilogue:
   return result;
 }
 
 template <typename T>
-lsResult queue_deserialize(_Out_ dataBlob *pBlob, queue<T> *pQueue)
+lsResult queue_deserialize(_Out_ data_blob *pBlob, queue<T> *pQueue)
 {
   lsResult result = lsR_Success;
 
   LS_ERROR_IF(pQueue == nullptr || pBlob == nullptr, lsR_ArgumentNull);
 
   size_t count;
-  LS_ERROR_CHECK(dataBlob_read(pBlob, &count));
+  LS_ERROR_CHECK(data_blob_read(pBlob, &count));
 
   for (size_t i = 0; i < count; i++)
   {
     T item;
-    LS_ERROR_CHECK(dataBlob_read(pBlob, &item));
+    LS_ERROR_CHECK(data_blob_read(pBlob, &item));
 
     LS_ERROR_CHECK(queue_pushBack(pQueue, &item));
   }
@@ -494,17 +417,17 @@ epilogue:
   return result;
 }
 
-lsResult game_serialize(_Out_ dataBlob *pBlob)
+lsResult game_serialize(_Out_ data_blob *pBlob)
 {
   lsResult result = lsR_Success;
 
   LS_ERROR_IF(pBlob == nullptr, lsR_ArgumentNull);
 
-  dataBlob_reset(pBlob);
+  data_blob_reset(pBlob);
 
-  LS_ERROR_CHECK(dataBlob_appendValue(pBlob, (uint64_t)0)); // size.
-  
-  // Append dataBlobs / Serialize pools.
+  LS_ERROR_CHECK(data_blob_appendValue(pBlob, (uint64_t)0)); // size.
+
+  // Append data_blobs / Serialize pools.
 
   *reinterpret_cast<uint64_t *>(pBlob->pData) = pBlob->size; // replace size.
 
@@ -516,19 +439,19 @@ lsResult game_deserialze(_Out_ game *pGame, _In_ const void *pData, const size_t
 {
   lsResult result = lsR_Success;
 
-  dataBlob blob;
+  data_blob blob;
 
   LS_ERROR_IF(pGame == nullptr || pData == nullptr || size == 0, lsR_ArgumentNull);
 
-  dataBlob_createFromForeign(&blob, pData, size);
+  data_blob_createFromForeign(&blob, pData, size);
 
   size_t actualSize;
-  LS_ERROR_CHECK(dataBlob_read(&blob, &actualSize));
+  LS_ERROR_CHECK(data_blob_read(&blob, &actualSize));
 
   LS_ERROR_IF(actualSize > size, lsR_ResourceInvalid);
   blob.size = actualSize;
 
-  // Read dataBlobs / Deserialize pools.
+  // Read data_blobs / Deserialize pools.
 
 epilogue:
   return result;
@@ -543,7 +466,7 @@ lsResult game_init_local()
   initializeLevel();
 
   // Create NullEntity / NullObject.
-  
+
   size_t zero;
 
   // Add them to their pools.
@@ -594,10 +517,6 @@ lsResult game_tick_local()
   }
 }
 
-lsResult game_observe_local(_Out_ game *pGame)
-{
-  return game_clone(&_Game, pGame);
-}
 //////////////////////////////////////////////////////////////////////////
 
 void game_removeEntity_internal(const size_t entityIndex)

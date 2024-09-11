@@ -1,10 +1,16 @@
-#include "objReader.h"
+#include "obj_reader.h"
 
 #include "io.h"
+#include "queue.h"
 
 //////////////////////////////////////////////////////////////////////////
 
-inline const char * FindLineEnd(const char *pos)
+constexpr bool LogObjParser = true;
+#define ObjParserLogPrefix "[   OBJ Parser   ] "
+
+//////////////////////////////////////////////////////////////////////////
+
+inline static const char * obj_reader_findLineEnd_internal(const char *pos)
 {
   lsAssert(pos != nullptr);
 
@@ -16,23 +22,22 @@ inline const char * FindLineEnd(const char *pos)
 
 //////////////////////////////////////////////////////////////////////////
 
-lsResult objReader_load(objInfo *pInfo, const char *contents)
+lsResult obj_reader_load(obj_info *pInfo, const char *contents)
 {
   lsResult result = lsR_Success;
 
-  queue<vec2f> texCoords;
-  queue<vec3f> normals;
+  list<vec2f> texCoords;
+  list<vec3f> normals;
 
   struct vertexData
   {
-    uint64_t index[3];
+    uint32_t index[3];
   };
 
   queue<vertexData> indices;
+  bool hasData = true;
 
   LS_ERROR_IF(pInfo == nullptr || contents == nullptr, lsR_ArgumentNull);
-
-  bool hasData = true;
 
   while (hasData)
   {
@@ -49,7 +54,7 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
           {
             contents++;
 
-            objInfo_vertex vertex;
+            obj_info_vertex vertex;
             lsZeroMemory(&vertex);
 
             size_t index = 0;
@@ -63,11 +68,31 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
               index++;
             }
 
-            LS_ERROR_CHECK(queue_pushBack(&pInfo->vertices, &vertex));
+            while (*contents == ' ')
+              contents++;
+
+            if (*contents != '\n' && *contents != '\r' && lsStartsWithInt(contents)) // vertex color.
+            {
+              index = 0;
+              vertex.hasColor = true;
+
+              while (index < 3)
+              {
+                while (*contents == ' ')
+                  contents++;
+
+                vertex.color.asArray[index] = (float_t)lsParseFloat(contents, &contents);
+                index++;
+              }
+            }
+
+            LS_ERROR_CHECK(list_add(&pInfo->vertices, &vertex));
+
             break;
           }
 
           case 'n':
+          case 'N':
           {
             contents++;
 
@@ -84,11 +109,12 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
               index++;
             }
 
-            LS_ERROR_CHECK(queue_pushBack(&normals, &normal));
+            LS_ERROR_CHECK(list_add(&normals, &normal));
             break;
           }
 
           case 't':
+          case 'T':
           {
             contents++;
 
@@ -105,18 +131,18 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
               index++;
             }
 
-            LS_ERROR_CHECK(queue_pushBack(&texCoords, &tex));
+            LS_ERROR_CHECK(list_add(&texCoords, &tex));
             break;
           }
 
           default:
           {
-            contents = FindLineEnd(contents);
+            contents = obj_reader_findLineEnd_internal(contents);
             break;
           }
         }
 
-        contents = FindLineEnd(contents);
+        contents = obj_reader_findLineEnd_internal(contents);
         break;
       }
 
@@ -132,9 +158,9 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
           vertexData data;
           queue_clear(&indices);
 
-          size_t index = 0;
+          size_t vertexCount = 0;
 
-          while (index < 4)
+          while (vertexCount < 4)
           {
             while (*contents == ' ')
               contents++;
@@ -145,53 +171,63 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
             for (size_t i = 0; i < 3; i++)
             {
               if (*contents == '/')
-                data.index[i] = (uint64_t)-1;
+                data.index[i] = (uint32_t)-1;
               else
-                data.index[i] = lsParseInt(contents, &contents);
-
+                data.index[i] = (uint32_t)lsParseInt(contents, &contents);
+              
               if (*contents == '/')
+              {
                 contents++;
+              }
+              else if (*contents == ' ' || *contents == '\n' || *contents == '\r')
+              {
+                for (size_t j = i + 1; j < 3; j++)
+                  data.index[j] = (uint32_t)-1;
+
+                break;
+              }
             }
 
-            index++;
+            vertexCount++;
 
             LS_ERROR_CHECK(queue_pushBack(&indices, &data));
           }
 
-          lsAssert(index >= 3);
+          lsAssert(vertexCount >= 3);
 
           while (indices.count >= 3)
           {
-            triangle<objInfo_triangleVertexInfo> tri;
+            obj_triangle<obj_info_triangle_vertex> tri;
             lsZeroMemory(&tri);
 
             for (size_t i = 0; i < 3; i++)
             {
               vertexData j;
               LS_ERROR_CHECK(queue_get(&indices, i, &j));
-              LS_ERROR_CHECK(queue_get(&pInfo->vertices, j.index[0] - 1, static_cast<objInfo_vertex *>(&tri.v[i])));
+              tri.v[i].vertexIdx = j.index[0] - 1;
+              LS_ERROR_CHECK(list_get_safe(&pInfo->vertices, tri.v[i].vertexIdx, static_cast<obj_info_vertex *>(&tri.v[i])));
 
-              if (j.index[1] != (uint64_t)-1)
+              if (j.index[1] != (uint32_t)-1)
               {
-                LS_ERROR_CHECK(queue_get(&texCoords, j.index[1] - 1, &tri.v[i].texCoord));
+                LS_ERROR_CHECK(list_get_safe(&texCoords, j.index[1] - 1, &tri.v[i].texCoord));
                 tri.v[i].hasTexCoord = true;
               }
 
-              if (j.index[2] != (uint64_t)-1)
+              if (j.index[2] != (uint32_t)-1)
               {
-                LS_ERROR_CHECK(queue_get(&normals, j.index[2] - 1, &tri.v[i].normal));
+                LS_ERROR_CHECK(list_get_safe(&normals, j.index[2] - 1, &tri.v[i].normal));
                 tri.v[i].hasNormal = true;
               }
             }
 
-            LS_ERROR_CHECK(queue_pushBack(&pInfo->triangles, &tri));
+            LS_ERROR_CHECK(list_add(&pInfo->triangles, &tri));
 
             vertexData _unused;
             LS_ERROR_CHECK(queue_popFront(&indices, &_unused));
           }
         }
 
-        contents = FindLineEnd(contents);
+        contents = obj_reader_findLineEnd_internal(contents);
         break;
       }
 
@@ -210,37 +246,39 @@ lsResult objReader_load(objInfo *pInfo, const char *contents)
 
       default:
       {
-        contents = FindLineEnd(contents);        
+        contents = obj_reader_findLineEnd_internal(contents);        
         break;
       }
     }
   }
 
 epilogue:
-  queue_destroy(&texCoords);
-  queue_destroy(&normals);
+  list_destroy(&texCoords);
+  list_destroy(&normals);
   queue_destroy(&indices);
 
   return result;
 }
 
-lsResult objReader_loadFromFile(objInfo *pInfo, const char *filename)
+lsResult obj_reader_load_file(obj_info *pInfo, const char *filename)
 {
   lsResult result = lsR_Success;
 
   size_t chars;
   char *fileStart = nullptr;
+  int64_t start, end;
 
   LS_ERROR_IF(pInfo == nullptr || filename == nullptr, lsR_ArgumentNull);
   LS_ERROR_CHECK(lsReadFile(filename, &fileStart, &chars));
 
-  const int64_t start = lsGetCurrentTimeNs();
+  start = lsGetCurrentTimeNs();
 
-  LS_ERROR_CHECK(objReader_load(pInfo, fileStart));
+  LS_ERROR_CHECK(obj_reader_load(pInfo, fileStart));
 
-  const int64_t end = lsGetCurrentTimeNs();
+  end = lsGetCurrentTimeNs();
 
-  printf("objReader has parsed '%s' (%" PRIu64 " bytes) in %f s (%f MB/s).\n", filename, chars, (end - start) * 1e-9, (float_t)chars / ((end - start) * 1e-9 * 1024 * 1024));
+  if constexpr (LogObjParser)
+    print_log_line(ObjParserLogPrefix "Parsed '", filename, "' (", chars, " bytes) in ", (end - start) * 1e-9, " s (", FF(Frac(1))((float_t)chars / ((end - start) * 1e-9f * 1024 * 1024)), " MB/s).");
 
 epilogue:
   lsFreePtr(&fileStart);

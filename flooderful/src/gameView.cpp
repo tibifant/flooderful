@@ -83,16 +83,11 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   (void)ppNext;
 
   render_startFrame(pAppState);
-  
+
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_RETURN))
     pView->lagSwitch = !pView->lagSwitch;
 
   LS_ERROR_CHECK(game_tick());
-
-  if (!pView->lagSwitch)
-    LS_ERROR_CHECK(game_observe(&pView->game));
-  
-  game_predict(&pView->game);
 
   // Handle Camera.
 

@@ -28,10 +28,10 @@ lsResult shader_createFromFile(shader *pShader, const char *vertexPath, const ch
 
   char *vertexSource = nullptr;
   char *fragmentSource = nullptr;
+  size_t bytes = 0; // unused.
 
   LS_ERROR_IF(pShader == nullptr || vertexPath == nullptr || fragmentPath == nullptr, lsR_ArgumentNull);
 
-  size_t bytes = 0; // unused.
   LS_ERROR_CHECK(lsReadFile(vertexPath, &vertexSource, &bytes));
   LS_ERROR_CHECK(lsReadFile(fragmentPath, &fragmentSource, &bytes));
 
@@ -67,12 +67,12 @@ lsResult shader_reload(shader *pShader)
 
   char *vertexSource = nullptr;
   char *fragmentSource = nullptr;
+  size_t bytes = 0; // unused.
 
   LS_ERROR_IF(pShader == nullptr, lsR_ArgumentNull);
   LS_ERROR_IF(!pShader->initialized, lsR_ResourceStateInvalid);
   LS_ERROR_IF(pShader->fragmentPath == nullptr || pShader->vertexPath == nullptr, lsR_ResourceStateInvalid);
 
-  size_t bytes = 0; // unused.
   LS_ERROR_CHECK(lsReadFile(pShader->vertexPath, &vertexSource, &bytes));
   LS_ERROR_CHECK(lsReadFile(pShader->fragmentPath, &fragmentSource, &bytes));
 
@@ -115,7 +115,7 @@ uint32_t shader_getUniformIndex(shader *pShader, const char *uniformName)
       return pShader->pUniformReferences[i].index;
 
   shader_name_ref ref;
-  ref.index= glGetUniformLocation(pShader->shaderProgram, uniformName);
+  ref.index = glGetUniformLocation(pShader->shaderProgram, uniformName);
   lsAssert(ref.index != (uint32_t)-1);
 
   const size_t length = strlen(uniformName);
@@ -143,9 +143,9 @@ uint32_t shader_getAttributeIndex(shader *pShader, const char *attributeName)
   shader_name_ref ref;
   ref.index = glGetAttribLocation(pShader->shaderProgram, attributeName);
   lsAssert(ref.index != (uint32_t)-1);
-  
+
   const size_t length = strlen(attributeName);
-  
+
   if (length >= LS_ARRAYSIZE_C_STYLE(shader_name_ref::name))
     return ref.index;
 
@@ -234,7 +234,7 @@ lsResult shader_create_internal(shader *pShader, const char *vertexSource, const
 
     puts("Error compiling fragment shader.\nThe following error occured:");
     puts(buffer);
-    
+
     LS_ERROR_SET(lsR_ResourceInvalid);
   }
 
@@ -266,7 +266,7 @@ lsResult shader_create_internal(shader *pShader, const char *vertexSource, const
 epilogue:
   lsFreePtr(&cleanVertexSource);
   lsFreePtr(&cleanFragmentSource);
-  
+
   if (vertexShaderHandle != (GLuint)-1)
     glDeleteShader(vertexShaderHandle);
 
@@ -291,14 +291,16 @@ lsResult shader_allocCleanSource_internal(_In_ const char *source, _Out_ char **
 
   LS_ERROR_CHECK(lsAlloc(&cleanSource, length));
 
-  char *write = cleanSource;
-
-  for (size_t i = 0; i < length; i++)
   {
-    if (source[i] != '\r')
+    char *write = cleanSource;
+
+    for (size_t i = 0; i < length; i++)
     {
-      *write = source[i];
-      write++;
+      if (source[i] != '\r')
+      {
+        *write = source[i];
+        write++;
+      }
     }
   }
 
