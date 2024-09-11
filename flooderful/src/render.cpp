@@ -262,12 +262,10 @@ void render_drawMap(const level_info &levelInfo, /*const std::vector<movementAct
   {
     //for (movementActor actor : actors)
     {
-      const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
+      //render_drawHex2D(matrix::Translation(1.f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.9f, 0.f, 0.f, 0.f));
 
-      if (!(mapPosToTile(actor.pos) / levelInfo.map_size.x) & 1)
-        render_draw2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 80.f + actor.pos.y * 65.f, 0), rTI_pupu);
-      else
-        render_draw2DQuad(mat * matrix::Translation(110.f + actor.pos.x * 66.f, 80.f + actor.pos.y * 65.f, 0), rTI_pupu);
+      const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
+      render_draw2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), rTI_pupu);
     }
   }
 }

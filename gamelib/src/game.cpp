@@ -85,10 +85,11 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    _Game.levelInfo.pMap[i] = tT_grass;
 
   //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  _Game.levelInfo.pMap[33] = tT_sand;
 
   // Setting borders to tT_mountain, so they're collidable
   {
@@ -179,10 +180,10 @@ void initializeLevel()
   }
 
   // Spawn Actors
-  vec2f pos = { 1, 1 };
+  vec2f pos = { 2, 2 };
   terrain_type target = tT_sand;
-  lsAssert(_Game.levelInfo.pMap[(size_t)(pos.y * _Game.levelInfo.map_size.x + pos.x)] != tT_mountain);
-  lsAssert(_Game.levelInfo.pMap[(size_t)(pos.y * _Game.levelInfo.map_size.x + pos.x)] != target);
+  lsAssert(_Game.levelInfo.pMap[34] != tT_mountain);
+  lsAssert(_Game.levelInfo.pMap[34] != target);
 
   //_Game.movementActors.push_back({ pos, target, false });
   _Game.actor = { pos, target, false };
@@ -220,16 +221,19 @@ void updateFloodfill()
 
 // TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
 
-size_t mapPosToTile(vec2f pos)
+size_t worldPosToTileIndex(vec2f pos)
 {
-  float_t x_even = (float_t)((int)(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x) + 0.5f));
-  float_t y_even = (int)(lsClamp(pos.y, 0.f, (float_t)_Game.levelInfo.map_size.y) * 0.5f + 0.5f) * 2.f;
+  float_t x_even = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x) + 0.5f);
+  float_t y_even = lsFloor(lsClamp(pos.y, 0.f, (float_t)_Game.levelInfo.map_size.y) * 0.5f + 0.5f) * 2.f;
 
-  float_t x_odd = (float_t)((int)(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x)));
-  float_t y_odd = (int)(lsClamp((pos.y - 1) * 0.5f, 0.f, (float_t)_Game.levelInfo.map_size.y) + 0.5f) * 2.f + 1.f;
+  float_t x_odd = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x)); // x_even is shifted by -0.5 compared to the world pos.
+  float_t y_odd = lsFloor(lsClamp((pos.y - 1) * 0.5f, 0.f, (float_t)_Game.levelInfo.map_size.y) + 0.5f) * 2.f + 1.f;
 
-  float_t dist_even = lsAbs((x_even + 0.5f + y_even) - (pos.x + pos.y));
-  float_t dist_odd = lsAbs((x_odd + y_odd) - (pos.x + pos.y));
+  //float_t dist_even = lsAbs((x_even + y_even) - (pos.x + pos.y));
+  //float_t dist_odd = lsAbs((x_odd + 0.5f + y_odd) - (pos.x + pos.y));
+
+  float_t dist_even = vec2f(x_even - pos.x, y_even - pos.y).LengthSquared();
+  float_t dist_odd = vec2f(x_odd - (pos.x - 0.5f), y_odd - pos.y).LengthSquared();
 
   if (dist_even < dist_odd)
     return (size_t)(y_even * _Game.levelInfo.map_size.x + x_even);
@@ -239,13 +243,13 @@ size_t mapPosToTile(vec2f pos)
 
 void movementActor_move()
 {
+  const vec2f dir[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
 
   //for (movementActor actor : _Game.movementActors)
   {
-    size_t idx = mapPosToTile(_Game.actor.pos);
+    size_t idx = worldPosToTileIndex(_Game.actor.pos);
 
-    size_t isOddBit = (idx / _Game.levelInfo.map_size.x) & 1;
-    vec2f dir[6] = { { (float_t)(- !isOddBit), 1.f }, { -1.f, 0.f }, { (float_t)(-!isOddBit), -1.f}, { (float_t)(isOddBit), -1.f}, {1.f, 0.f}, { (float_t)isOddBit, 1.f}};
+    printf("%" PRIu64 " (%f, %f)\n", idx, _Game.actor.pos.x, _Game.actor.pos.y);
 
     // Check if arrived at Target
     if (_Game.levelInfo.pMap[idx] == _Game.actor.target)
@@ -262,7 +266,7 @@ void movementActor_move()
     if (currentDir != d_unfillable && currentDir != d_unreachable) // this can get to be an assert, if we make sure the actor always gets a new target if at destination.
     {
       _Game.actor.pos += vec2f(velocity) * dir[currentDir - 1];
-      printf("{ %f, %f } \n", (vec2f(velocity) * dir[currentDir - 1]).x, (vec2f(velocity) * dir[currentDir - 1]).y);
+      //printf("%" PRIu64 " (%f, %f) (%f, %f) \n", idx, _Game.actor.pos.x, _Game.actor.pos.y, (vec2f(velocity) * dir[currentDir - 1]).x, (vec2f(velocity) * dir[currentDir - 1]).y);
     }
   }
 }

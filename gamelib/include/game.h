@@ -127,7 +127,7 @@ struct game
   size_t lastEventIndex, eventUpdateCutoffIndex;
 };
 
-size_t mapPosToTile(vec2f pos);
+size_t worldPosToTileIndex(vec2f pos);
 
 lsResult game_init();
 lsResult game_tick();
