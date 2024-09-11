@@ -85,11 +85,11 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i] = tT_grass;
+    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    //_Game.levelInfo.pMap[i] = tT_grass;
 
   //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
-  _Game.levelInfo.pMap[33] = tT_sand;
+  _Game.levelInfo.pMap[34] = tT_grass;
 
   // Setting borders to tT_mountain, so they're collidable
   {
