@@ -85,10 +85,10 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i] = tT_grass;
+    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    //_Game.levelInfo.pMap[i] = tT_grass;
 
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
 
   // Setting borders to tT_mountain, so they're collidable
   {
@@ -179,10 +179,10 @@ void initializeLevel()
   }
 
   // Spawn Actors
-  vec2i32 pos = { 1, 1 };
+  vec2f pos = { 1, 1 };
   terrain_type target = tT_sand;
-  lsAssert(_Game.levelInfo.pMap[pos.y * _Game.levelInfo.map_size.x + pos.x] != tT_mountain);
-  lsAssert(_Game.levelInfo.pMap[pos.y * _Game.levelInfo.map_size.x + pos.x] != target);
+  lsAssert(_Game.levelInfo.pMap[(size_t)(pos.y * _Game.levelInfo.map_size.x + pos.x)] != tT_mountain);
+  lsAssert(_Game.levelInfo.pMap[(size_t)(pos.y * _Game.levelInfo.map_size.x + pos.x)] != target);
 
   //_Game.movementActors.push_back({ pos, target, false });
   _Game.actor = { pos, target, false };
@@ -218,53 +218,51 @@ void updateFloodfill()
 
 //////////////////////////////////////////////////////////////////////////
 
-// size_t renderPosToTile(vec2f pos)
+// TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
+
+size_t mapPosToTile(vec2f pos)
+{
+  float_t x_even = (float_t)((int)(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x) + 0.5f));
+  float_t y_even = (int)(lsClamp(pos.y, 0.f, (float_t)_Game.levelInfo.map_size.y) * 0.5f + 0.5f) * 2.f;
+
+  float_t x_odd = (float_t)((int)(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x)));
+  float_t y_odd = (int)(lsClamp((pos.y - 1) * 0.5f, 0.f, (float_t)_Game.levelInfo.map_size.y) + 0.5f) * 2.f + 1.f;
+
+  float_t dist_even = lsAbs((x_even + 0.5f + y_even) - (pos.x + pos.y));
+  float_t dist_odd = lsAbs((x_odd + y_odd) - (pos.x + pos.y));
+
+  if (dist_even < dist_odd)
+    return (size_t)(y_even * _Game.levelInfo.map_size.x + x_even);
+  else
+    return (size_t)(y_odd * _Game.levelInfo.map_size.x + x_odd);
+}
 
 void movementActor_move()
 {
+
   //for (movementActor actor : _Game.movementActors)
   {
+    size_t idx = mapPosToTile(_Game.actor.pos);
+
+    size_t isOddBit = (idx / _Game.levelInfo.map_size.x) & 1;
+    vec2f dir[6] = { { (float_t)(- !isOddBit), 1.f }, { -1.f, 0.f }, { (float_t)(-!isOddBit), -1.f}, { (float_t)(isOddBit), -1.f}, {1.f, 0.f}, { (float_t)isOddBit, 1.f}};
+
     // Check if arrived at Target
-    if (_Game.levelInfo.pMap[_Game.actor.pos.x * _Game.actor.pos.y] == _Game.actor.target)
+    if (_Game.levelInfo.pMap[idx] == _Game.actor.target)
     {
       //actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
       _Game.actor.atDestination = true;
     }
 
+    direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][idx];
+    //lsAssert(currentDir != d_unreachable);
+
+    const float_t velocity = 0.01;
     // Move to Target
-    switch (_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][_Game.actor.pos.y * _Game.levelInfo.map_size.x + _Game.actor.pos.x])
+    if (currentDir != d_unfillable && currentDir != d_unreachable) // this can get to be an assert, if we make sure the actor always gets a new target if at destination.
     {
-    case d_left:
-      _Game.actor.pos.x++;
-      break;
-
-    case d_right:
-      _Game.actor.pos.x--;
-      break;
-
-    case d_bottomLeft:
-      _Game.actor.pos.x += _Game.actor.pos.y & 1;
-      _Game.actor.pos.y--;
-      break;
-
-    case d_bottomRight:
-      _Game.actor.pos.x -= (size_t)!(_Game.actor.pos.y & 1);
-      _Game.actor.pos.y--;
-      break;
-
-    case d_topLeft:
-      _Game.actor.pos.x += _Game.actor.pos.y & 1;
-      _Game.actor.pos.y++;
-      break;
-
-    case d_topRight:
-      _Game.actor.pos.x -= (size_t)!(_Game.actor.pos.y & 1);
-      _Game.actor.pos.y++;
-      break;
-
-    default:
-      //lsAssert(false);
-      break;
+      _Game.actor.pos += vec2f(velocity) * dir[currentDir - 1];
+      printf("{ %f, %f } \n", (vec2f(velocity) * dir[currentDir - 1]).x, (vec2f(velocity) * dir[currentDir - 1]).y);
     }
   }
 }

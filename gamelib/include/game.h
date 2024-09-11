@@ -105,7 +105,7 @@ enum direction : uint8_t
 
 struct movementActor
 {
-  vec2i32 pos;
+  vec2f pos;
   terrain_type target;
   bool atDestination;
 };
@@ -126,6 +126,8 @@ struct game
   size_t tickRate = 60;
   size_t lastEventIndex, eventUpdateCutoffIndex;
 };
+
+size_t mapPosToTile(vec2f pos);
 
 lsResult game_init();
 lsResult game_tick();
