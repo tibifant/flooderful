@@ -44,8 +44,8 @@ void setTerrain();
 
 constexpr size_t _FloodFillSteps = 10;
 
-bool floodfill(size_t ressourceIndex);
-void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir);
+bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup);
+void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -75,9 +75,9 @@ void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-  //_Game.levelInfo.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = tT_grass;
 
-//_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
   _Game.levelInfo.pMap[34] = tT_grass;
 
   // Setting borders to tT_mountain, so they're collidable
@@ -99,40 +99,40 @@ void setTerrain()
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(size_t ressourceIndex, const size_t nextIndex, const direction dir)
+void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir)
 {
-  direction nextTile = (direction)_Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex];
+  direction nextTile = (direction)pDirectionLookup[nextIndex];
 
   if (nextTile != d_unfillable && nextTile == d_unreachable)
   {
-    _Game.levelInfo.resources[ressourceIndex].pDirectionLookup[_Game.levelInfo.resources[ressourceIndex].write_direction_idx][nextIndex] = dir;
-    queue_pushBack(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, { nextIndex });
+    pDirectionLookup[nextIndex] = dir;
+    queue_pushBack(&pathfindQueue, fill_step(nextIndex));
   }
 }
 
-bool floodfill(size_t ressourceIndex)
+bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup)
 {
   fill_step current;
   size_t stepCount = 0;
 
-  while (_Game.levelInfo.resources[ressourceIndex].pathfinding_queue.count)
+  while (pathfindQueue.count)
   {
     if (stepCount > _FloodFillSteps)
       return false;
 
-    queue_popFront(&_Game.levelInfo.resources[ressourceIndex].pathfinding_queue, &current);
+    queue_popFront(&pathfindQueue, &current);
     lsAssert(current.index >= 0 && current.index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
     const size_t isOddBit = (current.index / _Game.levelInfo.map_size.x) & 1;
     const size_t topLeftIndex = current.index - _Game.levelInfo.map_size.x - (size_t)!isOddBit;
     const size_t bottomLeftIndex = current.index + _Game.levelInfo.map_size.x - (size_t)!isOddBit;
 
-    floodfill_suggestNextTarget(ressourceIndex, current.index - 1, d_left);
-    floodfill_suggestNextTarget(ressourceIndex, current.index + 1, d_right);
-    floodfill_suggestNextTarget(ressourceIndex, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
-    floodfill_suggestNextTarget(ressourceIndex, bottomLeftIndex, d_bottomLeft);
-    floodfill_suggestNextTarget(ressourceIndex, topLeftIndex, d_topLeft);
-    floodfill_suggestNextTarget(ressourceIndex, topLeftIndex + 1, d_topRight);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight);
 
     stepCount++;
   }
@@ -182,25 +182,27 @@ void updateFloodfill()
 {
   for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
-    if (floodfill(i))
+    size_t writeIndex = _Game.levelInfo.resources[i].write_direction_idx;
+
+    if (floodfill(_Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.resources[i].pDirectionLookup[writeIndex]))
     {
       lsAssert(!_Game.levelInfo.resources[i].pathfinding_queue.count);
 
-      size_t newDirectionIndex = 1 - _Game.levelInfo.resources[i].write_direction_idx;
-      _Game.levelInfo.resources[i].write_direction_idx = newDirectionIndex;
+      size_t newWriteIndex = 1 - writeIndex;
+      _Game.levelInfo.resources[i].write_direction_idx = newWriteIndex;
 
-      lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+      lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
       for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
       {
         if (_Game.levelInfo.pMap[j] == i)
         {
-          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_unfillable;
-          queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
+          _Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex][j] = d_unfillable;
+          queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, fill_step(j));
         }
 
         if (_Game.levelInfo.pMap[j] == tT_mountain)
-          _Game.levelInfo.resources[i].pDirectionLookup[newDirectionIndex][j] = d_unfillable;
+          _Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex][j] = d_unfillable;
       }
     }
   }
@@ -230,39 +232,50 @@ size_t worldPosToTileIndex(vec2f pos)
     return (size_t)(y_odd * _Game.levelInfo.map_size.x + x_odd);
 }
 
-void movementActor_move()
+vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction direction)
 {
   const vec2f dir[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
 
+  float_t y_center = (size_t)(currentIndex / _Game.levelInfo.map_size.x) + dir[direction - 1].y;
+  float_t x_center = (currentIndex % _Game.levelInfo.map_size.x) + dir[direction - 1].x;
+
+  if ((size_t)y_center & 1)
+    x_center += 0.5f;
+
+  return vec2f(x_center - currentPos.x, y_center - currentPos.y).Normalize();
+}
+
+size_t lastTile = 0;
+
+void movementActor_move()
+{
   //for (movementActor actor : _Game.movementActors)
   {
-    size_t idx = worldPosToTileIndex(_Game.actor.pos);
+    size_t current = worldPosToTileIndex(_Game.actor.pos);
 
-    print(idx, ", ", _Game.actor.pos, '\n');
+    print(current, ", ", _Game.actor.pos, '\n');
 
-    // Check if arrived at Target
-    if (_Game.levelInfo.pMap[idx] == _Game.actor.target)
+    if (current != lastTile)
     {
-      //actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
-      _Game.actor.atDestination = true;
-    }
+      // Check if arrived at Target
+      if (_Game.levelInfo.pMap[current] == _Game.actor.target)
+      {
+        _Game.actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
+        _Game.actor.atDestination = true;
+        return;
+      }
 
-    direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][idx];
-    //lsAssert(currentDir != d_unreachable);
+      direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][current];
 
-    const float_t velocity = 0.01;
-    // Move to Target
-    if (currentDir != d_unfillable && currentDir != d_unreachable) // this can get to be an assert, if we make sure the actor always gets a new target if at destination.
-    {
-      _Game.actor.pos += vec2f(velocity) * dir[currentDir - 1];
-      //printf("%" PRIu64 " (%f, %f) (%f, %f) \n", idx, _Game.actor.pos.x, _Game.actor.pos.y, (vec2f(velocity) * dir[currentDir - 1]).x, (vec2f(velocity) * dir[currentDir - 1]).y);
+      if (currentDir != d_unreachable && currentDir != d_unfillable)
+        _Game.actor.pos += vec2f(0.1) * dirToTargetTileCenter(current, _Game.actor.pos, currentDir);
     }
   }
 }
 
 //////////////////////////////////////////////////////////////////////////
 
-// changing tiles for debugging
+// Changing tiles for debugging
 
 size_t playerMapIndex = 0;
 

@@ -74,6 +74,9 @@ enum terrain_type
 struct fill_step
 {
   size_t index;
+
+  inline fill_step() = default;
+  inline fill_step(const size_t idx) : index(idx) { lsAssert(index < 16 * 16); }
 };
 
 struct level_info
@@ -135,7 +138,7 @@ lsResult game_tick();
 void game_setPlayerMapIndex(bool left);
 void game_playerSwitchTiles(terrain_type terrainType);
 
-game * game_getGame();
+game *game_getGame();
 
 bool game_hasAnyEvent(game *pGame);
 gameEvent game_getNextEvent(game *pGame);
