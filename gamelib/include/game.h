@@ -135,6 +135,8 @@ lsResult game_tick();
 void game_setPlayerMapIndex(bool left);
 void game_playerSwitchTiles(terrain_type terrainType);
 
+game * game_getGame();
+
 bool game_hasAnyEvent(game *pGame);
 gameEvent game_getNextEvent(game *pGame);
 size_t game_getTickRate();

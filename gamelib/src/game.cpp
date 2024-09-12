@@ -238,7 +238,7 @@ void movementActor_move()
   {
     size_t idx = worldPosToTileIndex(_Game.actor.pos);
 
-    printf("%" PRIu64 " (%f, %f)\n", idx, _Game.actor.pos.x, _Game.actor.pos.y);
+    print(idx, ", ", _Game.actor.pos, '\n');
 
     // Check if arrived at Target
     if (_Game.levelInfo.pMap[idx] == _Game.actor.target)
@@ -298,6 +298,13 @@ lsResult game_init()
 lsResult game_tick()
 {
   return game_tick_local();
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+game *game_getGame()
+{
+  return &_Game;
 }
 
 //////////////////////////////////////////////////////////////////////////

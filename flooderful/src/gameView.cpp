@@ -6,7 +6,7 @@
 
 struct gameView : lsAppView
 {
-  game game;
+  game *pGame;
   vec2f lookAtPos;
   float_t lookAtRotation;
   float_t lookAtDistance;
@@ -24,7 +24,6 @@ struct gameView : lsAppView
   vec2f particleVelocities[LS_ARRAYSIZE_C_STYLE(particles)];
 
   size_t lastParticleIndex = 0;
-  bool lagSwitch = false;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,6 +64,8 @@ lsResult gameView_init(_Out_ lsAppView **ppView, lsAppState *pAppState)
   //pView->lookAtRotation = pGameObject->rotation;
   //pView->lookAtDistance = 35.f;
 
+  pView->pGame = game_getGame();
+
 epilogue:
   if (LS_FAILED(result))
     lsFreePtr(&pView);
@@ -84,8 +85,6 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   render_startFrame(pAppState);
 
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_RETURN))
-    pView->lagSwitch = !pView->lagSwitch;
 
   LS_ERROR_CHECK(game_tick());
 
@@ -115,13 +114,13 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   // Draw Scene
   {
-    const float_t ticksSinceOrigin = (pView->game.lastPredictTimeNs - pView->game.gameStartTimeNs) / (1e9f / pView->game.tickRate);
+    const float_t ticksSinceOrigin = (pView->pGame->lastPredictTimeNs - pView->pGame->gameStartTimeNs) / (1e9f / pView->pGame->tickRate);
 
     render_setTicksSinceOrigin(ticksSinceOrigin);
 
     // rendered objects
 
-    render_drawMap(pView->game.levelInfo, /*pView->game.movementActors*/ pView->game.actor, pAppState);
+    render_drawMap(pView->pGame->levelInfo, /*pView->game.movementActors*/ pView->pGame->actor, pAppState);
 
     render_flushRenderQueue();
   }
