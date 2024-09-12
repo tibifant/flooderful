@@ -35,14 +35,13 @@ void game_addEvent_internal(gameEvent *pEvent);
 // ziele die in die map floodfillen wie man zum naechsten ziel des typen kommt
 // floodfill look-up map -> sagt pro kachel pro ziel welche richtung
 
-constexpr uint8_t _DirectionsBits = 4;
-
 void initializeLevel();
 void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain();
 
 constexpr size_t _FloodFillSteps = 10;
+static bool floodfillCompleted = false;
 
 bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup);
 void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir);
@@ -74,10 +73,12 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    _Game.levelInfo.pMap[i] = tT_grass;
 
   //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  _Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
+  _Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
   _Game.levelInfo.pMap[34] = tT_grass;
 
   // Setting borders to tT_mountain, so they're collidable
@@ -159,7 +160,7 @@ void initializeLevel()
     {
       if (_Game.levelInfo.pMap[j] == i)
       {
-        queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, { j });
+        queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, fill_step(j));
         _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
       }
 
@@ -204,6 +205,8 @@ void updateFloodfill()
         if (_Game.levelInfo.pMap[j] == tT_mountain)
           _Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex][j] = d_unfillable;
       }
+
+      floodfillCompleted = true;
     }
   }
 }
@@ -234,42 +237,57 @@ size_t worldPosToTileIndex(vec2f pos)
 
 vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction direction)
 {
+  lsAssert(direction != d_unfillable && direction != d_unreachable);
+
   const vec2f dir[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
 
-  float_t y_center = (size_t)(currentIndex / _Game.levelInfo.map_size.x) + dir[direction - 1].y;
-  float_t x_center = (currentIndex % _Game.levelInfo.map_size.x) + dir[direction - 1].x;
+  float_t y_center = (float_t)(currentIndex / _Game.levelInfo.map_size.x);
+  float_t x_center = (float_t)(currentIndex % _Game.levelInfo.map_size.x);
 
   if ((size_t)y_center & 1)
     x_center += 0.5f;
+
+  y_center += dir[direction - 1].y;
+  x_center += dir[direction - 1].x;
 
   return vec2f(x_center - currentPos.x, y_center - currentPos.y).Normalize();
 }
 
 size_t lastTile = 0;
+vec2f dir;
 
 void movementActor_move()
 {
+  // TODO: Reset lastTile every so often to handle map changes.
+
   //for (movementActor actor : _Game.movementActors)
   {
     size_t current = worldPosToTileIndex(_Game.actor.pos);
-
-    print(current, ", ", _Game.actor.pos, '\n');
+    direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][current];
 
     if (current != lastTile)
     {
+      print(current, ", ", _Game.actor.pos, '\n');
+
       // Check if arrived at Target
       if (_Game.levelInfo.pMap[current] == _Game.actor.target)
       {
-        _Game.actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
+        //_Game.actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
+        _Game.actor.target = tT_water;
         _Game.actor.atDestination = true;
         return;
       }
 
-      direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][current];
+      lsAssert(_Game.levelInfo.pMap[current] != tT_mountain);
 
       if (currentDir != d_unreachable && currentDir != d_unfillable)
-        _Game.actor.pos += vec2f(0.1) * dirToTargetTileCenter(current, _Game.actor.pos, currentDir);
+        dir = dirToTargetTileCenter(current, _Game.actor.pos, currentDir);
     }
+
+    if (currentDir != d_unreachable && currentDir != d_unfillable)
+      _Game.actor.pos += vec2f(0.1) * dir;
+
+    lastTile = current;
   }
 }
 
@@ -529,7 +547,9 @@ lsResult game_tick_local()
   // process player interactions.
   {
     updateFloodfill();
-    movementActor_move();
+
+    if (floodfillCompleted)
+      movementActor_move();
 
     goto epilogue;
   epilogue:
