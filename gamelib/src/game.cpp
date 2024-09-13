@@ -73,13 +73,14 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i] = tT_grass;
+    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    //_Game.levelInfo.pMap[i] = tT_grass;
 
-  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
-  _Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
-  _Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
+  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  //_Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
+  //_Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
   _Game.levelInfo.pMap[34] = tT_grass;
+  _Game.levelInfo.pMap[16 * 16 - (16 + 14)] = tT_grass;
 
   // Setting borders to tT_mountain, so they're collidable
   {
@@ -170,13 +171,15 @@ void initializeLevel()
   }
 
   // Spawn Actors
-  vec2f pos = { 2, 2 };
   terrain_type target = tT_sand;
   lsAssert(_Game.levelInfo.pMap[34] != tT_mountain);
+  lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != tT_mountain);
   lsAssert(_Game.levelInfo.pMap[34] != target);
+  lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != target);
 
-  //_Game.movementActors.push_back({ pos, target, false });
-  _Game.actor = { pos, target, false };
+  _Game.movementActors.push_back(movementActor(vec2f(2, 2), target, false));
+  _Game.movementActors.push_back(movementActor(vec2f(2, 14), target, false));
+  //_Game.actor = { pos, target, false };
 }
 
 void updateFloodfill()
@@ -253,41 +256,55 @@ vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction dir
   return vec2f(x_center - currentPos.x, y_center - currentPos.y).Normalize();
 }
 
-size_t lastTile = 0;
-vec2f dir;
+size_t lastTiles[2] = { 0, 0 };
+vec2f dirs[2];
+//size_t lastTile = 0;
+//vec2f dir;
+size_t tickCount = 0;
+
+// TODO: make several pupus spawning good
+// TODO: Spawn random things that need to be taken to random places.
+// TODO: Why does the second move towarsd the first?? Why does it take forever to spawn these?
+// TODO: Make a sperate render func for movement actors.
 
 void movementActor_move()
 {
-  // TODO: Reset lastTile every so often to handle map changes.
-
-  //for (movementActor actor : _Game.movementActors)
+  for (size_t i = 0; i < _Game.movementActors.size(); i++)
   {
-    size_t current = worldPosToTileIndex(_Game.actor.pos);
-    direction currentDir = (direction)_Game.levelInfo.resources[_Game.actor.target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.actor.target].write_direction_idx][current];
-
-    if (current != lastTile)
+    // Reset lastTile every so often to handle map changes.
+    // TODO: For several actors do only some at a time and cycle through them. So it won't reset all at once.
+    if (!(tickCount % 10))
     {
-      print(current, ", ", _Game.actor.pos, '\n');
+      lastTiles[i] = 0;
+      tickCount = 0;
+    }
 
+    size_t currentIdx = worldPosToTileIndex(_Game.movementActors[i].pos);
+    direction currentDir = (direction)_Game.levelInfo.resources[_Game.movementActors[i].target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.movementActors[i].target].write_direction_idx][currentIdx];
+
+    if (currentIdx != lastTiles[i])
+    {
       // Check if arrived at Target
-      if (_Game.levelInfo.pMap[current] == _Game.actor.target)
+      if (_Game.levelInfo.pMap[currentIdx] == _Game.movementActors[i].target)
       {
-        //_Game.actor.target = terrain_type(lsGetRand() % (tT_Count - 1));
-        _Game.actor.target = tT_water;
-        _Game.actor.atDestination = true;
+        _Game.movementActors[i].target = terrain_type(lsGetRand() % (tT_Count - 1));
+        //_Game.movementActors[i].target = tT_water;
+        _Game.movementActors[i].atDestination = true;
+        dirs[i] = vec2f(0);
         return;
       }
 
-      lsAssert(_Game.levelInfo.pMap[current] != tT_mountain);
+      lsAssert(_Game.levelInfo.pMap[currentIdx] != tT_mountain);
 
       if (currentDir != d_unreachable && currentDir != d_unfillable)
-        dir = dirToTargetTileCenter(current, _Game.actor.pos, currentDir);
+        dirs[i] = dirToTargetTileCenter(currentIdx, _Game.movementActors[i].pos, currentDir);
     }
 
     if (currentDir != d_unreachable && currentDir != d_unfillable)
-      _Game.actor.pos += vec2f(0.1) * dir;
+      _Game.movementActors[i].pos += vec2f(0.1) * dirs[i];
 
-    lastTile = current;
+    lastTiles[i] = currentIdx;
+    tickCount++;
   }
 }
 

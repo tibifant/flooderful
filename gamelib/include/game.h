@@ -111,6 +111,9 @@ struct movementActor
   vec2f pos;
   terrain_type target;
   bool atDestination;
+
+  inline movementActor() = default;
+  inline movementActor(const vec2f position, terrain_type tgt, bool atDest) : pos(position), target(tgt), atDestination(atDest) { lsAssert(position.x < 16 && position.x >= 0 && position.y < 16 && position.y >= 0); }
 };
 
 struct game
@@ -122,8 +125,8 @@ struct game
 
   level_info levelInfo;
 
-  //std::vector<movementActor> movementActors;
-  movementActor actor;
+  std::vector<movementActor> movementActors;
+  //movementActor actor;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;
