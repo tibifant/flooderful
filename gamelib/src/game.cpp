@@ -265,7 +265,6 @@ size_t tickCount = 0;
 // TODO: make several pupus spawning good
 // TODO: Spawn random things that need to be taken to random places.
 // TODO: Why does the second move towarsd the first?? Why does it take forever to spawn these?
-// TODO: Make a sperate render func for movement actors.
 
 void movementActor_move()
 {

@@ -230,7 +230,7 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, const std::vector<movementActor> &actors /* movementActor actor*/, lsAppState *pAppState) // Maybe just give game...
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState) // Maybe just give game...
 {
   (void)pAppState;
 
@@ -257,7 +257,10 @@ void render_drawMap(const level_info &levelInfo, const std::vector<movementActor
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
     }
   }
+}
 
+void render_drawActor(const std::vector<movementActor> &actors /* movementActor actor*/)
+{
   // Draw Actor.
   {
     for (size_t i = 0; i < actors.size(); i++)
