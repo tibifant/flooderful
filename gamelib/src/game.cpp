@@ -2,8 +2,6 @@
 
 #include "box2d/box2d.h"
 
-#include "local_list.h"
-
 //////////////////////////////////////////////////////////////////////////
 
 static game _Game;
@@ -39,6 +37,7 @@ void initializeLevel();
 void mapInit(const size_t width, const size_t height);
 void updateFloodfill();
 void setTerrain();
+lsResult spawnActors();
 
 constexpr size_t _FloodFillSteps = 10;
 static bool floodfillCompleted = false;
@@ -46,9 +45,8 @@ static bool floodfillCompleted = false;
 bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup);
 void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir);
 
-
-//////////////////////////////////////////////////////////////////////////
-
+size_t worldPosToTileIndex(vec2f pos);
+vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction direction);
 void movementActor_move();
 
 //////////////////////////////////////////////////////////////////////////
@@ -73,10 +71,10 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i] = tT_sand;
+    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    //_Game.levelInfo.pMap[i] = tT_sand;
 
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_grass;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_grass;
   //_Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
   //_Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
   _Game.levelInfo.pMap[34] = tT_grass;
@@ -97,6 +95,31 @@ void setTerrain()
     }
   }
 }
+
+lsResult spawnActors()
+{
+  lsResult result = lsR_Success;
+
+  for (size_t i = 0; i < _MaxMovementActors; i++)
+  {
+    movementActor actor;
+    actor.target = (terrain_type)(lsGetRand() % (tT_Count - 1));
+    actor.pos = vec2f(16.f + i, i + 1.f);
+
+    while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)] == tT_mountain)
+      actor.pos += vec2f(1);
+
+    size_t index = 0;
+    LS_ERROR_CHECK(pool_add(&_MovementActors, &actor, &index));
+    local_list_add(&_Game.movementActors, index);
+  }
+
+  goto epilogue;
+epilogue:
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef _DEBUG
 __declspec(__forceinline)
@@ -131,8 +154,8 @@ bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup)
 
     floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left);
     floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
     floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight); // bottomRight and bottomLeft are flipped to not give the right side all the paths
     floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft);
     floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight);
 
@@ -152,6 +175,7 @@ void initializeLevel()
   mapInit(16, 16);
   setTerrain();
 
+  // Set up floodfill queue and lookup
   for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
@@ -170,16 +194,7 @@ void initializeLevel()
     }
   }
 
-  // Spawn Actors
-  terrain_type target = tT_grass;
-  lsAssert(_Game.levelInfo.pMap[34] != tT_mountain);
-  lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != tT_mountain);
-  lsAssert(_Game.levelInfo.pMap[34] != target);
-  lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != target);
-
-  //_Game.movementActors.push_back(movementActor(vec2f(2, 2), target, false));
-  _Game.movementActors.push_back(movementActor(vec2f(2, 14), target, false));
-  //_Game.actor = { pos, target, false };
+  lsAssert(spawnActors() == lsR_Success);
 }
 
 void updateFloodfill()
@@ -256,11 +271,7 @@ vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction dir
   return vec2f(x_center - currentPos.x, y_center - currentPos.y).Normalize();
 }
 
-size_t lastTiles[2] = { 0, 0 };
-vec2f dirs[2];
-//size_t lastTile = 0;
-//vec2f dir;
-size_t tickCount = 0;
+static size_t tickCount = 0;
 
 // TODO: make several pupus spawning good
 // TODO: Spawn random things that need to be taken to random places.
@@ -268,41 +279,43 @@ size_t tickCount = 0;
 
 void movementActor_move()
 {
-  for (size_t i = 0; i < _Game.movementActors.size(); i++)
+  for (const size_t index : _Game.movementActors)
   {
+    movementActor *pActor = pool_get(_MovementActors, index); // TODO: Error Handling
+
     // Reset lastTile every so often to handle map changes.
     // TODO: For several actors do only some at a time and cycle through them. So it won't reset all at once.
     if (!(tickCount % 10))
     {
-      lastTiles[i] = 0;
+      pActor->activeTilePos = 0;
       tickCount = 0;
     }
 
-    size_t currentIdx = worldPosToTileIndex(_Game.movementActors[i].pos);
-    direction currentDir = (direction)_Game.levelInfo.resources[_Game.movementActors[i].target].pDirectionLookup[1 - _Game.levelInfo.resources[_Game.movementActors[i].target].write_direction_idx][currentIdx];
+    size_t currentTileIdx = worldPosToTileIndex(pActor->pos);
+    direction currentDir = (direction)_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][currentTileIdx];
 
-    if (currentIdx != lastTiles[i])
+    if (currentTileIdx != pActor->activeTilePos)
     {
       // Check if arrived at Target
-      if (_Game.levelInfo.pMap[currentIdx] == _Game.movementActors[i].target)
+      if (_Game.levelInfo.pMap[currentTileIdx] == pActor->target)
       {
-        _Game.movementActors[i].target = terrain_type(lsGetRand() % (tT_Count - 1));
+        pActor->target = terrain_type(lsGetRand() % (tT_Count - 1));
         //_Game.movementActors[i].target = tT_water;
-        _Game.movementActors[i].atDestination = true;
-        dirs[i] = vec2f(0);
+        pActor->atDestination = true;
+        pActor->activeDir = vec2f(0);
         return;
       }
 
-      lsAssert(_Game.levelInfo.pMap[currentIdx] != tT_mountain);
+      lsAssert(_Game.levelInfo.pMap[currentTileIdx] != tT_mountain);
 
       if (currentDir != d_unreachable && currentDir != d_unfillable)
-        dirs[i] = dirToTargetTileCenter(currentIdx, _Game.movementActors[i].pos, currentDir);
+        pActor->activeDir = dirToTargetTileCenter(currentTileIdx, pActor->pos, currentDir);
     }
 
     if (currentDir != d_unreachable && currentDir != d_unfillable)
-      _Game.movementActors[i].pos += vec2f(0.1) * dirs[i];
+      pActor->pos += vec2f(0.05) * pActor->activeDir;
 
-    lastTiles[i] = currentIdx;
+    pActor->activeTilePos = currentTileIdx;
     tickCount++;
   }
 }
