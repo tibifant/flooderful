@@ -73,10 +73,10 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    _Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i] = tT_grass;
+    //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
+    _Game.levelInfo.pMap[i] = tT_sand;
 
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_sand;
+  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_grass;
   //_Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
   //_Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
   _Game.levelInfo.pMap[34] = tT_grass;
@@ -171,13 +171,13 @@ void initializeLevel()
   }
 
   // Spawn Actors
-  terrain_type target = tT_sand;
+  terrain_type target = tT_grass;
   lsAssert(_Game.levelInfo.pMap[34] != tT_mountain);
   lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != tT_mountain);
   lsAssert(_Game.levelInfo.pMap[34] != target);
   lsAssert(_Game.levelInfo.pMap[16 * 16 - (16 + 14)] != target);
 
-  _Game.movementActors.push_back(movementActor(vec2f(2, 2), target, false));
+  //_Game.movementActors.push_back(movementActor(vec2f(2, 2), target, false));
   _Game.movementActors.push_back(movementActor(vec2f(2, 14), target, false));
   //_Game.actor = { pos, target, false };
 }
