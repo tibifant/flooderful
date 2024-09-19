@@ -259,19 +259,12 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_
   }
 }
 
-void render_drawActor(const local_list<size_t, _MaxMovementActors> &actors)
+void render_drawActor(const movementActor actor) // In Future: flush all actors being drawed.
 {
-  for (const size_t index : actors)
-  {
-    // I don't feel like it is nice to iterate the pool here. Ask coc and maybe change. But finish it now to got to bed...
-    movementActor *pActor; 
-    lsAssert(pool_get_safe(&_MovementActors, index, &pActor) == lsR_Success);
+  //render_drawHex2D(matrix::Translation(1.f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.9f, 0.f, 0.f, 0.f));
 
-    //render_drawHex2D(matrix::Translation(1.f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.9f, 0.f, 0.f, 0.f));
-
-    const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
-    render_draw2DQuad(mat * matrix::Translation(75.f + pActor->pos.x * 66.f, 70.f + pActor->pos.y * 65.f, 0), rTI_pupu);
-  }
+  const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
+  render_draw2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), rTI_pupu);
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)

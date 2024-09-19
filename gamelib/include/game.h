@@ -4,7 +4,6 @@
 #include "pool.h"
 #include "queue.h"
 #include "data_blob.h"
-#include "local_list.h"
 
 enum gameObject_type
 {
@@ -116,11 +115,8 @@ struct movementActor
   size_t activeTilePos = 0;
 
   inline movementActor() = default;
-  inline movementActor(const vec2f position, terrain_type tgt, bool atDest) : pos(position), target(tgt), atDestination(atDest) { lsAssert(position.x < 16 && position.x >= 0 && position.y < 16 && position.y >= 0); }
+  inline movementActor(const vec2f pos, terrain_type tgt, bool atDest = false) : pos(pos), target(tgt), atDestination(atDest) { lsAssert(pos.x < 16 && pos.x >= 0 && pos.y < 16 && pos.y >= 0); }
 };
-
-static pool<movementActor> _MovementActors;
-static constexpr size_t _MaxMovementActors = 5;
 
 struct game
 {
@@ -130,8 +126,7 @@ struct game
   queue<gameEvent> events;
 
   level_info levelInfo;
-
-  local_list<size_t, _MaxMovementActors> movementActors;
+  pool<movementActor> movementActors;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

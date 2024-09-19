@@ -100,18 +100,17 @@ lsResult spawnActors()
 {
   lsResult result = lsR_Success;
 
-  for (size_t i = 0; i < _MaxMovementActors; i++)
+  for (size_t i = 0; i < 5; i++)
   {
     movementActor actor;
     actor.target = (terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f(16.f + i, i + 1.f);
 
     while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)] == tT_mountain)
-      actor.pos += vec2f(1);
+      actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
 
-    size_t index = 0;
-    LS_ERROR_CHECK(pool_add(&_MovementActors, &actor, &index));
-    local_list_add(&_Game.movementActors, index);
+    size_t _unused;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &_unused));
   }
 
   goto epilogue;
@@ -279,43 +278,41 @@ static size_t tickCount = 0;
 
 void movementActor_move()
 {
-  for (const size_t index : _Game.movementActors)
+  for (auto &&_actor : _Game.movementActors)
   {
-    movementActor *pActor = pool_get(_MovementActors, index); // TODO: Error Handling
-
     // Reset lastTile every so often to handle map changes.
     // TODO: For several actors do only some at a time and cycle through them. So it won't reset all at once.
     if (!(tickCount % 10))
     {
-      pActor->activeTilePos = 0;
+      _actor.pItem->activeTilePos = 0;
       tickCount = 0;
     }
 
-    size_t currentTileIdx = worldPosToTileIndex(pActor->pos);
-    direction currentDir = (direction)_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][currentTileIdx];
+    size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
+    direction currentDir = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx];
 
-    if (currentTileIdx != pActor->activeTilePos)
+    if (currentTileIdx != _actor.pItem->activeTilePos)
     {
       // Check if arrived at Target
-      if (_Game.levelInfo.pMap[currentTileIdx] == pActor->target)
+      if (_Game.levelInfo.pMap[currentTileIdx] == _actor.pItem->target)
       {
-        pActor->target = terrain_type(lsGetRand() % (tT_Count - 1));
+        _actor.pItem->target = terrain_type(lsGetRand() % (tT_Count - 1));
         //_Game.movementActors[i].target = tT_water;
-        pActor->atDestination = true;
-        pActor->activeDir = vec2f(0);
+        _actor.pItem->atDestination = true;
+        _actor.pItem->activeDir = vec2f(0);
         return;
       }
 
       lsAssert(_Game.levelInfo.pMap[currentTileIdx] != tT_mountain);
 
       if (currentDir != d_unreachable && currentDir != d_unfillable)
-        pActor->activeDir = dirToTargetTileCenter(currentTileIdx, pActor->pos, currentDir);
+        _actor.pItem->activeDir = dirToTargetTileCenter(currentTileIdx, _actor.pItem->pos, currentDir);
     }
 
     if (currentDir != d_unreachable && currentDir != d_unfillable)
-      pActor->pos += vec2f(0.05) * pActor->activeDir;
+      _actor.pItem->pos += vec2f(0.05) * _actor.pItem->activeDir;
 
-    pActor->activeTilePos = currentTileIdx;
+    _actor.pItem->activeTilePos = currentTileIdx;
     tickCount++;
   }
 }

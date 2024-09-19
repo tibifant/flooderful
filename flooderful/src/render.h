@@ -28,7 +28,7 @@ void render_drawHex(const matrix &model, const vec4f color);
 void render_drawHex2D(const matrix &model, const vec4f color);
 void render_drawHex3D(const matrix &model, const vec4f color);
 void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_type debuggArrow);
-void render_drawActor(const local_list<size_t, _MaxMovementActors> &actors); // Ask coc what is nicer? Just give the actor and iterate somewhere else? Should the actors live in level_info? Should this simply be called in drawMap?
+void render_drawActor(const movementActor actor);
 
 void render_flushRenderQueue();
 
