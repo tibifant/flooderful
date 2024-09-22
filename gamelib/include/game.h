@@ -111,8 +111,8 @@ struct movementActor
   vec2f pos;
   terrain_type target;
   bool atDestination = false;
-  vec2f activeDir = vec2f(0);
-  size_t activeTilePos = 0;
+  vec2f direction = vec2f(0);
+  size_t lastTickTileIdx = 0;
 
   inline movementActor() = default;
   inline movementActor(const vec2f pos, terrain_type tgt, bool atDest = false) : pos(pos), target(tgt), atDestination(atDest) { lsAssert(pos.x < 16 && pos.x >= 0 && pos.y < 16 && pos.y >= 0); }
