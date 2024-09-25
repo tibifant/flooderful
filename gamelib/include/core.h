@@ -1423,6 +1423,7 @@ struct rand_seed
 
   inline rand_seed() { v[0] = lsGetRand(); v[1] = lsGetRand(); };
   inline rand_seed(const rand_seed &) = default;
+  inline rand_seed(const uint64_t v0, const uint64_t v1) { v[0] = v0; v[1] = v1; };
   rand_seed &operator =(const rand_seed &) = default;
 };
 

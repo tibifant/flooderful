@@ -22,13 +22,15 @@ void render_setLookAt(const vec3f position, const vec3f up);
 void render_setTicksSinceOrigin(const float_t ticksSinceOrigin);
 
 void render_drawQuad(const matrix &model, const render_textureId textureIndex);
+void render_drawColoredQuad(const matrix &model, const vec4f color, const render_textureId textureIndex);
 void render_draw2DQuad(const matrix &model, const render_textureId textureIndex);
+void render_drawColored2DQuad(const matrix &model, const vec4f color, const render_textureId textureIndex);
 void render_draw3DQuad(const matrix &model, const render_textureId textureIndex);
 void render_drawHex(const matrix &model, const vec4f color);
 void render_drawHex2D(const matrix &model, const vec4f color);
 void render_drawHex3D(const matrix &model, const vec4f color);
 void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_type debuggArrow);
-void render_drawActor(const movementActor actor);
+void render_drawActor(const movementActor actor, size_t index);
 
 void render_flushRenderQueue();
 

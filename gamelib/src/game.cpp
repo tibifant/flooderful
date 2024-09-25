@@ -45,7 +45,7 @@ bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup);
 void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir);
 
 size_t worldPosToTileIndex(vec2f pos);
-vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction direction);
+vec2f tileIndexToWorldPos(const size_t tileIndex);
 void movementActor_move();
 
 //////////////////////////////////////////////////////////////////////////
@@ -69,9 +69,11 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 
 void setTerrain()
 {
+  rand_seed seed = rand_seed(0, 0);
+
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i] = (lsGetRand() & 15) < 12 ? tT_grass : tT_mountain;
+    _Game.levelInfo.pMap[i] = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
 
   //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)] = tT_grass;
   //_Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
@@ -81,8 +83,8 @@ void setTerrain()
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pMap[lsGetRand() % (16 * 16)] = tT_sand;
-    _Game.levelInfo.pMap[lsGetRand() % (16 * 16)] = tT_water;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)] = tT_sand;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)] = tT_water;
   }
 
   // Setting borders to tT_mountain, so they're collidable
@@ -109,11 +111,11 @@ lsResult spawnActors()
   {
     movementActor actor;
     actor.target = tT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-    actor.pos = vec2f(16.f + i * 3, i * 3 + 1.f);
-  
+    actor.pos = vec2f((float_t)((16 + i * 3) % _Game.levelInfo.map_size.x), i * 3 + 1.f);
+
     while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)] == tT_mountain)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
-  
+
     size_t _unused;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &_unused));
   }
@@ -236,42 +238,37 @@ void updateFloodfill()
 
 // TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
 
-size_t worldPosToTileIndex(vec2f pos)
+size_t worldPosToTileIndex(const vec2f pos)
 {
-  float_t x_even = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x) + 0.5f);
-  float_t y_even = lsFloor(lsClamp(pos.y, 0.f, (float_t)_Game.levelInfo.map_size.y) * 0.5f + 0.5f) * 2.f;
+  const float_t x_even = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x) + 0.5f);
+  const float_t y_even = lsFloor(lsClamp(pos.y, 0.f, (float_t)_Game.levelInfo.map_size.y) * 0.5f + 0.5f) * 2.f;
 
-  float_t x_odd = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x)); // x_even is shifted by -0.5 compared to the world pos.
-  float_t y_odd = lsFloor(lsClamp((pos.y - 1) * 0.5f, 0.f, (float_t)_Game.levelInfo.map_size.y) + 0.5f) * 2.f + 1.f;
+  const float_t x_odd = lsFloor(lsClamp(pos.x, 0.f, (float_t)_Game.levelInfo.map_size.x)); // x_even is shifted by -0.5 compared to the world pos.
+  const float_t y_odd = lsFloor(lsClamp((pos.y - 1) * 0.5f, 0.f, (float_t)_Game.levelInfo.map_size.y) + 0.5f) * 2.f + 1.f;
 
-  //float_t dist_even = lsAbs((x_even + y_even) - (pos.x + pos.y));
-  //float_t dist_odd = lsAbs((x_odd + 0.5f + y_odd) - (pos.x + pos.y));
+  //const float_t dist_even = lsAbs((x_even + y_even) - (pos.x + pos.y));
+  //const float_t dist_odd = lsAbs((x_odd + 0.5f + y_odd) - (pos.x + pos.y));
 
-  float_t dist_even = vec2f(x_even - pos.x, y_even - pos.y).LengthSquared();
-  float_t dist_odd = vec2f(x_odd - (pos.x - 0.5f), y_odd - pos.y).LengthSquared();
+  const float_t dist_even = vec2f(x_even - pos.x, y_even - pos.y).LengthSquared();
+  const float_t dist_odd = vec2f(x_odd - (pos.x - 0.5f), y_odd - pos.y).LengthSquared();
 
   if (dist_even < dist_odd)
-    return (size_t)(y_even * _Game.levelInfo.map_size.x + x_even);
+    return (size_t)lsRound(y_even * _Game.levelInfo.map_size.x + x_even);
   else
-    return (size_t)(y_odd * _Game.levelInfo.map_size.x + x_odd);
+    return (size_t)lsRound(y_odd * _Game.levelInfo.map_size.x + x_odd);
 }
 
-vec2f dirToTargetTileCenter(size_t currentIndex, vec2f currentPos, direction direction)
+vec2f tileIndexToWorldPos(const size_t tileIndex)
 {
-  lsAssert(direction != d_unfillable && direction != d_unreachable);
+  const size_t x_center = tileIndex % _Game.levelInfo.map_size.x;
+  const size_t y_center = tileIndex / _Game.levelInfo.map_size.x;
 
-  const vec2f dir[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
-
-  float_t y_center = (float_t)(currentIndex / _Game.levelInfo.map_size.x);
-  float_t x_center = (float_t)(currentIndex % _Game.levelInfo.map_size.x);
+  vec2f tilePos = vec2f(vec2s(x_center, y_center));
 
   if ((size_t)y_center & 1)
-    x_center += 0.5f;
+    tilePos.x += 0.5f;
 
-  y_center += dir[direction - 1].y;
-  x_center += dir[direction - 1].x;
-
-  return vec2f(x_center - currentPos.x, y_center - currentPos.y).Normalize();
+  return tilePos;
 }
 
 static size_t tickCount = 0;
@@ -283,13 +280,15 @@ void movementActor_move()
 {
   for (auto _actor : _Game.movementActors)
   {
+    const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
+
     // Reset lastTile every so often to handle map changes.
     // TODO: For several actors do only some at a time and cycle through them. So it won't reset all at once.
     if (!(tickCount % 10))
       _actor.pItem->lastTickTileIdx = 0;
-    
-    size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
-    direction currentDir = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx];
+
+    const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
+    const direction currentTileDirectionType = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx];
 
     if (currentTileIdx != _actor.pItem->lastTickTileIdx)
     {
@@ -302,18 +301,27 @@ void movementActor_move()
         continue;
       }
 
-      lsAssert(_Game.levelInfo.pMap[currentTileIdx] != tT_mountain);
+      if (currentTileDirectionType != d_unreachable && currentTileDirectionType != d_unfillable)
+      {
+        const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
+        const vec2f direction = directionLut[currentTileDirectionType - 1];
+        const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
+        const vec2f destinationPos = tilePos + direction;
 
-      if (currentDir != d_unreachable && currentDir != d_unfillable)
-        _actor.pItem->direction = dirToTargetTileCenter(currentTileIdx, _actor.pItem->pos, currentDir);
+        _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
+      }
+      else if (_Game.levelInfo.pMap[currentTileIdx] == tT_mountain)
+      {
+        _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
+      }
     }
 
-    if (currentDir != d_unreachable && currentDir != d_unfillable)
+    if (currentTileDirectionType != d_unreachable) // currentDir == unfillable should always be because we're at tT_mountain. We should never be on our target tile here.
       _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
 
     _actor.pItem->lastTickTileIdx = currentTileIdx;
   }
-  
+
   tickCount++;
 }
 

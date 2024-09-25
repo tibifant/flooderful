@@ -32,6 +32,12 @@ static struct
   {
     shader shader;
     vertexBuffer<vb_attribute_float<2, _Attrib_Pos>> buffer;
+  } colored_plane;
+
+  struct
+  {
+    shader shader;
+    vertexBuffer<vb_attribute_float<2, _Attrib_Pos>> buffer;
     framebuffer framebuffer;
   } screenQuad;
 
@@ -73,6 +79,15 @@ lsResult render_init(lsAppState *pAppState)
   }
 
   // Create Plane.
+  {
+    LS_ERROR_CHECK(shader_createFromFile(&_Render.colored_plane.shader, "shaders/plane.vert", "shaders/colored_plane.frag"));
+
+    float_t renderData[] = { 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0 };
+    LS_ERROR_CHECK(vertexBuffer_create(&_Render.colored_plane.buffer, &_Render.colored_plane.shader));
+    LS_ERROR_CHECK(vertexBuffer_setVertexBuffer(&_Render.colored_plane.buffer, renderData, LS_ARRAYSIZE(renderData)));
+  }
+
+  // Create Colored Plane.
   {
     LS_ERROR_CHECK(shader_createFromFile(&_Render.plane.shader, "shaders/plane.vert", "shaders/plane.frag"));
 
@@ -192,9 +207,25 @@ void render_drawQuad(const matrix &model, const render_textureId textureIndex)
   vertexBuffer_render(&_Render.plane.buffer);
 }
 
+void render_drawColoredQuad(const matrix &model, const vec4f color, const render_textureId textureIndex)
+{
+  texture *pTex = pool_get(&_Render.textures, textureIndex);
+  texture_bind(pTex, 0);
+  shader_bind(&_Render.colored_plane.shader);
+  shader_setUniform(&_Render.colored_plane.shader, "color", color);
+  shader_setUniform(&_Render.colored_plane.shader, "texture", pTex);
+  shader_setUniform(&_Render.colored_plane.shader, "matrix", model);
+  vertexBuffer_render(&_Render.colored_plane.buffer);
+}
+
 void render_draw2DQuad(const matrix &model, const render_textureId textureIndex)
 {
   render_drawQuad(model * matrix::Scale(2.f / _Render.windowSize.x, 2.f / _Render.windowSize.y, 0) * matrix::Translation(-1.f, -1.f, 0) * matrix::Scale(1, -1, 0), textureIndex);
+}
+
+void render_drawColored2DQuad(const matrix &model, const vec4f color, const render_textureId textureIndex)
+{
+  render_drawColoredQuad(model * matrix::Scale(2.f / _Render.windowSize.x, 2.f / _Render.windowSize.y, 0) * matrix::Translation(-1.f, -1.f, 0) * matrix::Scale(1, -1, 0), color, textureIndex);
 }
 
 void render_draw3DQuad(const matrix &model, const render_textureId textureIndex)
@@ -259,12 +290,12 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_
   }
 }
 
-void render_drawActor(const movementActor actor) // In Future: flush all actors being drawed.
+void render_drawActor(const movementActor actor, size_t index) // In Future: flush all actors being drawed.
 {
-  //render_drawHex2D(matrix::Translation(1.f + actor.pos.x * 1.1f, 2.f + actor.pos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(0.9f, 0.f, 0.f, 0.f));
-
+  vec4f color = vec4f(0.1f + index * 0.2f, 1.f - index * 0.2f, 1.f, 1.f);
+  
   const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
-  render_draw2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), rTI_pupu);
+  render_drawColored2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), color, rTI_pupu);
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
