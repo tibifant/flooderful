@@ -272,9 +272,9 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_
     for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x]]);
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].terrainType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x]]);
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].terrainType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
 

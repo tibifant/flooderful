@@ -71,6 +71,12 @@ enum terrain_type
   tT_Count,
 };
 
+struct terrain_element
+{
+  terrain_type terrainType : 4;
+  uint8_t elevationLevel : 4;
+};
+
 struct fill_step
 {
   size_t index;
@@ -88,7 +94,7 @@ struct level_info
     size_t write_direction_idx = 0;
   } resources[tT_Count - 1]; // change to ressource-count once they exist
 
-  terrain_type *pMap = nullptr;
+  terrain_element *pMap = nullptr;
   vec2s map_size;
 };
 
