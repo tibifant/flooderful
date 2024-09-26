@@ -61,7 +61,7 @@ struct gameEvent
   gameEvent_type type;
 };
 
-enum terrain_type
+enum terrain_type // 32 different terrain_types possible.
 {
   tT_grass,
   tT_water,
@@ -73,8 +73,8 @@ enum terrain_type
 
 struct terrain_element
 {
-  terrain_type terrainType : 4;
-  uint8_t elevationLevel : 4;
+  terrain_type terrainType : 5; // 32 different terrain_types.
+  uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
 
 struct fill_step

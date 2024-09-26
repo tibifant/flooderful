@@ -74,25 +74,26 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    //_Game.levelInfo.pMap[i].terrainType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
-    _Game.levelInfo.pMap[i].terrainType = tT_grass;
-    _Game.levelInfo.pMap[i].elevationLevel = 0;
+    _Game.levelInfo.pMap[i].terrainType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    //_Game.levelInfo.pMap[i].terrainType = tT_grass;
+    //_Game.levelInfo.pMap[i].elevationLevel = 0;
+    _Game.levelInfo.pMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)].terrainType = tT_sand;
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)].elevationLevel = 3;
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5) + 1].elevationLevel = 2;
-  _Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5) + 2].elevationLevel = 1;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)].terrainType = tT_sand;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5)].elevationLevel = 3;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5) + 1].elevationLevel = 2;
+  //_Game.levelInfo.pMap[size_t(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5 + _Game.levelInfo.map_size.x * 0.5) + 2].elevationLevel = 1;
   //_Game.levelInfo.pMap[size_t(16 * 16 - 18)] = tT_sand;
   //_Game.levelInfo.pMap[size_t(16 * 2 - 2)] = tT_water;
   //_Game.levelInfo.pMap[34] = tT_grass;
   //_Game.levelInfo.pMap[16 * 16 - (16 + 14)] = tT_grass;
 
-  //for (size_t i = 0; i < 3; i++)
-  //{
-  //  _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_sand;
-  //  _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_water;
-  //}
+  for (size_t i = 0; i < 3; i++)
+  {
+    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_sand;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_water;
+  }
 
   // Setting borders to tT_mountain, so they're collidable
   {
