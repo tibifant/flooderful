@@ -69,7 +69,7 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 
 void setTerrain()
 {
-  rand_seed seed = rand_seed(0, 0);
+  rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
@@ -91,8 +91,8 @@ void setTerrain()
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_sand;
-    _Game.levelInfo.pMap[lsGetRand(seed) % (16 * 16)].terrainType = tT_water;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].terrainType = tT_sand;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].terrainType = tT_water;
   }
 
   // Setting borders to tT_mountain, so they're collidable
@@ -119,7 +119,7 @@ lsResult spawnActors()
   {
     movementActor actor;
     actor.target = tT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-    actor.pos = vec2f((float_t)((16 + i * 3) % _Game.levelInfo.map_size.x), i * 3 + 1.f);
+    actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 
     while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].terrainType == tT_mountain)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
@@ -279,20 +279,20 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
   return tilePos;
 }
 
-static size_t tickCount = 0;
-
 // TODO: Spawn random things that need to be taken to random places.
-// TODO: Why does the second move towarsd the first?? Why does it take forever to spawn these?
+
+static size_t r = 0;
 
 void movementActor_move()
 {
+  r = (r + 1) & 63;
+
   for (auto _actor : _Game.movementActors)
   {
     const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
 
     // Reset lastTile every so often to handle map changes.
-    // TODO: For several actors do only some at a time and cycle through them. So it won't reset all at once.
-    if (!(tickCount % 10))
+    if ((_actor.index & 63) == r) 
       _actor.pItem->lastTickTileIdx = 0;
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
@@ -329,8 +329,6 @@ void movementActor_move()
 
     _actor.pItem->lastTickTileIdx = currentTileIdx;
   }
-
-  tickCount++;
 }
 
 //////////////////////////////////////////////////////////////////////////

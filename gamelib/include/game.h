@@ -82,7 +82,7 @@ struct fill_step
   size_t index;
 
   inline fill_step() = default;
-  inline fill_step(const size_t idx) : index(idx) { lsAssert(index < 16 * 16); }
+  inline fill_step(const size_t idx) : index(idx) { lsAssert(index < 16 * 16); } // Change if map size changes!
 };
 
 struct level_info
@@ -119,9 +119,6 @@ struct movementActor
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
-
-  inline movementActor() = default;
-  inline movementActor(const vec2f pos, terrain_type tgt, bool atDest = false) : pos(pos), target(tgt), atDestination(atDest) { lsAssert(pos.x < 16 && pos.x >= 0 && pos.y < 16 && pos.y >= 0); }
 };
 
 struct game
