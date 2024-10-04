@@ -30,7 +30,7 @@ void render_drawHex(const matrix &model, const vec4f color);
 void render_drawHex2D(const matrix &model, const vec4f color);
 void render_drawHex3D(const matrix &model, const vec4f color);
 void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_type debuggArrow);
-void render_drawActor(const movementActor actor, size_t index);
+void render_drawActor(const movement_actor actor, size_t index);
 
 void render_flushRenderQueue();
 

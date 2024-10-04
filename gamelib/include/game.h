@@ -61,11 +61,15 @@ struct gameEvent
   gameEvent_type type;
 };
 
-enum terrain_type // 32 different terrain_types possible.
+// TODO: change to ressource type
+enum ressource_type // 32 different terrain_types possible.
 {
   tT_grass,
   tT_water,
   tT_sand,
+  tT_tree,
+  tT_sapling,
+  tT_wood,
   tT_mountain, // is used as collidable
 
   tT_Count,
@@ -73,9 +77,26 @@ enum terrain_type // 32 different terrain_types possible.
 
 struct terrain_element
 {
-  terrain_type terrainType : 5; // 32 different terrain_types.
+  ressource_type terrainType : 5; // 32 different terrain_types.
   uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
+
+// TODO: gameplay element: ressource count, bool house?
+struct gameplay_element
+{
+  size_t ressourceCount;
+  size_t maxRessourceCount;
+  bool hasHouse;
+};
+// gameplay map in level_info
+
+// TODO: render element: texture, height, etc
+struct render_element
+{
+  // texture
+  uint8_t elevationLevel;
+};
+// render map
 
 struct fill_step
 {
@@ -95,6 +116,8 @@ struct level_info
   } resources[tT_Count - 1]; // change to ressource-count once they exist
 
   terrain_element *pMap = nullptr;
+  gameplay_element *pGPMap = nullptr; // change name, but like that?
+  render_element *pRMap = nullptr; // change name, but like that?
   vec2s map_size;
 };
 
@@ -112,13 +135,45 @@ enum direction : uint8_t
   d_unfillable,
 };
 
-struct movementActor
+enum entity_type
+{
+  eT_lumberjack,
+  eT_stonemason,
+
+  eT_count,
+};
+
+struct movement_actor
 {
   vec2f pos;
-  terrain_type target;
+  ressource_type target;
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
+};
+
+struct lifesupport_actor
+{
+  entity_type type;
+  size_t entityIndex;
+  // nutritions
+  // food storage
+};
+
+enum lumberjack_state
+{
+  lS_plant,
+  lS_water,
+  lS_fell,
+  lS_cut,
+
+  lS_count,
+};
+
+struct lumberjack_actor
+{
+  lumberjack_state state;
+  movement_actor *pActor;
 };
 
 struct game
@@ -129,7 +184,7 @@ struct game
   queue<gameEvent> events;
 
   level_info levelInfo;
-  pool<movementActor> movementActors;
+  pool<movement_actor> movementActors;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;
@@ -142,7 +197,7 @@ lsResult game_init();
 lsResult game_tick();
 
 void game_setPlayerMapIndex(bool left);
-void game_playerSwitchTiles(terrain_type terrainType);
+void game_playerSwitchTiles(ressource_type terrainType);
 
 game *game_getGame();
 

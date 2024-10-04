@@ -117,7 +117,7 @@ lsResult spawnActors()
 
   for (size_t i = 0; i < 5; i++)
   {
-    movementActor actor;
+    movement_actor actor;
     actor.target = tT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 

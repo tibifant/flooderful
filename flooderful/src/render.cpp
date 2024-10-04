@@ -290,7 +290,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_
   }
 }
 
-void render_drawActor(const movementActor actor, size_t index) // In Future: flush all actors being drawed.
+void render_drawActor(const movement_actor actor, size_t index) // In Future: flush all actors being drawed.
 {
   vec4f color = vec4f(0.1f + index * 0.2f, 1.f - index * 0.2f, 1.f, 1.f);
   
