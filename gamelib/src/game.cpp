@@ -50,6 +50,10 @@ void movementActor_move();
 
 //////////////////////////////////////////////////////////////////////////
 
+static pool<lumberjack_actor> _LumberjackActors; // Do we need this in the header?
+
+//////////////////////////////////////////////////////////////////////////
+
 // fillterrain and switch maps:
 // fill terrain map with enums
 // per ressource:
@@ -333,11 +337,28 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
+void update_lumberjack()
+{
+  static const ressource_type target_from_state[laS_count] = { tT_sapling, tT_tree, tT_trunk, tT_wood };
+
+  for (const auto _actor : _LumberjackActors)
+  {
+    lumberjack_actor *pLumberjack = _actor.pItem;
+
+    if (pLumberjack->pActor->atDestination && pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+      pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+
+    pLumberjack->pActor->target = target_from_state[pLumberjack->state];
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 // Changing tiles for debugging
 
 size_t playerMapIndex = 0;
 
-void game_playerSwitchTiles(terrain_type terrainType)
+void game_playerSwitchTiles(ressource_type terrainType)
 {
   lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_Count);

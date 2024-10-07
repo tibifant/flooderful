@@ -67,8 +67,9 @@ enum ressource_type // 32 different terrain_types possible.
   tT_grass,
   tT_water,
   tT_sand,
-  tT_tree,
   tT_sapling,
+  tT_tree,
+  tT_trunk,
   tT_wood,
   tT_mountain, // is used as collidable
 
@@ -160,19 +161,19 @@ struct lifesupport_actor
   // food storage
 };
 
-enum lumberjack_state
+enum lumberjack_actor_state
 {
-  lS_plant,
-  lS_water,
-  lS_fell,
-  lS_cut,
+  laS_plant,
+  laS_water,
+  laS_chop,
+  laS_cut,
 
-  lS_count,
+  laS_count,
 };
 
 struct lumberjack_actor
 {
-  lumberjack_state state;
+  lumberjack_actor_state state;
   movement_actor *pActor;
 };
 

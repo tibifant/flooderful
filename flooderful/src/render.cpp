@@ -261,7 +261,7 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, terrain_type debugArrow)
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, ressource_type debugArrow)
 {
   (void)pAppState;
 
