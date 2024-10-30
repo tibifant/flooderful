@@ -153,12 +153,22 @@ struct movement_actor
   size_t lastTickTileIdx = 0;
 };
 
+enum nutrition_type
+{
+  nT_vitamin,
+  nT_protein,
+  nT_fat,
+  nT_carbohydrates,
+
+  nT_count,
+};
+
 struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  // nutritions
-  // food storage
+  size_t nutritions[nT_count]; // hmm the nutritions probably are a resources...
+  size_t lunchbox[nT_count]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
 enum lumberjack_actor_state
@@ -186,6 +196,7 @@ struct game
 
   level_info levelInfo;
   pool<movement_actor> movementActors;
+  pool<lifesupport_actor> lifesupportActors;
 
   float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;

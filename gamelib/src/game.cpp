@@ -337,7 +337,25 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
-void update_lumberjack()
+void update_lifesupportActors()
+{
+  static const size_t nutritionThreshold = 1;
+
+  for (auto _actor : _Game.lifesupportActors)
+  {
+    for (size_t nt = 0; nt < nT_count; nt++)
+    {
+      if (_actor.pItem->nutritions[nt] < nutritionThreshold) // how should this work? do we just loose nutritions over time or whilst working/moving? TODO: decide and adapt this accordingly
+      {
+        
+      }
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void update_lumberjack() // WIP I guess...
 {
   static const ressource_type target_from_state[laS_count] = { tT_sapling, tT_tree, tT_trunk, tT_wood };
 
