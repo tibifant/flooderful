@@ -61,8 +61,9 @@ struct gameEvent
   gameEvent_type type;
 };
 
-// TODO: change to ressource type
-enum ressource_type // 32 different terrain_types possible.
+// TODO: change name: target
+// for rendering map have enum values for what should be rendered there that simply have the same enum value. food (and possibly other stuff) that consists of several targetables needs to be handled seperatly.
+enum target_type // 32 different terrain_types possible.
 {
   tT_grass,
   tT_water,
@@ -71,6 +72,14 @@ enum ressource_type // 32 different terrain_types possible.
   tT_tree,
   tT_trunk,
   tT_wood,
+
+  nutrition_start,
+  tT_vitamin = nutrition_start,
+  tT_protein,
+  tT_fat,
+  tT_carbohydrates,
+  nutrition_end =  tT_carbohydrates, // always +1 for nutrition_count!
+
   tT_mountain, // is used as collidable
 
   tT_Count,
@@ -78,7 +87,7 @@ enum ressource_type // 32 different terrain_types possible.
 
 struct terrain_element
 {
-  ressource_type terrainType : 5; // 32 different terrain_types.
+  target_type terrainType : 5; // 32 different terrain_types.
   uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
 
@@ -147,28 +156,18 @@ enum entity_type
 struct movement_actor
 {
   vec2f pos;
-  ressource_type target;
+  target_type target;
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
-};
-
-enum nutrition_type
-{
-  nT_vitamin,
-  nT_protein,
-  nT_fat,
-  nT_carbohydrates,
-
-  nT_count,
 };
 
 struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  size_t nutritions[nT_count]; // hmm the nutritions probably are a resources...
-  size_t lunchbox[nT_count]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
+  size_t nutritions[nutrition_end + 1 - nutrition_start];
+  size_t lunchbox[nutrition_end + 1 - nutrition_start]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
 enum lumberjack_actor_state
@@ -209,7 +208,7 @@ lsResult game_init();
 lsResult game_tick();
 
 void game_setPlayerMapIndex(bool left);
-void game_playerSwitchTiles(ressource_type terrainType);
+void game_playerSwitchTiles(target_type terrainType);
 
 game *game_getGame();
 

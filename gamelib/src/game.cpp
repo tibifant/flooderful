@@ -343,11 +343,16 @@ void update_lifesupportActors()
 
   for (auto _actor : _Game.lifesupportActors)
   {
-    for (size_t nt = 0; nt < nT_count; nt++)
+    for (size_t n = 0; n < nutrition_end + 1 -  nutrition_start; n++)
     {
-      if (_actor.pItem->nutritions[nt] < nutritionThreshold) // how should this work? do we just loose nutritions over time or whilst working/moving? TODO: decide and adapt this accordingly
+      if (_actor.pItem->nutritions[n] < nutritionThreshold) // how should this work? do we just loose nutritions over time or whilst working/moving? TODO: decide and adapt this accordingly
       {
-        
+        // Check lunchbox // TODO: function to conclude from nutrition to food
+
+        // if nothing in lunchbox:
+        // get movemntactor -  set target
+        // ehhhhhh in the map with all resources how do we handle several resources being at the same tile?
+        // also can and do we want to handle needing several resources differently?
       }
     }
   }
@@ -357,7 +362,7 @@ void update_lifesupportActors()
 
 void update_lumberjack() // WIP I guess...
 {
-  static const ressource_type target_from_state[laS_count] = { tT_sapling, tT_tree, tT_trunk, tT_wood };
+  static const target_type target_from_state[laS_count] = { tT_sapling, tT_tree, tT_trunk, tT_wood };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -376,7 +381,7 @@ void update_lumberjack() // WIP I guess...
 
 size_t playerMapIndex = 0;
 
-void game_playerSwitchTiles(ressource_type terrainType)
+void game_playerSwitchTiles(target_type terrainType)
 {
   lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_Count);
