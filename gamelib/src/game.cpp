@@ -184,41 +184,59 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
 {
   lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  if (type < _ptt_multi_types)
   {
-    if (pMap[i].tileType == tT_mountain)
-    {
-      pDirectionLookup[i] = d_unfillable;
-      continue;
-    }
-
-    if (type < _ptt_multi_types)
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
       if (pMap[i].tileType == (tile_type)type)
       {
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
       }
+      else if (pMap[i].tileType == tT_mountain)
+      {
+        pDirectionLookup[i] = d_unfillable;
+      }
     }
-    else if (type == ptT_vitamin)
+  }
+  else if (type == ptT_vitamin)
+  {
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal));
-      queue_pushBack(&pathfindQueue, fill_step(i));
+      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal))))
+        queue_pushBack(&pathfindQueue, fill_step(i));
+
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
     }
-    else if (type == ptT_protein)
+  }
+  else if (type == ptT_protein)
+  {
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal));
-      queue_pushBack(&pathfindQueue, fill_step(i));
+      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal))))
+        queue_pushBack(&pathfindQueue, fill_step(i));
+
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
     }
-    else if (type == ptT_carbohydrates)
+  }
+  else if (type == ptT_carbohydrates)
+  {
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal));
-      queue_pushBack(&pathfindQueue, fill_step(i));
+      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal))))
+        queue_pushBack(&pathfindQueue, fill_step(i));
+
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
     }
-    else if (type == ptT_fat)
+  }
+  else if (type == ptT_fat)
+  {
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal));
-      queue_pushBack(&pathfindQueue, fill_step(i));
+      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal))))
+        queue_pushBack(&pathfindQueue, fill_step(i));
+
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
     }
   }
 }
@@ -263,23 +281,6 @@ void updateFloodfill()
 //////////////////////////////////////////////////////////////////////////
 
 // TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
-
-bool at_target(const tile_type tileType, const pathfinding_target_type targetType)
-{
-  switch (targetType)
-  {
-  case ptT_vitamin:
-    return tileType == tT_tomato || tileType == tT_meal;
-  case ptT_protein:
-    return tileType == tT_bean || tileType == tT_meal;
-  case ptT_carbohydrates:
-    return tileType == tT_wheat || tileType == tT_meal;
-  case ptT_fat:
-    return tileType == tT_sunflower || tileType == tT_meal;
-  default:
-    return tileType == (tile_type)targetType; // ask coc if this is clean?
-  }
-}
 
 size_t worldPosToTileIndex(const vec2f pos)
 {
@@ -333,18 +334,23 @@ void movementActor_move()
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     const direction currentTileDirectionType = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx];
 
-    if (currentTileIdx != _actor.pItem->lastTickTileIdx)
+    if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
     {
-      // Check if arrived at Target
-      if (at_target(_Game.levelInfo.pMap[currentTileIdx].tileType, _actor.pItem->target))
+      if (currentTileDirectionType == d_unfillable)
       {
-        _actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
-        _actor.pItem->atDestination = true;
-        _actor.pItem->direction = vec2f(0);
-        continue;
+        if (_Game.levelInfo.pMap[currentTileIdx].tileType == tT_mountain)
+        {
+          _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
+        }
+        else // no check if where actually at our target as this should always be true if we're at unfillable but not at tT_mountain
+        {
+          _actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
+          _actor.pItem->atDestination = true;
+          _actor.pItem->direction = vec2f(0);
+          continue;
+        }
       }
-
-      if (currentTileDirectionType != d_unreachable && currentTileDirectionType != d_unfillable)
+      else
       {
         const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
         const vec2f direction = directionLut[currentTileDirectionType - 1];
@@ -353,14 +359,9 @@ void movementActor_move()
 
         _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
       }
-      else if (_Game.levelInfo.pMap[currentTileIdx].tileType == tT_mountain)
-      {
-        _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
-      }
-    }
 
-    if (currentTileDirectionType != d_unreachable) // currentDir == unfillable should always be because we're at tT_mountain. We should never be on our target tile here.
       _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
+    }
 
     _actor.pItem->lastTickTileIdx = currentTileIdx;
   }
