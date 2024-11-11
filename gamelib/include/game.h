@@ -159,7 +159,7 @@ struct level_info
     queue<fill_step> pathfinding_queue;
     direction *pDirectionLookup[2] = {};
     size_t write_direction_idx = 0;
-  } resources[ptT_Count - 1];
+  } resources[ptT_Count];
 
   pathfinding_element *pMap = nullptr;
   gameplay_element *pGPMap = nullptr; // change name, but like that?

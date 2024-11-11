@@ -247,7 +247,7 @@ void initializeLevel()
   setTerrain();
 
   // Set up floodfill queue and lookup
-  for (size_t i = 0; i < ptT_Count /*- 1*/; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < ptT_Count; i++) // tT_mountain isn't part of pathfinfing_target_type so we don't need to skip it anymore
   {
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
@@ -260,7 +260,7 @@ void initializeLevel()
 
 void updateFloodfill()
 {
-  for (size_t i = 0; i < ptT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < ptT_Count - 1; i++) // tT_mountain isn't part of pathfinfing_target_type so we don't need to skip it anymore
   {
     size_t writeIndex = _Game.levelInfo.resources[i].write_direction_idx;
 
