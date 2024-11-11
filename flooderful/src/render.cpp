@@ -261,20 +261,21 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, target_type debugArrow)
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfinding_target_type debugArrow)
 {
   (void)pAppState;
 
-  const vec4f colors[tT_Count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
+  // TODO!!
+  const vec4f colors[tT_count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
 
   for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {
     for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].terrainType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].terrainType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
 

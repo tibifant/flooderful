@@ -33,16 +33,7 @@ void game_addEvent_internal(gameEvent *pEvent);
 // ziele die in die map floodfillen wie man zum naechsten ziel des typen kommt
 // floodfill look-up map -> sagt pro kachel pro ziel welche richtung
 
-void initializeLevel();
-void mapInit(const size_t width, const size_t height);
-void updateFloodfill();
-void setTerrain();
-lsResult spawnActors();
-
 constexpr size_t _FloodFillSteps = 100;
-
-bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const terrain_element *pMap);
-void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const terrain_element *pMap);
 
 size_t worldPosToTileIndex(vec2f pos);
 vec2f tileIndexToWorldPos(const size_t tileIndex);
@@ -78,7 +69,7 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i].terrainType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    _Game.levelInfo.pMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
     //_Game.levelInfo.pMap[i].terrainType = tT_grass;
     //_Game.levelInfo.pMap[i].elevationLevel = 0;
     _Game.levelInfo.pMap[i].elevationLevel = lsGetRand(seed) % 3;
@@ -95,22 +86,22 @@ void setTerrain()
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].terrainType = tT_sand;
-    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].terrainType = tT_water;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
   }
 
   // Setting borders to tT_mountain, so they're collidable
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].terrainType = tT_mountain;
-      _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1].terrainType = tT_mountain;
+      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
-      _Game.levelInfo.pMap[x].terrainType = tT_mountain;
-      _Game.levelInfo.pMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].terrainType = tT_mountain;
+      _Game.levelInfo.pMap[x].tileType = tT_mountain;
+      _Game.levelInfo.pMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
     }
   }
 }
@@ -122,10 +113,10 @@ lsResult spawnActors()
   for (size_t i = 0; i < 5; i++)
   {
     movement_actor actor;
-    actor.target = tT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
+    actor.target = ptT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 
-    while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].terrainType == tT_mountain)
+    while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
 
     size_t _unused;
@@ -143,7 +134,7 @@ epilogue:
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const terrain_element *pMap)
+void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const pathfinding_element *pMap)
 {
   direction nextTile = (direction)pDirectionLookup[nextIndex];
 
@@ -154,7 +145,7 @@ void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, uint8_t *pDire
   }
 }
 
-bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const terrain_element *pMap)
+bool floodfill(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, const pathfinding_element *pMap)
 {
   fill_step current;
   size_t stepCount = 0;
@@ -189,28 +180,61 @@ bool floodfill(queue<fill_step> &pathfindQueue, uint8_t *pDirectionLookup, const
 
 // TODO: have a special map for rendering to know if something needs to be rotated etc.
 
+void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pMap, const pathfinding_target_type type)
+{
+  lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  {
+    if (pMap[i].tileType == tT_mountain)
+    {
+      pDirectionLookup[i] = d_unfillable;
+      continue;
+    }
+
+    if (type < _ptt_multi_types)
+    {
+      if (pMap[i].tileType == (tile_type)type)
+      {
+        queue_pushBack(&pathfindQueue, fill_step(i));
+        pDirectionLookup[i] = d_unfillable;
+      }
+    }
+    else if (type == ptT_vitamin)
+    {
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal));
+      queue_pushBack(&pathfindQueue, fill_step(i));
+    }
+    else if (type == ptT_protein)
+    {
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal));
+      queue_pushBack(&pathfindQueue, fill_step(i));
+    }
+    else if (type == ptT_carbohydrates)
+    {
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal));
+      queue_pushBack(&pathfindQueue, fill_step(i));
+    }
+    else if (type == ptT_fat)
+    {
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal));
+      queue_pushBack(&pathfindQueue, fill_step(i));
+    }
+  }
+}
+
 void initializeLevel()
 {
   mapInit(16, 16);
   setTerrain();
 
   // Set up floodfill queue and lookup
-  for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < ptT_Count /*- 1*/; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-    for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
-    {
-      if (_Game.levelInfo.pMap[j].terrainType == i)
-      {
-        queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, fill_step(j));
-        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
-      }
-
-      if (_Game.levelInfo.pMap[j].terrainType == tT_mountain)
-        _Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx][j] = d_unfillable;
-    }
+    rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pMap, (pathfinding_target_type)i);
   }
 
   lsAssert(spawnActors() == lsR_Success);
@@ -218,7 +242,7 @@ void initializeLevel()
 
 void updateFloodfill()
 {
-  for (size_t i = 0; i < tT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
+  for (size_t i = 0; i < ptT_Count - 1; i++) // Skipping tT_mountain, as this is our collidable stuff atm.
   {
     size_t writeIndex = _Game.levelInfo.resources[i].write_direction_idx;
 
@@ -231,17 +255,7 @@ void updateFloodfill()
 
       lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-      for (size_t j = 0; j < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; j++)
-      {
-        if (_Game.levelInfo.pMap[j].terrainType == i)
-        {
-          _Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex][j] = d_unfillable;
-          queue_pushBack(&_Game.levelInfo.resources[i].pathfinding_queue, fill_step(j));
-        }
-
-        if (_Game.levelInfo.pMap[j].terrainType == tT_mountain)
-          _Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex][j] = d_unfillable;
-      }
+      rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pMap, (pathfinding_target_type)i);
     }
   }
 }
@@ -249,6 +263,23 @@ void updateFloodfill()
 //////////////////////////////////////////////////////////////////////////
 
 // TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
+
+bool at_target(const tile_type tileType, const pathfinding_target_type targetType)
+{
+  switch (targetType)
+  {
+  case ptT_vitamin:
+    return tileType == tT_tomato || tileType == tT_meal;
+  case ptT_protein:
+    return tileType == tT_bean || tileType == tT_meal;
+  case ptT_carbohydrates:
+    return tileType == tT_wheat || tileType == tT_meal;
+  case ptT_fat:
+    return tileType == tT_sunflower || tileType == tT_meal;
+  default:
+    return tileType == (tile_type)targetType; // ask coc if this is clean?
+  }
+}
 
 size_t worldPosToTileIndex(const vec2f pos)
 {
@@ -305,9 +336,9 @@ void movementActor_move()
     if (currentTileIdx != _actor.pItem->lastTickTileIdx)
     {
       // Check if arrived at Target
-      if (_Game.levelInfo.pMap[currentTileIdx].terrainType == _actor.pItem->target)
+      if (at_target(_Game.levelInfo.pMap[currentTileIdx].tileType, _actor.pItem->target))
       {
-        _actor.pItem->target = _actor.pItem->target == tT_water ? tT_sand : tT_water;
+        _actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
         _actor.pItem->atDestination = true;
         _actor.pItem->direction = vec2f(0);
         continue;
@@ -322,7 +353,7 @@ void movementActor_move()
 
         _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
       }
-      else if (_Game.levelInfo.pMap[currentTileIdx].terrainType == tT_mountain)
+      else if (_Game.levelInfo.pMap[currentTileIdx].tileType == tT_mountain)
       {
         _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
       }
@@ -343,7 +374,7 @@ void update_lifesupportActors()
 
   for (auto _actor : _Game.lifesupportActors)
   {
-    for (size_t n = 0; n < nutrition_end + 1 -  nutrition_start; n++)
+    for (size_t n = 0; n < _ptT_nutrition_end + 1 - _ptT_nutrition_start; n++)
     {
       if (_actor.pItem->nutritions[n] < nutritionThreshold) // how should this work? do we just loose nutritions over time or whilst working/moving? TODO: decide and adapt this accordingly
       {
@@ -362,7 +393,7 @@ void update_lifesupportActors()
 
 void update_lumberjack() // WIP I guess...
 {
-  static const target_type target_from_state[laS_count] = { tT_sapling, tT_tree, tT_trunk, tT_wood };
+  static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -381,12 +412,12 @@ void update_lumberjack() // WIP I guess...
 
 size_t playerMapIndex = 0;
 
-void game_playerSwitchTiles(target_type terrainType)
+void game_playerSwitchTiles(tile_type terrainType)
 {
   lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  lsAssert(terrainType < tT_Count);
+  lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pMap[playerMapIndex].terrainType = terrainType;
+  _Game.levelInfo.pMap[playerMapIndex].tileType = terrainType;
 }
 
 void game_setPlayerMapIndex(bool left)

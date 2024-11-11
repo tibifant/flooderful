@@ -61,33 +61,69 @@ struct gameEvent
   gameEvent_type type;
 };
 
-// TODO: change name: target
 // for rendering map have enum values for what should be rendered there that simply have the same enum value. food (and possibly other stuff) that consists of several targetables needs to be handled seperatly.
-enum target_type // 32 different terrain_types possible.
+enum pathfinding_target_type // 32 different terrain_types possible.
+{
+  ptT_grass,
+  ptT_water,
+  ptT_sand,
+  ptT_sapling,
+  ptT_tree,
+  ptT_trunk,
+  ptT_wood,
+
+  _ptt_multi_types,
+  _ptT_nutrition_start = _ptt_multi_types,
+  ptT_vitamin = _ptT_nutrition_start,
+  ptT_protein,
+  ptT_fat,
+  ptT_carbohydrates,
+  _ptT_nutrition_end =  ptT_carbohydrates, // always +1 for nutrition_count!
+
+  // i think we don't need this here, but double check!
+  //ptT_mountain, // is used as collidable
+
+  ptT_Count,
+};
+
+enum tile_type // max 32 different terrain_types.
 {
   tT_grass,
   tT_water,
   tT_sand,
   tT_sapling,
   tT_tree,
-  tT_trunk,
+  tT_trunk, // we probably don't need trunk as resource, as we just walk to the sawmill, once the tree is felled...
   tT_wood,
 
-  nutrition_start,
-  tT_vitamin = nutrition_start,
-  tT_protein,
-  tT_fat,
-  tT_carbohydrates,
-  nutrition_end =  tT_carbohydrates, // always +1 for nutrition_count!
+  tT_tomato,
+  tT_bean,
+  tT_wheat,
+  tT_sunflower,
+  tT_meal, // insert meal types here
 
-  tT_mountain, // is used as collidable
+  tT_mountain,
 
-  tT_Count,
+  tT_count,
 };
 
-struct terrain_element
+enum direction : uint8_t
 {
-  target_type terrainType : 5; // 32 different terrain_types.
+  d_unreachable,
+
+  d_topRight,
+  d_right,
+  d_bottomRight,
+  d_bottomLeft,
+  d_left,
+  d_topLeft,
+
+  d_unfillable,
+};
+
+struct pathfinding_element // hmm i don't like this name
+{
+  tile_type tileType : 5; // 32 different terrain_types.
   uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
 
@@ -121,28 +157,14 @@ struct level_info
   struct resource_info
   {
     queue<fill_step> pathfinding_queue;
-    uint8_t *pDirectionLookup[2] = {};
+    direction *pDirectionLookup[2] = {};
     size_t write_direction_idx = 0;
-  } resources[tT_Count - 1]; // change to ressource-count once they exist
+  } resources[ptT_Count - 1];
 
-  terrain_element *pMap = nullptr;
+  pathfinding_element *pMap = nullptr;
   gameplay_element *pGPMap = nullptr; // change name, but like that?
   render_element *pRMap = nullptr; // change name, but like that?
   vec2s map_size;
-};
-
-enum direction : uint8_t
-{
-  d_unreachable,
-
-  d_topRight,
-  d_right,
-  d_bottomRight,
-  d_bottomLeft,
-  d_left,
-  d_topLeft,
-
-  d_unfillable,
 };
 
 enum entity_type
@@ -156,7 +178,7 @@ enum entity_type
 struct movement_actor
 {
   vec2f pos;
-  target_type target;
+  pathfinding_target_type target;
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
@@ -166,8 +188,8 @@ struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  size_t nutritions[nutrition_end + 1 - nutrition_start];
-  size_t lunchbox[nutrition_end + 1 - nutrition_start]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
+  size_t nutritions[_ptT_nutrition_end + 1 - _ptT_nutrition_start];
+  size_t lunchbox[_ptT_nutrition_end + 1 - _ptT_nutrition_start]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
 enum lumberjack_actor_state
@@ -208,7 +230,7 @@ lsResult game_init();
 lsResult game_tick();
 
 void game_setPlayerMapIndex(bool left);
-void game_playerSwitchTiles(target_type terrainType);
+void game_playerSwitchTiles(tile_type terrainType);
 
 game *game_getGame();
 
