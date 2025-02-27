@@ -261,7 +261,7 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfinding_target_type debugArrow)
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfinding_element debugArrow)
 {
   (void)pAppState;
 
@@ -283,7 +283,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      const direction dir = (direction)levelInfo.resources[debugArrow].pDirectionLookup[1 - levelInfo.resources[debugArrow].write_direction_idx][j];
+      const direction dir = (direction)levelInfo.resources[debugArrow.tileType].pDirectionLookup[1 - levelInfo.resources[debugArrow.tileType].write_direction_idx][j];
 
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);

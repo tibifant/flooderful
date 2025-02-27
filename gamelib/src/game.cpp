@@ -203,40 +203,55 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal))))
-        queue_pushBack(&pathfindQueue, fill_step(i));
-
       pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
+
+      if (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal)
+      {
+        queue_pushBack(&pathfindQueue, fill_step(i));
+        pDirectionLookup[i] = d_unfillable;
+      }
+      else if (pMap[i].tileType == tT_mountain)
+      {
+      }
     }
   }
   else if (type == ptT_protein)
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal))))
-        queue_pushBack(&pathfindQueue, fill_step(i));
-
       pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
+
+      if (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal)
+      {
+        queue_pushBack(&pathfindQueue, fill_step(i));
+        pDirectionLookup[i] = d_unfillable;
+      }
     }
   }
   else if (type == ptT_carbohydrates)
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal))))
-        queue_pushBack(&pathfindQueue, fill_step(i));
-
       pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
+
+      if (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal)
+      {
+        queue_pushBack(&pathfindQueue, fill_step(i));
+        pDirectionLookup[i] = d_unfillable;
+      }
     }
   }
   else if (type == ptT_fat)
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      if (!!(pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal))))
-        queue_pushBack(&pathfindQueue, fill_step(i));
-
       pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
+
+      if (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal)
+      {
+        queue_pushBack(&pathfindQueue, fill_step(i));
+        pDirectionLookup[i] = d_unfillable;
+      }
     }
   }
 }
@@ -342,7 +357,7 @@ void movementActor_move()
         {
           _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
         }
-        else // no check if where actually at our target as this should always be true if we're at unfillable but not at tT_mountain
+        else // no check if we're actually at our target as this should always be true if we're at unfillable but not at tT_mountain
         {
           _actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
           _actor.pItem->atDestination = true;
