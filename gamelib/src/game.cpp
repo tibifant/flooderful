@@ -193,9 +193,9 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
       }
-      else if (pMap[i].tileType == tT_mountain)
+      else
       {
-        pDirectionLookup[i] = d_unfillable;
+        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
       }
     }
   }
@@ -203,15 +203,14 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-
       if (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal)
       {
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
       }
-      else if (pMap[i].tileType == tT_mountain)
+      else
       {
+        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
       }
     }
   }
@@ -219,12 +218,14 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-
       if (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal)
       {
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
+      }
+      else
+      {
+        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
       }
     }
   }
@@ -232,12 +233,14 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-
       if (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal)
       {
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
+      }
+      else
+      {
+        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
       }
     }
   }
@@ -245,12 +248,14 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-
       if (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal)
       {
         queue_pushBack(&pathfindQueue, fill_step(i));
         pDirectionLookup[i] = d_unfillable;
+      }
+      else
+      {
+        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
       }
     }
   }
