@@ -391,35 +391,85 @@ void movementActor_move()
 
 void update_lifesupportActors()
 {
-  static const size_t NutritionThreshold = 4;
-  static const size_t EatConsiderThreshold = 10;
+  // TODO: ADAPT VALUES TO MAKE SENSE!
+  static const size_t EatingThreshold = 4;
+  static const size_t ConsiderationThreshold = 10;
+  static const int16_t MaxNutritionValue = 256;
+  static const int16_t MaxFoodItemCount = 256;
 
-  static const size_t nutritonsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
+  static const size_t nutritionsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
-  static const int8_t FoodToNutrition[foodTypeCount][nutritonsCount] = { { 10, 0, 0, 0 } /*tomato*/, {0, 10, 0, 0} /*bean*/, { 0, 0, 10, 0 } /*wheat*/,  { 0, 0, 0, 10 } /*sunflower*/, {5, 5, 5, 5} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
+  static const int8_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 10, 0, 0, 0 } /*tomato*/, {0, 10, 0, 0} /*bean*/, { 0, 0, 10, 0 } /*wheat*/,  { 0, 0, 0, 10 } /*sunflower*/, {5, 5, 5, 5} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
   {
-    int8_t bestScore = 0;
-    size_t bestIndex = 0;
+    bool anyNeededNutrion = false;
 
-    for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+    for (size_t j = 0; j < nutritionsCount; j++)
+      if (_actor.pItem->nutritions[j] < EatingThreshold)
+        anyNeededNutrion = true;
+
+    if (anyNeededNutrion)
     {
-      if (_actor.pItem->lunchbox[i])
-      {
-        int8_t score = 0;
-        for (size_t j = 0; j < nutritonsCount; j++)
-          score += FoodToNutrition[i][j] > 0 && _actor.pItem->nutritions[j] < EatConsiderThreshold ? 10 : -1;
+      int8_t bestScore = 0;
+      size_t bestIndex = 0;
 
-        if (score > bestScore)
+      for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+      {
+
+        if (_actor.pItem->lunchbox[i])
         {
-          bestScore = score;
-          bestIndex = i;
+          int8_t score = 0;
+          for (size_t j = 0; j < nutritionsCount; j++)
+            score += FoodToNutrition[i][j] > 0 && _actor.pItem->nutritions[j] < ConsiderationThreshold ? nutritionsCount : -1;
+
+          if (score > bestScore)
+          {
+            bestScore = score;
+            bestIndex = i;
+          }
         }
       }
 
-      // eat best item TODO: consider neutriton threashhold
-      // if no item: set actor target
+      // eat best item
+      if (bestScore > 0)
+      {
+        for (size_t j = 0; j < nutritionsCount; j++)
+        {
+          const int16_t val = (int16_t)_actor.pItem->nutritions[j] + FoodToNutrition[bestIndex][j];
+          _actor.pItem->nutritions[j] = (size_t)lsClamp(val, (int16_t)0, MaxNutritionValue);
+        }
+
+        // remove from lunchbox
+        _actor.pItem->lunchbox[bestIndex] = (size_t)lsClamp((int16_t)(_actor.pItem->lunchbox[bestIndex] - 1), (int16_t)0, MaxFoodItemCount);
+      }
+      else // if no item: set actor target
+      {
+        size_t lowest = MaxNutritionValue;
+        pathfinding_target_type lowestNutrient = ptT_Count;
+
+        for (size_t j = 0; j < nutritionsCount; j++)
+        {
+          if (_actor.pItem->nutritions[j] < lowest)
+          {
+            lowest = _actor.pItem->nutritions[j];
+            lowestNutrient = (pathfinding_target_type)(j);
+          }
+        }
+
+        lsAssert(lowestNutrient < ptT_Count);
+
+        switch (_actor.pItem->type)
+        {
+        case eT_lumberjack:
+          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = lowestNutrient;
+          break;
+        case eT_stonemason:
+        default:
+          lsFail(); // not implemented.
+          break;
+        }
+      }
     }
   }
 }
