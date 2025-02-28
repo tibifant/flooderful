@@ -391,21 +391,35 @@ void movementActor_move()
 
 void update_lifesupportActors()
 {
-  static const size_t nutritionThreshold = 1;
+  static const size_t NutritionThreshold = 4;
+  static const size_t EatConsiderThreshold = 10;
+
+  static const size_t nutritonsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
+  static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
+  static const int8_t FoodToNutrition[foodTypeCount][nutritonsCount] = { { 10, 0, 0, 0 } /*tomato*/, {0, 10, 0, 0} /*bean*/, { 0, 0, 10, 0 } /*wheat*/,  { 0, 0, 0, 10 } /*sunflower*/, {5, 5, 5, 5} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
   {
-    for (size_t n = 0; n < _ptT_nutrition_end + 1 - _ptT_nutrition_start; n++)
-    {
-      if (_actor.pItem->nutritions[n] < nutritionThreshold) // how should this work? do we just loose nutritions over time or whilst working/moving? TODO: decide and adapt this accordingly
-      {
-        // Check lunchbox // TODO: function to conclude from nutrition to food
+    int8_t bestScore = 0;
+    size_t bestIndex = 0;
 
-        // if nothing in lunchbox:
-        // get movemntactor -  set target
-        // ehhhhhh in the map with all resources how do we handle several resources being at the same tile?
-        // also can and do we want to handle needing several resources differently?
+    for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+    {
+      if (_actor.pItem->lunchbox[i])
+      {
+        int8_t score = 0;
+        for (size_t j = 0; j < nutritonsCount; j++)
+          score += FoodToNutrition[i][j] > 0 && _actor.pItem->nutritions[j] < EatConsiderThreshold ? 10 : -1;
+
+        if (score > bestScore)
+        {
+          bestScore = score;
+          bestIndex = i;
+        }
       }
+
+      // eat best item TODO: consider neutriton threashhold
+      // if no item: set actor target
     }
   }
 }
