@@ -80,8 +80,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_fat,
   _ptT_nutrition_end = ptT_fat, // always +1 for nutrition_count!
 
-  // i think we don't need this here, but double check!
-  //ptT_mountain, // is used as collidable
+  ptT_collidable,
 
   ptT_Count,
 };
@@ -125,7 +124,8 @@ enum direction : uint8_t
 
 struct pathfinding_element // hmm i don't like this name
 {
-  tile_type tileType : 5; // 32 different terrain_types.
+  //tile_type tileType : 5; // 32 different terrain_types.
+  pathfinding_target_type tileType : 5; // 32 different terrain_types.
   uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
 
@@ -142,6 +142,7 @@ struct gameplay_element
 struct render_element
 {
   // texture
+  // rotation
   uint8_t elevationLevel;
 };
 // render map
@@ -232,7 +233,7 @@ lsResult game_init();
 lsResult game_tick();
 
 void game_setPlayerMapIndex(bool left);
-void game_playerSwitchTiles(tile_type terrainType);
+void game_playerSwitchTiles(pathfinding_target_type terrainType);
 
 game *game_getGame();
 

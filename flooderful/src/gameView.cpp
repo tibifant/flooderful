@@ -101,16 +101,16 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
     game_setPlayerMapIndex(false);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
-    game_playerSwitchTiles(tT_grass);
+    game_playerSwitchTiles(ptT_grass);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_2))
-    game_playerSwitchTiles(tT_water);
+    game_playerSwitchTiles(ptT_water);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_3))
-    game_playerSwitchTiles(tT_sand);
+    game_playerSwitchTiles(ptT_sand);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_4))
-    game_playerSwitchTiles(tT_mountain);
+    game_playerSwitchTiles(ptT_collidable);
 
   // Draw Scene
   {
@@ -120,7 +120,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
     pathfinding_element e;
-    e.tileType = tT_sand;
+    e.tileType = ptT_sand;
     e.elevationLevel = 1;
 
     render_drawMap(pView->pGame->levelInfo, pAppState, e);

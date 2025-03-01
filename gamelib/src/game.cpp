@@ -69,7 +69,7 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     //_Game.levelInfo.pMap[i] = (terrain_type)(lsGetRand() % tT_Count);
-    _Game.levelInfo.pMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    _Game.levelInfo.pMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? ptT_grass : ptT_collidable;
     //_Game.levelInfo.pMap[i].terrainType = tT_grass;
     //_Game.levelInfo.pMap[i].elevationLevel = 0;
     _Game.levelInfo.pMap[i].elevationLevel = lsGetRand(seed) % 3;
@@ -86,22 +86,22 @@ void setTerrain()
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
-    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = ptT_sand;
+    _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = ptT_water;
   }
 
   // Setting borders to tT_mountain, so they're collidable
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-      _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
+      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].tileType = ptT_collidable; // TODOOOOOO
+      _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = ptT_collidable;
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
-      _Game.levelInfo.pMap[x].tileType = tT_mountain;
-      _Game.levelInfo.pMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pMap[x].tileType = ptT_collidable;
+      _Game.levelInfo.pMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = ptT_collidable;
     }
   }
 }
@@ -116,7 +116,7 @@ lsResult spawnActors()
     actor.target = ptT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 
-    while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
+    while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].tileType == ptT_collidable)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
 
     size_t _unused;
@@ -184,79 +184,16 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
 {
   lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-  if (type < _ptt_multi_types)
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+    if (pMap[i].tileType == (pathfinding_target_type)type)
     {
-      if (pMap[i].tileType == (tile_type)type)
-      {
-        queue_pushBack(&pathfindQueue, fill_step(i));
-        pDirectionLookup[i] = d_unfillable;
-      }
-      else
-      {
-        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-      }
+      queue_pushBack(&pathfindQueue, fill_step(i));
+      pDirectionLookup[i] = d_unfillable;
     }
-  }
-  else if (type == ptT_vitamin)
-  {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+    else
     {
-      if (pMap[i].tileType == tT_tomato || pMap[i].tileType == tT_meal)
-      {
-        queue_pushBack(&pathfindQueue, fill_step(i));
-        pDirectionLookup[i] = d_unfillable;
-      }
-      else
-      {
-        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-      }
-    }
-  }
-  else if (type == ptT_protein)
-  {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    {
-      if (pMap[i].tileType == tT_bean || pMap[i].tileType == tT_meal)
-      {
-        queue_pushBack(&pathfindQueue, fill_step(i));
-        pDirectionLookup[i] = d_unfillable;
-      }
-      else
-      {
-        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-      }
-    }
-  }
-  else if (type == ptT_carbohydrates)
-  {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    {
-      if (pMap[i].tileType == tT_wheat || pMap[i].tileType == tT_meal)
-      {
-        queue_pushBack(&pathfindQueue, fill_step(i));
-        pDirectionLookup[i] = d_unfillable;
-      }
-      else
-      {
-        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-      }
-    }
-  }
-  else if (type == ptT_fat)
-  {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    {
-      if (pMap[i].tileType == tT_sunflower || pMap[i].tileType == tT_meal)
-      {
-        queue_pushBack(&pathfindQueue, fill_step(i));
-        pDirectionLookup[i] = d_unfillable;
-      }
-      else
-      {
-        pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == tT_mountain));
-      }
+      pDirectionLookup[i] = (direction)(d_unfillable * (pMap[i].tileType == ptT_collidable));
     }
   }
 }
@@ -358,7 +295,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        if (_Game.levelInfo.pMap[currentTileIdx].tileType == tT_mountain)
+        if (_Game.levelInfo.pMap[currentTileIdx].tileType == ptT_collidable)
         {
           _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
         }
@@ -499,10 +436,10 @@ void update_lumberjack() // WIP I guess...
 
 size_t playerMapIndex = 0;
 
-void game_playerSwitchTiles(tile_type terrainType)
+void game_playerSwitchTiles(pathfinding_target_type terrainType)
 {
   lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  lsAssert(terrainType < tT_count);
+  lsAssert(terrainType < ptT_Count);
 
   _Game.levelInfo.pMap[playerMapIndex].tileType = terrainType;
 }
