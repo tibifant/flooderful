@@ -393,7 +393,7 @@ void update_lifesupportActors()
 {
   // TODO: ADAPT VALUES TO MAKE SENSE!
   static const size_t EatingThreshold = 4;
-  static const size_t ConsiderationThreshold = 10;
+  static const size_t AppetiteThreshold = 10;
   static const int16_t MaxNutritionValue = 256;
   static const int16_t MaxFoodItemCount = 256;
 
@@ -420,8 +420,10 @@ void update_lifesupportActors()
         if (_actor.pItem->lunchbox[i])
         {
           int8_t score = 0;
+
           for (size_t j = 0; j < nutritionsCount; j++)
-            score += FoodToNutrition[i][j] > 0 && _actor.pItem->nutritions[j] < ConsiderationThreshold ? nutritionsCount : -1;
+            if (FoodToNutrition[i][j] > 0)
+              score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1;
 
           if (score > bestScore)
           {
