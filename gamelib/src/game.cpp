@@ -90,11 +90,16 @@ void setTerrain()
     _Game.levelInfo.pMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = ptT_water;
   }
 
+  for (size_t i = 0; i < ptT_Count; i++)
+  {
+    _Game.levelInfo.pMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = pathfinding_target_type(i);
+  }
+
   // Setting borders to tT_mountain, so they're collidable
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].tileType = ptT_collidable; // TODOOOOOO
+      _Game.levelInfo.pMap[y * _Game.levelInfo.map_size.x].tileType = ptT_collidable;
       _Game.levelInfo.pMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = ptT_collidable;
     }
 
@@ -113,7 +118,7 @@ lsResult spawnActors()
   for (size_t i = 0; i < 5; i++)
   {
     movement_actor actor;
-    actor.target = ptT_sand; //(terrain_type)(lsGetRand() % (tT_Count - 1));
+    actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 
     while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].tileType == ptT_collidable)
@@ -121,6 +126,12 @@ lsResult spawnActors()
 
     size_t _unused;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &_unused));
+
+    lumberjack_actor lj_actor;
+    lj_actor.state = laS_plant;
+    lj_actor.pActor = &actor;
+    
+    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &_unused));
   }
 
   goto epilogue;
@@ -301,7 +312,7 @@ void movementActor_move()
         }
         else // no check if we're actually at our target as this should always be true if we're at unfillable but not at tT_mountain
         {
-          _actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
+          //_actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
           _actor.pItem->atDestination = true;
           _actor.pItem->direction = vec2f(0);
           continue;
@@ -419,14 +430,21 @@ void update_lumberjack() // WIP I guess...
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
 
+  size_t i = 0;
   for (const auto _actor : _LumberjackActors)
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
 
     if (pLumberjack->pActor->atDestination && pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+    {
       pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+      print("actor ", i, " at dest!!!!!!!\n");
+    }
 
     pLumberjack->pActor->target = target_from_state[pLumberjack->state];
+    print("actor ", i, " target: ", pLumberjack->pActor->target, ", state: ", pLumberjack->state, "\n");
+
+    i++;
   }
 }
 
@@ -686,7 +704,8 @@ lsResult game_tick_local()
   // process player interactions.
   {
     updateFloodfill();
-    movementActor_move();
+    movementActor_move(); 
+    update_lumberjack();
 
     goto epilogue;
   epilogue:

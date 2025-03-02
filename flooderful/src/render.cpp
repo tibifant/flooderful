@@ -266,7 +266,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   (void)pAppState;
 
   // TODO!!
-  const vec4f colors[tT_count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
+  const vec4f colors[ptT_Count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.1f, 0.3f, 0.1f, 0), vec4f(0.2f, 0.3f, 0.1f, 0), vec4f(0.3f, 0.2f, 0.1f, 0), vec4f(0.3f, 0.2f, 0.2f, 0), vec4f(0.2f, 0, 0.5f, 0), vec4f(0.3f, 0, 0.4f, 0), vec4f(0.4f, 0, 0.3f, 0), vec4f(0.5f, 0, 0.1f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
 
   for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {
