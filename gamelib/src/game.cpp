@@ -124,13 +124,14 @@ lsResult spawnActors()
     while (_Game.levelInfo.pMap[worldPosToTileIndex(actor.pos)].tileType == ptT_collidable)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
 
-    size_t _unused;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &_unused));
+    size_t index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
 
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
-    lj_actor.pActor = &actor;
+    lj_actor.pActor = pool_get(&_Game.movementActors, index);
     
+    size_t _unused;
     LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &_unused));
   }
 
@@ -439,9 +440,10 @@ void update_lumberjack() // WIP I guess...
     {
       pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
       print("actor ", i, " at dest!!!!!!!\n");
+      pLumberjack->pActor->target = target_from_state[pLumberjack->state]; // TODO: handle survival actor may changing the target...
+      pLumberjack->pActor->atDestination = false;
     }
 
-    pLumberjack->pActor->target = target_from_state[pLumberjack->state];
     print("actor ", i, " target: ", pLumberjack->pActor->target, ", state: ", pLumberjack->state, "\n");
 
     i++;
