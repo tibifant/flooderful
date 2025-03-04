@@ -328,10 +328,9 @@ void movementActor_move()
 
         _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
       }
-
-      _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     }
 
+    _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
   }
 }
@@ -431,7 +430,6 @@ void update_lumberjack() // WIP I guess...
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
 
-  size_t i = 0;
   for (const auto _actor : _LumberjackActors)
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
@@ -439,14 +437,9 @@ void update_lumberjack() // WIP I guess...
     if (pLumberjack->pActor->atDestination && pLumberjack->pActor->target == target_from_state[pLumberjack->state])
     {
       pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-      print("actor ", i, " at dest!!!!!!!\n");
       pLumberjack->pActor->target = target_from_state[pLumberjack->state]; // TODO: handle survival actor may changing the target...
       pLumberjack->pActor->atDestination = false;
     }
-
-    print("actor ", i, " target: ", pLumberjack->pActor->target, ", state: ", pLumberjack->state, "\n");
-
-    i++;
   }
 }
 
