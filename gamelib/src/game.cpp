@@ -131,8 +131,15 @@ lsResult spawnActors()
     lj_actor.state = laS_plant;
     lj_actor.pActor = pool_get(&_Game.movementActors, index);
     
+    size_t la_index;
+    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
+
+    lifesupport_actor lf_actor;
+    lf_actor.entityIndex = la_index;
+    lf_actor.type = eT_lumberjack;
+
     size_t _unused;
-    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &_unused));
+    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &lf_actor, &_unused));
   }
 
   goto epilogue;
@@ -340,17 +347,21 @@ void movementActor_move()
 void update_lifesupportActors()
 {
   // TODO: ADAPT VALUES TO MAKE SENSE!
-  static const size_t EatingThreshold = 4;
+  static const size_t EatingThreshold = 1;
   static const size_t AppetiteThreshold = 10;
   static const int16_t MaxNutritionValue = 256;
   static const int16_t MaxFoodItemCount = 256;
 
   static const size_t nutritionsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
-  static const int8_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 10, 0, 0, 0 } /*tomato*/, {0, 10, 0, 0} /*bean*/, { 0, 0, 10, 0 } /*wheat*/,  { 0, 0, 0, 10 } /*sunflower*/, {5, 5, 5, 5} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
+  static const int8_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
   {
+    // just for testing!!!!
+    for (size_t j = 0; j < nutritionsCount; j++)
+      _actor.pItem->nutritions[j] = lsClamp((int16_t)((int16_t)_actor.pItem->nutritions[j] - 1), (int16_t)0, MaxNutritionValue);
+
     bool anyNeededNutrion = false;
 
     for (size_t j = 0; j < nutritionsCount; j++)
@@ -412,7 +423,8 @@ void update_lifesupportActors()
         switch (_actor.pItem->type)
         {
         case eT_lumberjack:
-          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = lowestNutrient;
+          lsAssert(lowestNutrient + _ptT_nutrition_start <= _ptT_nutrition_end);
+          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = (pathfinding_target_type)(lowestNutrient + _ptT_nutrition_start);
           break;
         case eT_stonemason:
         default:
@@ -420,6 +432,28 @@ void update_lifesupportActors()
           break;
         }
       }
+    }
+
+    // ONLY VERY TEMPORARY FOR TESTING!
+    // add food to lunchbox if at dest and dest == fooditem
+    switch (_actor.pItem->type)
+    {
+    case eT_lumberjack:
+    {
+      lumberjack_actor *pLa = pool_get(_LumberjackActors, _actor.pItem->entityIndex);
+
+      if (pLa->pActor->atDestination && pLa->pActor->target <= _ptT_nutrition_end && pLa->pActor->target >= _ptT_nutrition_start)
+      {
+        lsAssert(pLa->pActor->target - _ptT_nutrition_start >= 0);
+        _actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] = lsClamp((size_t)(_actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] + 10), (size_t)0, (size_t)MaxFoodItemCount); //THIS IS ONLY FOR TESTING!!! THIS NEEDS TO WORK WITH FOODITEMS THAT ARE ON THE map as targettypes later!
+      }
+
+      break;
+    }
+    case eT_stonemason:
+    default:
+      lsFail(); // not implemented.
+      break;
     }
   }
 }
@@ -434,11 +468,18 @@ void update_lumberjack() // WIP I guess...
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
 
-    if (pLumberjack->pActor->atDestination && pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+    if (pLumberjack->pActor->atDestination)
     {
-      pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-      pLumberjack->pActor->target = target_from_state[pLumberjack->state]; // TODO: handle survival actor may changing the target...
-      pLumberjack->pActor->atDestination = false;
+      if (pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+      {
+        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+        pLumberjack->pActor->target = target_from_state[pLumberjack->state]; // TODO: handle survival actor may changing the target...
+        pLumberjack->pActor->atDestination = false;
+      }
+      else if (pLumberjack->pActor->target <= _ptT_nutrition_end && pLumberjack->pActor->target >= _ptT_nutrition_start)
+      {
+        pLumberjack->pActor->target = target_from_state[pLumberjack->state];
+      }
     }
   }
 }
@@ -699,7 +740,8 @@ lsResult game_tick_local()
   // process player interactions.
   {
     updateFloodfill();
-    movementActor_move(); 
+    movementActor_move();
+    update_lifesupportActors();
     update_lumberjack();
 
     goto epilogue;
