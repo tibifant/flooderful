@@ -93,6 +93,7 @@ void setTerrain()
   for (size_t i = 0; i < ptT_Count; i++)
   {
     _Game.levelInfo.pMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = pathfinding_target_type(i);
+    _Game.levelInfo.pMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].elevationLevel = 1;
   }
 
   // Setting borders to tT_mountain, so they're collidable
@@ -134,12 +135,18 @@ lsResult spawnActors()
     size_t la_index;
     LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
 
-    lifesupport_actor lf_actor;
-    lf_actor.entityIndex = la_index;
-    lf_actor.type = eT_lumberjack;
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = la_index;
+    ls_actor.type = eT_lumberjack;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.nutritions); j++)
+      ls_actor.nutritions[j] = 0;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.lunchbox); j++)
+      ls_actor.lunchbox[j] = 0;
 
     size_t _unused;
-    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &lf_actor, &_unused));
+    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &ls_actor, &_unused));
   }
 
   goto epilogue;
@@ -362,20 +369,21 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionsCount; j++)
       _actor.pItem->nutritions[j] = lsClamp((int16_t)((int16_t)_actor.pItem->nutritions[j] - 1), (int16_t)0, MaxNutritionValue);
 
+    // TODO: Add range in pathfinding and walk to nearest item with best score.
+
     bool anyNeededNutrion = false;
 
     for (size_t j = 0; j < nutritionsCount; j++)
       if (_actor.pItem->nutritions[j] < EatingThreshold)
         anyNeededNutrion = true;
 
-    if (anyNeededNutrion)
+    if (anyNeededNutrion) // Should we actually just do this once we've obtained the food we currently want to get? so we don't calculate the best item alltough we're already on our way and we don't 
     {
       int8_t bestScore = 0;
       size_t bestIndex = 0;
 
       for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
       {
-
         if (_actor.pItem->lunchbox[i])
         {
           int8_t score = 0;
@@ -414,7 +422,7 @@ void update_lifesupportActors()
           if (_actor.pItem->nutritions[j] < lowest)
           {
             lowest = _actor.pItem->nutritions[j];
-            lowestNutrient = (pathfinding_target_type)(j);
+            lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_start);
           }
         }
 
@@ -423,8 +431,8 @@ void update_lifesupportActors()
         switch (_actor.pItem->type)
         {
         case eT_lumberjack:
-          lsAssert(lowestNutrient + _ptT_nutrition_start <= _ptT_nutrition_end);
-          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = (pathfinding_target_type)(lowestNutrient + _ptT_nutrition_start);
+          lsAssert(lowestNutrient <= _ptT_nutrition_end);
+          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = lowestNutrient;
           break;
         case eT_stonemason:
         default:
