@@ -122,6 +122,12 @@ enum direction : uint8_t
   d_unfillable,
 };
 
+struct pathfinding_info
+{
+  direction dir;
+  size_t dist;
+};
+
 struct pathfinding_element // hmm i don't like this name
 {
   //tile_type tileType : 5; // 32 different terrain_types.
@@ -150,9 +156,10 @@ struct render_element
 struct fill_step
 {
   size_t index;
+  size_t dist;
 
   inline fill_step() = default;
-  inline fill_step(const size_t idx) : index(idx) { lsAssert(index < 16 * 16); } // Change if map size changes!
+  inline fill_step(const size_t idx, const size_t dist) : index(idx), dist(dist) { lsAssert(index < 16 * 16); } // Change if map size changes!
 };
 
 struct level_info
@@ -160,7 +167,7 @@ struct level_info
   struct resource_info
   {
     queue<fill_step> pathfinding_queue;
-    direction *pDirectionLookup[2] = {};
+    pathfinding_info *pDirectionLookup[2] = {};
     size_t write_direction_idx = 0;
   } resources[ptT_Count];
 

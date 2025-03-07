@@ -123,18 +123,21 @@ epilogue:
 #ifndef _DEBUG
 __declspec(__forceinline)
 #endif
-void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const pathfinding_element *pPathfindingMap)
+void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const size_t parentDist, const pathfinding_element *pPathfindingMap)
 {
-  direction nextTile = (direction)pDirectionLookup[nextIndex];
+  direction nextTile = (direction)pDirectionLookup[nextIndex].dir;
 
-  if (nextTile != d_unfillable && nextTile == d_unreachable && lsAbs((int8_t)parentElevation - (int8_t)pPathfindingMap[nextIndex].elevationLevel) <= 1)
+  if (nextTile == d_unreachable && lsAbs((int8_t)parentElevation - (int8_t)pPathfindingMap[nextIndex].elevationLevel) <= 1)
   {
-    pDirectionLookup[nextIndex] = dir;
-    queue_pushBack(&pathfindQueue, fill_step(nextIndex));
+    pathfinding_info p;
+    p.dir = dir;
+    p.dist = parentDist + 1;
+    pDirectionLookup[nextIndex] = p;
+    queue_pushBack(&pathfindQueue, fill_step(nextIndex, p.dist));
   }
 }
 
-bool floodfill(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, const pathfinding_element *pPathfindingMap)
+bool floodfill(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const pathfinding_element *pPathfindingMap)
 {
   fill_step current;
   size_t stepCount = 0;
@@ -151,12 +154,12 @@ bool floodfill(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, con
     const size_t topLeftIndex = current.index - _Game.levelInfo.map_size.x - (size_t)!isOddBit;
     const size_t bottomLeftIndex = current.index + _Game.levelInfo.map_size.x - (size_t)!isOddBit;
 
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left, pPathfindingMap[current.index].elevationLevel, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right, pPathfindingMap[current.index].elevationLevel, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft, pPathfindingMap[current.index].elevationLevel, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight, pPathfindingMap[current.index].elevationLevel, pPathfindingMap); // bottomRight and bottomLeft are flipped to not give the right side all the paths
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft, pPathfindingMap[current.index].elevationLevel, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight, pPathfindingMap[current.index].elevationLevel, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap); // bottomRight and bottomLeft are flipped to not give the right side all the paths
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
 
     stepCount++;
   }
@@ -169,7 +172,7 @@ bool floodfill(queue<fill_step> &pathfindQueue, direction *pDirectionLookup, con
 
 // TODO: have a special map for rendering to know if something needs to be rotated etc.
 
-void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pPathfindingMap, const pathfinding_target_type type)
+void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pPathfindingMap, const pathfinding_target_type type)
 {
   lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
@@ -177,12 +180,15 @@ void rebuild_resource_info(direction *pDirectionLookup, queue<fill_step> &pathfi
   {
     if (pPathfindingMap[i].targetType == (pathfinding_target_type)type)
     {
-      queue_pushBack(&pathfindQueue, fill_step(i));
-      pDirectionLookup[i] = d_unfillable;
+      queue_pushBack(&pathfindQueue, fill_step(i, 0));
+      pathfinding_info p;
+      p.dir = d_unfillable;
+      p.dist = 0;
+      pDirectionLookup[i] = p;
     }
     else
     {
-      pDirectionLookup[i] = (direction)(d_unfillable * (pPathfindingMap[i].targetType == ptT_collidable));
+      pDirectionLookup[i].dir = (direction)(d_unfillable * (pPathfindingMap[i].targetType == ptT_collidable));
     }
   }
 }
@@ -278,7 +284,7 @@ void movementActor_move()
       _actor.pItem->lastTickTileIdx = 0;
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
-    const direction currentTileDirectionType = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx];
+    const direction currentTileDirectionType = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
 
     if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
     {

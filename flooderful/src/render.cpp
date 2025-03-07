@@ -283,7 +283,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      const direction dir = (direction)levelInfo.resources[debugArrow.targetType].pDirectionLookup[1 - levelInfo.resources[debugArrow.targetType].write_direction_idx][j];
+      const direction dir = (direction)levelInfo.resources[debugArrow.targetType].pDirectionLookup[1 - levelInfo.resources[debugArrow.targetType].write_direction_idx][j].dir;
 
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
