@@ -120,7 +120,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
     pathfinding_element e;
-    e.tileType = ptT_protein;
+    e.targetType = ptT_protein;
     e.elevationLevel = 1;
 
     render_drawMap(pView->pGame->levelInfo, pAppState, e);

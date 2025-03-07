@@ -85,7 +85,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_Count,
 };
 
-enum tile_type // max 32 different terrain_types.
+enum tile_type
 {
   tT_grass,
   tT_water,
@@ -125,18 +125,18 @@ enum direction : uint8_t
 struct pathfinding_element // hmm i don't like this name
 {
   //tile_type tileType : 5; // 32 different terrain_types.
-  pathfinding_target_type tileType : 5; // 32 different terrain_types.
+  pathfinding_target_type targetType : 5; // 32 different terrain_types.
   uint8_t elevationLevel : 3; // 8 different elevationLevel.
 };
 
 // TODO: gameplay element: ressource count, bool house?
 struct gameplay_element
 {
+  tile_type tileType;
   size_t ressourceCount;
   size_t maxRessourceCount;
   bool hasHouse;
 };
-// gameplay map in level_info
 
 // TODO: render element: texture, height, etc
 struct render_element
@@ -164,9 +164,9 @@ struct level_info
     size_t write_direction_idx = 0;
   } resources[ptT_Count];
 
-  pathfinding_element *pMap = nullptr;
-  gameplay_element *pGPMap = nullptr; // change name, but like that?
-  render_element *pRMap = nullptr; // change name, but like that?
+  pathfinding_element *pPathfindingMap = nullptr;
+  gameplay_element *pGameplayMap = nullptr; // change name, but like that?
+  render_element *pRenderMap = nullptr; // change name, but like that?
   vec2s map_size;
 };
 

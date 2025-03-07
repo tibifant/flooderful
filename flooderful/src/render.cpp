@@ -273,9 +273,9 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
     for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].targetType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].targetType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
 
@@ -283,7 +283,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      const direction dir = (direction)levelInfo.resources[debugArrow.tileType].pDirectionLookup[1 - levelInfo.resources[debugArrow.tileType].write_direction_idx][j];
+      const direction dir = (direction)levelInfo.resources[debugArrow.targetType].pDirectionLookup[1 - levelInfo.resources[debugArrow.targetType].write_direction_idx][j];
 
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
