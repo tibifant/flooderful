@@ -131,7 +131,7 @@ void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, pathfinding_in
   {
     pathfinding_info p;
     p.dir = dir;
-    p.dist = parentDist + 1;
+    p.dist = (uint8_t)lsClamp((uint16_t)(parentDist + 1), (uint16_t)0, (uint16_t)255);
     pDirectionLookup[nextIndex] = p;
     queue_pushBack(&pathfindQueue, fill_step(nextIndex, p.dist));
   }

@@ -125,7 +125,7 @@ enum direction : uint8_t
 struct pathfinding_info
 {
   direction dir;
-  size_t dist;
+  uint8_t dist;
 };
 
 struct pathfinding_element // hmm i don't like this name
