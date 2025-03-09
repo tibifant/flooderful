@@ -85,7 +85,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_Count,
 };
 
-enum tile_type
+enum resource_type
 {
   tT_grass,
   tT_water,
@@ -126,6 +126,7 @@ struct pathfinding_info
 {
   direction dir;
   uint8_t dist;
+  uint8_t elevationLevel; // TODO: bit packing?
 };
 
 struct pathfinding_element // hmm i don't like this name
@@ -138,7 +139,7 @@ struct pathfinding_element // hmm i don't like this name
 // TODO: gameplay element: ressource count, bool house?
 struct gameplay_element
 {
-  tile_type tileType;
+  resource_type tileType;
   size_t ressourceCount;
   size_t maxRessourceCount;
   bool hasHouse;
@@ -167,11 +168,11 @@ struct level_info
   struct resource_info
   {
     queue<fill_step> pathfinding_queue;
-    pathfinding_info *pDirectionLookup[2] = {};
+    pathfinding_info *pDirectionLookup[2] = {}; // add elevation level to this map
     size_t write_direction_idx = 0;
   } resources[ptT_Count];
 
-  pathfinding_element *pPathfindingMap = nullptr;
+  pathfinding_element *pPathfindingMap = nullptr; // don't needed anymore as we will conclude from the ressurce type to the pathfinfing target type in templated func (see notes)
   gameplay_element *pGameplayMap = nullptr; // change name, but like that?
   render_element *pRenderMap = nullptr; // change name, but like that?
   vec2s map_size;

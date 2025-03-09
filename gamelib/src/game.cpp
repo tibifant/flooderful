@@ -178,13 +178,12 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
+    // TODO: fill with elevation level here which means we either don't zero memory this anymore or we need to read the elevation level from somewhere else
+
     if (pPathfindingMap[i].targetType == (pathfinding_target_type)type)
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
-      pathfinding_info p;
-      p.dir = d_unfillable;
-      p.dist = 0;
-      pDirectionLookup[i] = p;
+      pDirectionLookup[i].dir = d_unfillable;
     }
     else
     {
