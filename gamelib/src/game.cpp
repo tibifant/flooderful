@@ -35,6 +35,7 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   _Game.levelInfo.map_size = { width, height };
 
   lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
+  //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
 }
 
 void setTerrain()
@@ -43,19 +44,19 @@ void setTerrain()
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    _Game.levelInfo.pPathfindingMap[i].targetType = (lsGetRand(seed) & 15) < 12 ? ptT_grass : ptT_collidable;
+    _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pPathfindingMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].targetType = ptT_sand;
-    _Game.levelInfo.pPathfindingMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].targetType = ptT_water;
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
   }
 
   for (size_t i = 0; i < ptT_Count; i++)
   {
-    _Game.levelInfo.pPathfindingMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].targetType = pathfinding_target_type(i);
+    _Game.levelInfo.pGameplayMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = resource_type(i);
     _Game.levelInfo.pPathfindingMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].elevationLevel = 1;
   }
 
@@ -63,14 +64,14 @@ void setTerrain()
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pPathfindingMap[y * _Game.levelInfo.map_size.x].targetType = ptT_collidable;
-      _Game.levelInfo.pPathfindingMap[(y + 1) * _Game.levelInfo.map_size.x - 1].targetType = ptT_collidable;
+      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
-      _Game.levelInfo.pPathfindingMap[x].targetType = ptT_collidable;
-      _Game.levelInfo.pPathfindingMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].targetType = ptT_collidable;
+      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
     }
   }
 }
@@ -85,7 +86,7 @@ lsResult spawnActors()
     actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
 
-    while (_Game.levelInfo.pPathfindingMap[worldPosToTileIndex(actor.pos)].targetType == ptT_collidable)
+    while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
 
     size_t index;
@@ -94,7 +95,7 @@ lsResult spawnActors()
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
     lj_actor.pActor = pool_get(&_Game.movementActors, index);
-    
+
     size_t la_index;
     LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
 
@@ -178,9 +179,8 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    // TODO: fill with elevation level here which means we either don't zero memory this anymore or we need to read the elevation level from somewhere else
-
-    if (pPathfindingMap[i].targetType == (pathfinding_target_type)type)
+    // TODO: Templated Functions for getting the pathfiniding target type from the ressource type
+    if (pPathfindingMap[i].targetType == type)
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_unfillable;
@@ -279,7 +279,7 @@ void movementActor_move()
     const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
 
     // Reset lastTile every so often to handle map changes.
-    if ((_actor.index & 63) == r) 
+    if ((_actor.index & 63) == r)
       _actor.pItem->lastTickTileIdx = 0;
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
@@ -289,7 +289,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        if (_Game.levelInfo.pPathfindingMap[currentTileIdx].targetType == ptT_collidable)
+        if (_Game.levelInfo.pPathfindingMap[currentTileIdx].targetType == ptT_collidable) // TODO: Can we replace this with mountain or should this be different in case we add other collidable resource types?
         {
           _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
         }

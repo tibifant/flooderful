@@ -126,14 +126,11 @@ struct pathfinding_info
 {
   direction dir;
   uint8_t dist;
-  uint8_t elevationLevel; // TODO: bit packing?
 };
 
 struct pathfinding_element // hmm i don't like this name
 {
-  //tile_type tileType : 5; // 32 different terrain_types.
-  pathfinding_target_type targetType : 5; // 32 different terrain_types.
-  uint8_t elevationLevel : 3; // 8 different elevationLevel.
+  uint8_t elevationLevel;
 };
 
 // TODO: gameplay element: ressource count, bool house?
@@ -230,7 +227,6 @@ struct game
   pool<movement_actor> movementActors;
   pool<lifesupport_actor> lifesupportActors;
 
-  float_t movementFriction = 0.965, turnFriction = 0.9;
   size_t tickRate = 60;
   size_t lastEventIndex, eventUpdateCutoffIndex;
 };
