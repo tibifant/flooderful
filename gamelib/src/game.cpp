@@ -171,16 +171,87 @@ bool floodfill(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLook
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: have a special map for rendering to know if something needs to be rotated etc.
+template <pathfinding_target_type p>
+struct match_resource;
 
-void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pPathfindingMap, const pathfinding_target_type type)
+template<>
+struct match_resource<pathfinding_target_type::ptT_carbohydrates>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_collidable>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_fat>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_grass>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_grass; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_protein>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_sand>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sand; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_sapling>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sapling; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_tree>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tree; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_trunk>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_trunk; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_vitamin>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_water>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_wood>
+{// force inline macro?
+  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wood; };
+};
+
+template<pathfinding_target_type p>
+void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
 {
-  lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    // TODO: Templated Functions for getting the pathfiniding target type from the ressource type
-    if (pPathfindingMap[i].targetType == type)
+    if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].targetType))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_unfillable;
@@ -189,6 +260,17 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
     {
       pDirectionLookup[i].dir = (direction)(d_unfillable * (pPathfindingMap[i].targetType == ptT_collidable));
     }
+  }
+}
+
+
+void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pPathfindingMap, const pathfinding_target_type type)
+{
+  lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+  switch (type)
+  {
+  case ptT_carbohydrates: // call fill_resource_info
   }
 }
 
