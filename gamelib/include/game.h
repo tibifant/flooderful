@@ -236,8 +236,8 @@ size_t worldPosToTileIndex(vec2f pos);
 lsResult game_init();
 lsResult game_tick();
 
-void game_setPlayerMapIndex(bool left);
-void game_playerSwitchTiles(pathfinding_target_type terrainType);
+void game_setPlayerMapIndex(const bool left);
+void game_playerSwitchTiles(const resource_type terrainType);
 
 game *game_getGame();
 

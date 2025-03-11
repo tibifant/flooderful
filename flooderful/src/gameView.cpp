@@ -101,16 +101,16 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
     game_setPlayerMapIndex(false);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
-    game_playerSwitchTiles(ptT_grass);
+    game_playerSwitchTiles(tT_grass);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_2))
-    game_playerSwitchTiles(ptT_water);
+    game_playerSwitchTiles(tT_water);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_3))
-    game_playerSwitchTiles(ptT_sand);
+    game_playerSwitchTiles(tT_sand);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_4))
-    game_playerSwitchTiles(ptT_collidable);
+    game_playerSwitchTiles(tT_mountain);
 
   // Draw Scene
   {

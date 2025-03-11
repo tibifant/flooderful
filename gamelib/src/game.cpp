@@ -176,101 +176,112 @@ struct match_resource;
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_carbohydrates>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat || resourceType == tT_meal; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat || resourceType == tT_meal; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_collidable>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_fat>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower || resourceType == tT_meal; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower || resourceType == tT_meal; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_grass>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_grass; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_grass; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_protein>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean || resourceType == tT_meal; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean || resourceType == tT_meal; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sand>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sand; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sand; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sapling>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sapling; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sapling; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_tree>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tree; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tree; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_trunk>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_trunk; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_trunk; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_vitamin>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato || resourceType == tT_meal; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato || resourceType == tT_meal; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_water>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_wood>
-{// force inline macro?
-  static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wood; };
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wood; };
 };
 
 template<pathfinding_target_type p>
 void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
 {
+  lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].targetType))
+    if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_unfillable;
     }
     else
     {
-      pDirectionLookup[i].dir = (direction)(d_unfillable * (pPathfindingMap[i].targetType == ptT_collidable));
+      pDirectionLookup[i].dir = (direction)(d_unfillable * (direction)(match_resource<ptT_collidable>::resourceAttribute_matches_resource(pMap[i].tileType)));
     }
   }
 }
 
-
-void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, pathfinding_element *pPathfindingMap, const pathfinding_target_type type)
+void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pResourceMap, const pathfinding_target_type type)
 {
-  lsZeroMemory(pDirectionLookup, _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-
   switch (type)
   {
-  case ptT_carbohydrates: // call fill_resource_info
+  case ptT_grass: fill_resource_info<ptT_grass>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_water: fill_resource_info<ptT_water>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_sand: fill_resource_info<ptT_sand>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_sapling: fill_resource_info<ptT_sapling>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_tree: fill_resource_info<ptT_tree>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_trunk: fill_resource_info<ptT_trunk>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_wood: fill_resource_info<ptT_wood>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_vitamin: fill_resource_info<ptT_vitamin>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_protein: fill_resource_info<ptT_protein>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_carbohydrates: fill_resource_info<ptT_carbohydrates>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_fat: fill_resource_info<ptT_fat>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_collidable: fill_resource_info<ptT_collidable>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  default: lsFail(); // not implemented.
   }
 }
 
@@ -285,7 +296,7 @@ void initializeLevel()
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-    rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pPathfindingMap, (pathfinding_target_type)i);
+    rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pGameplayMap, (pathfinding_target_type)(i));
   }
 
   lsAssert(spawnActors() == lsR_Success);
@@ -306,7 +317,7 @@ void updateFloodfill()
 
       lsZeroMemory(_Game.levelInfo.resources[i].pDirectionLookup[newWriteIndex], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-      rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pPathfindingMap, (pathfinding_target_type)i);
+      rebuild_resource_info(_Game.levelInfo.resources[i].pDirectionLookup[_Game.levelInfo.resources[i].write_direction_idx], _Game.levelInfo.resources[i].pathfinding_queue, _Game.levelInfo.pGameplayMap, (pathfinding_target_type)i);
     }
   }
 }
@@ -371,7 +382,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        if (_Game.levelInfo.pPathfindingMap[currentTileIdx].targetType == ptT_collidable) // TODO: Can we replace this with mountain or should this be different in case we add other collidable resource types?
+        if (match_resource<ptT_collidable>::resourceAttribute_matches_resource(_Game.levelInfo.pGameplayMap[currentTileIdx].tileType))
         {
           _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
         }
@@ -548,15 +559,15 @@ void update_lumberjack() // WIP I guess...
 
 size_t playerMapIndex = 0;
 
-void game_playerSwitchTiles(pathfinding_target_type terrainType)
+void game_playerSwitchTiles(const resource_type terrainType)
 {
   lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  lsAssert(terrainType < ptT_Count);
+  lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pPathfindingMap[playerMapIndex].targetType = terrainType;
+  _Game.levelInfo.pGameplayMap[playerMapIndex].tileType = terrainType;
 }
 
-void game_setPlayerMapIndex(bool left)
+void game_setPlayerMapIndex(const bool left)
 {
   if (left)
   {
