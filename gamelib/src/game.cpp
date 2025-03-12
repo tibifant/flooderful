@@ -35,6 +35,7 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   _Game.levelInfo.map_size = { width, height };
 
   lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
+  lsAllocZero(&_Game.levelInfo.pGameplayMap, height * width);
   //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
 }
 

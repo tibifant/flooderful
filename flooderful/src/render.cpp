@@ -261,21 +261,35 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfinding_element debugArrow)
+void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfinding_target_type debugArrow)
 {
   (void)pAppState;
 
   // TODO!!
-  const vec4f colors[ptT_Count] = { vec4f(0.1f, 0.4f, 0, 0), vec4f(0, 0.2f, 0.4f, 0), vec4f(0.4f, 0.35f, 0.2f, 0), vec4f(0.1f, 0.3f, 0.1f, 0), vec4f(0.2f, 0.3f, 0.1f, 0), vec4f(0.3f, 0.2f, 0.1f, 0), vec4f(0.3f, 0.2f, 0.2f, 0), vec4f(0.2f, 0, 0.5f, 0), vec4f(0.3f, 0, 0.4f, 0), vec4f(0.4f, 0, 0.3f, 0), vec4f(0.5f, 0, 0.1f, 0), vec4f(0.25f, 0.25f, 0.25f, 0) };
+  const vec4f colors[tT_count] = { 
+    vec4f(0.1f, 0.4f, 0, 0), // tT_grass 
+    vec4f(0, 0.2f, 0.4f, 0), // tT_water 
+    vec4f(0.4f, 0.35f, 0.2f, 0), // tT_sand 
+    vec4f(0.1f, 0.3f, 0.1f, 0), // tT_sapling 
+    vec4f(0.2f, 0.3f, 0.1f, 0), // tT_tree 
+    vec4f(0.3f, 0.2f, 0.1f, 0), // tT_trunk 
+    vec4f(0.3f, 0.2f, 0.2f, 0), // tT_wood 
+    vec4f(0.2f, 0, 0.5f, 0), // tT_tomato 
+    vec4f(0.3f, 0, 0.4f, 0), // tT_bean 
+    vec4f(0.4f, 0, 0.3f, 0), // tT_wheat 
+    vec4f(0.5f, 0, 0.1f, 0), // tT_sunflower 
+    vec4f(0.6f, 0, 0.05f, 0), // tT_meal
+    vec4f(0.25f, 0.25f, 0.25f, 0), // tT_mountain
+  };
 
   for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {
     for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
       if (y % 2 == 0)
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].targetType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
       else
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].targetType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
+        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
 
@@ -283,7 +297,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   {
     for (size_t j = 0; j < levelInfo.map_size.x * levelInfo.map_size.y; j++)
     {
-      const direction dir = (direction)levelInfo.resources[debugArrow.targetType].pDirectionLookup[1 - levelInfo.resources[debugArrow.targetType].write_direction_idx][j].dir;
+      const direction dir = (direction)levelInfo.resources[debugArrow].pDirectionLookup[1 - levelInfo.resources[debugArrow].write_direction_idx][j].dir;
 
       if (dir != d_unfillable && dir != d_unreachable)
         render_drawArrow(j % levelInfo.map_size.x, j / levelInfo.map_size.x, dir);
