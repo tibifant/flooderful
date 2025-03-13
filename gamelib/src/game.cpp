@@ -46,6 +46,7 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = lsGetRand(seed) % 10;
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
@@ -515,6 +516,7 @@ void update_lifesupportActors()
       if (pLa->pActor->atDestination && pLa->pActor->target <= _ptT_nutrition_end && pLa->pActor->target >= _ptT_nutrition_start)
       {
         lsAssert(pLa->pActor->target - _ptT_nutrition_start >= 0);
+        // remove from resource
         _actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] = lsClamp((size_t)(_actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] + 10), (size_t)0, (size_t)MaxFoodItemCount); //THIS IS ONLY FOR TESTING!!! THIS NEEDS TO WORK WITH FOODITEMS THAT ARE ON THE map as targettypes later!
       }
 
