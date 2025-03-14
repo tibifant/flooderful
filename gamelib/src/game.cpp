@@ -503,9 +503,14 @@ void update_lifesupportActors()
         switch (_actor.pItem->type)
         {
         case eT_lumberjack:
+        {
           lsAssert(lowestNutrient <= _ptT_nutrition_end);
-          pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor->target = lowestNutrient;
+          movement_actor *pActor = pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor;
+          pActor->target = lowestNutrient;
+          pActor->atDestination = false; // TODO handle this correctly in lumber jack update because we should be able to handle that we are at out lumberjack dest and then go to the food target, shouldn;t we?
           break;
+        }
+
         case eT_stonemason:
         default:
           lsFail(); // not implemented.
