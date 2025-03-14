@@ -196,8 +196,8 @@ struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  size_t nutritions[(_ptT_nutrition_end + 1) - _ptT_nutrition_start];
-  size_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
+  uint8_t nutritions[(_ptT_nutrition_end + 1) - _ptT_nutrition_start];
+  uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
 enum lumberjack_actor_state

@@ -414,23 +414,35 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+  requires (std::is_integral_v<T> && (sizeof(T) < sizeof(int64_t) || std::is_same_v<T, int64_t>))
+inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValue<T>(), const T max = lsMaxValue<T>())
+{
+  const int64_t val = (int64_t)value + diff;
+  const T prevVal = value;
+  value = (T)lsClamp<int64_t>(val, min, max);
+  return value - prevVal;
+}
+
 void update_lifesupportActors()
 {
   // TODO: ADAPT VALUES TO MAKE SENSE!
-  static const size_t EatingThreshold = 1;
-  static const size_t AppetiteThreshold = 10;
-  static const int16_t MaxNutritionValue = 256;
-  static const int16_t MaxFoodItemCount = 256;
+  static const uint8_t EatingThreshold = 1;
+  static const uint8_t AppetiteThreshold = 10;
+  static const uint8_t MaxNutritionValue = 255;
+  static const int64_t FoodItemGain = 10;
+  static const uint8_t MaxFoodItemCount = 255;
+  static const uint8_t MinFoodItemCount = 0;
 
   static const size_t nutritionsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
-  static const int8_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
+  static const int64_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
   {
     // just for testing!!!!
     for (size_t j = 0; j < nutritionsCount; j++)
-      _actor.pItem->nutritions[j] = lsClamp((int16_t)((int16_t)_actor.pItem->nutritions[j] - 1), (int16_t)0, MaxNutritionValue);
+      modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
     // TODO: Add range in pathfinding and walk to nearest item with best score.
 
@@ -467,13 +479,10 @@ void update_lifesupportActors()
       if (bestScore > 0)
       {
         for (size_t j = 0; j < nutritionsCount; j++)
-        {
-          const int16_t val = (int16_t)_actor.pItem->nutritions[j] + FoodToNutrition[bestIndex][j];
-          _actor.pItem->nutritions[j] = (size_t)lsClamp(val, (int16_t)0, MaxNutritionValue);
-        }
+          modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
 
         // remove from lunchbox
-        _actor.pItem->lunchbox[bestIndex] = (size_t)lsClamp((int16_t)(_actor.pItem->lunchbox[bestIndex] - 1), (int16_t)0, MaxFoodItemCount);
+        modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
       }
       else // if no item: set actor target
       {
@@ -515,9 +524,8 @@ void update_lifesupportActors()
 
       if (pLa->pActor->atDestination && pLa->pActor->target <= _ptT_nutrition_end && pLa->pActor->target >= _ptT_nutrition_start)
       {
-        lsAssert(pLa->pActor->target - _ptT_nutrition_start >= 0);
-        // remove from resource
-        _actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] = lsClamp((size_t)(_actor.pItem->lunchbox[pLa->pActor->target - _ptT_nutrition_start] + 10), (size_t)0, (size_t)MaxFoodItemCount); //THIS IS ONLY FOR TESTING!!! THIS NEEDS TO WORK WITH FOODITEMS THAT ARE ON THE map as targettypes later!
+        // TODO remove item from map
+        modify_with_clamp(_actor.pItem->lunchbox[_Game.levelInfo.pGameplayMap[worldPosToTileIndex(pLa->pActor->pos)].tileType], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
       }
 
       break;
