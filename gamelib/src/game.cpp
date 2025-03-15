@@ -101,6 +101,8 @@ lsResult spawnActors()
     size_t la_index;
     LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
 
+    lsAssert(la_index == index); // Maybe we need to use `pool_insert_at`? Ask...
+
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = la_index;
     ls_actor.type = eT_lumberjack;
@@ -498,47 +500,20 @@ void update_lifesupportActors()
           }
         }
 
-        lsAssert(lowestNutrient < ptT_Count);
+        lsAssert(lowestNutrient <= _ptT_nutrition_end);
 
-        switch (_actor.pItem->type)
-        {
-        case eT_lumberjack:
-        {
-          lsAssert(lowestNutrient <= _ptT_nutrition_end);
-          movement_actor *pActor = pool_get(_LumberjackActors, _actor.pItem->entityIndex)->pActor;
-          pActor->target = lowestNutrient;
-          pActor->atDestination = false; // TODO handle this correctly in lumber jack update because we should be able to handle that we are at out lumberjack dest and then go to the food target, shouldn;t we?
-          break;
-        }
-
-        case eT_stonemason:
-        default:
-          lsFail(); // not implemented.
-          break;
-        }
+        movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
+        pActor->target = lowestNutrient;
       }
     }
 
-    // ONLY VERY TEMPORARY FOR TESTING!
     // add food to lunchbox if at dest and dest == fooditem
-    switch (_actor.pItem->type)
-    {
-    case eT_lumberjack:
-    {
-      lumberjack_actor *pLa = pool_get(_LumberjackActors, _actor.pItem->entityIndex);
+    movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
-      if (pLa->pActor->atDestination && pLa->pActor->target <= _ptT_nutrition_end && pLa->pActor->target >= _ptT_nutrition_start)
-      {
-        // TODO remove item from map
-        modify_with_clamp(_actor.pItem->lunchbox[_Game.levelInfo.pGameplayMap[worldPosToTileIndex(pLa->pActor->pos)].tileType], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
-      }
-
-      break;
-    }
-    case eT_stonemason:
-    default:
-      lsFail(); // not implemented.
-      break;
+    if (pActor->atDestination && pActor->target <= _ptT_nutrition_end && pActor->target >= _ptT_nutrition_start) // This check can fail... we need to check the map
+    {
+      // TODO remove item from map
+      modify_with_clamp(_actor.pItem->lunchbox[_Game.levelInfo.pGameplayMap[worldPosToTileIndex(pActor->pos)].tileType], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
     }
   }
 }
@@ -567,6 +542,16 @@ void update_lumberjack() // WIP I guess...
       }
     }
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void game_update()
+{
+  updateFloodfill();
+  movementActor_move();
+  update_lifesupportActors();
+  update_lumberjack();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -824,10 +809,7 @@ lsResult game_tick_local()
   // stuff.
   // process player interactions.
   {
-    updateFloodfill();
-    movementActor_move();
-    update_lifesupportActors();
-    update_lumberjack();
+    game_update();
 
     goto epilogue;
   epilogue:

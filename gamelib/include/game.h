@@ -213,7 +213,7 @@ enum lumberjack_actor_state
 struct lumberjack_actor
 {
   lumberjack_actor_state state;
-  movement_actor *pActor;
+  movement_actor *pActor; // TODO: Remove because of shared index
 };
 
 struct game
