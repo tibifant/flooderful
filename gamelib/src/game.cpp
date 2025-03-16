@@ -260,7 +260,7 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
     if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
-      pDirectionLookup[i].dir = d_unfillable;
+      pDirectionLookup[i].dir = d_atDestination;
     }
     else
     {
@@ -380,23 +380,20 @@ void movementActor_move()
       _actor.pItem->lastTickTileIdx = 0;
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
-    const direction currentTileDirectionType = (direction)_Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
+    const direction currentTileDirectionType = _Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
 
     if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        if (match_resource<ptT_collidable>::resourceAttribute_matches_resource(_Game.levelInfo.pGameplayMap[currentTileIdx].tileType))
-        {
-          _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
-        }
-        else // no check if we're actually at our target as this should always be true if we're at unfillable but not at tT_mountain
-        {
-          //_actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
-          _actor.pItem->atDestination = true;
-          _actor.pItem->direction = vec2f(0);
-          continue;
-        }
+        _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
+      }
+      else if (currentTileDirectionType == d_atDestination)
+      {
+        //_actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
+        _actor.pItem->atDestination = true;
+        _actor.pItem->direction = vec2f(0);
+        continue;
       }
       else
       {
@@ -445,6 +442,7 @@ void update_lifesupportActors()
     // just for testing!!!!
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
+
 
     // TODO: Add range in pathfinding and walk to nearest item with best score.
 
@@ -509,8 +507,9 @@ void update_lifesupportActors()
 
     // add food to lunchbox if at dest and dest == fooditem
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
+    const size_t actorIdx = worldPosToTileIndex(pActor->pos);
 
-    if (pActor->atDestination && pActor->target <= _ptT_nutrition_end && pActor->target >= _ptT_nutrition_start) // This check can fail... we need to check the map
+    if (pActor->atDestination && _Game.levelInfo.resources[pActor->target].pDirectionLookup[_Game.levelInfo.resources[pActor->target].write_direction_idx][actorIdx].dir == d_atDestination)
     {
       // TODO remove item from map
       modify_with_clamp(_actor.pItem->lunchbox[_Game.levelInfo.pGameplayMap[worldPosToTileIndex(pActor->pos)].tileType], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
@@ -530,13 +529,15 @@ void update_lumberjack() // WIP I guess...
 
     if (pLumberjack->pActor->atDestination)
     {
-      if (pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+      const size_t idx = worldPosToTileIndex(pLumberjack->pActor->pos);
+
+      if (_Game.levelInfo.resources[target_from_state[pLumberjack->state]].pDirectionLookup[_Game.levelInfo.resources[pLumberjack->state].write_direction_idx][idx].dir == d_atDestination)
       {
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pLumberjack->pActor->target = target_from_state[pLumberjack->state]; // TODO: handle survival actor may changing the target...
+        pLumberjack->pActor->target = target_from_state[pLumberjack->state];
         pLumberjack->pActor->atDestination = false;
       }
-      else if (pLumberjack->pActor->target <= _ptT_nutrition_end && pLumberjack->pActor->target >= _ptT_nutrition_start)
+      else
       {
         pLumberjack->pActor->target = target_from_state[pLumberjack->state];
       }

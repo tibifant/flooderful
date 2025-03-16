@@ -119,6 +119,7 @@ enum direction : uint8_t
   d_left,
   d_topLeft,
 
+  d_atDestination,
   d_unfillable,
 };
 
