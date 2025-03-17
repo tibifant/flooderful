@@ -61,6 +61,8 @@ struct gameEvent
   gameEvent_type type;
 };
 
+//////////////////////////////////////////////////////////////////////////
+
 // for rendering map have enum values for what should be rendered there that simply have the same enum value. food (and possibly other stuff) that consists of several targetables needs to be handled seperatly.
 enum pathfinding_target_type // 32 different terrain_types possible.
 {
@@ -108,6 +110,8 @@ enum resource_type
   tT_count,
 };
 
+//////////////////////////////////////////////////////////////////////////
+
 enum direction : uint8_t
 {
   d_unreachable,
@@ -128,6 +132,17 @@ struct pathfinding_info
   direction dir;
   uint8_t dist;
 };
+
+struct fill_step
+{
+  size_t index;
+  size_t dist;
+
+  inline fill_step() = default;
+  inline fill_step(const size_t idx, const size_t dist) : index(idx), dist(dist) { lsAssert(index < 16 * 16); } // Change if map size changes!
+};
+
+//////////////////////////////////////////////////////////////////////////
 
 struct pathfinding_element // hmm i don't like this name
 {
@@ -152,29 +167,8 @@ struct render_element
 };
 // render map
 
-struct fill_step
-{
-  size_t index;
-  size_t dist;
 
-  inline fill_step() = default;
-  inline fill_step(const size_t idx, const size_t dist) : index(idx), dist(dist) { lsAssert(index < 16 * 16); } // Change if map size changes!
-};
-
-struct level_info
-{
-  struct resource_info
-  {
-    queue<fill_step> pathfinding_queue;
-    pathfinding_info *pDirectionLookup[2] = {}; // add elevation level to this map
-    size_t write_direction_idx = 0;
-  } resources[ptT_Count];
-
-  pathfinding_element *pPathfindingMap = nullptr; // don't needed anymore as we will conclude from the ressurce type to the pathfinfing target type in templated func (see notes)
-  gameplay_element *pGameplayMap = nullptr; // change name, but like that?
-  render_element *pRenderMap = nullptr; // change name, but like that?
-  vec2s map_size;
-};
+//////////////////////////////////////////////////////////////////////////
 
 enum entity_type
 {
@@ -201,6 +195,8 @@ struct lifesupport_actor
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
+//////////////////////////////////////////////////////////////////////////
+
 enum lumberjack_actor_state
 {
   laS_plant,
@@ -217,6 +213,27 @@ struct lumberjack_actor
   movement_actor *pActor; // TODO: Remove because of shared index
 };
 
+//////////////////////////////////////////////////////////////////////////
+
+struct level_info
+{
+  struct resource_info
+  {
+    queue<fill_step> pathfinding_queue;
+    pathfinding_info *pDirectionLookup[2] = {}; // add elevation level to this map
+    size_t write_direction_idx = 0;
+  } resources[ptT_Count];
+
+  pathfinding_element *pPathfindingMap = nullptr; // don't needed anymore as we will conclude from the ressurce type to the pathfinfing target type in templated func (see notes)
+  gameplay_element *pGameplayMap = nullptr; // change name, but like that?
+  render_element *pRenderMap = nullptr; // change name, but like that?
+  vec2s map_size;
+};
+
+size_t worldPosToTileIndex(vec2f pos);
+
+//////////////////////////////////////////////////////////////////////////
+
 struct game
 {
   uint64_t lastUpdateTimeNs, gameStartTimeNs, lastPredictTimeNs;
@@ -231,8 +248,6 @@ struct game
   size_t tickRate = 60;
   size_t lastEventIndex, eventUpdateCutoffIndex;
 };
-
-size_t worldPosToTileIndex(vec2f pos);
 
 lsResult game_init();
 lsResult game_tick();

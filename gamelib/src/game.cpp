@@ -30,151 +30,6 @@ static pool<lumberjack_actor> _LumberjackActors; // Do we need this in the heade
 
 //////////////////////////////////////////////////////////////////////////
 
-void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
-{
-  _Game.levelInfo.map_size = { width, height };
-
-  lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
-  lsAllocZero(&_Game.levelInfo.pGameplayMap, height * width);
-  //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
-}
-
-void setTerrain()
-{
-  rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
-
-  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-  {
-    _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
-    _Game.levelInfo.pGameplayMap[i].ressourceCount = lsGetRand(seed) % 10;
-    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
-  }
-
-  for (size_t i = 0; i < 3; i++)
-  {
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
-  }
-
-  for (size_t i = 0; i < ptT_Count; i++)
-  {
-    _Game.levelInfo.pGameplayMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = resource_type(i);
-    _Game.levelInfo.pPathfindingMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].elevationLevel = 1;
-  }
-
-  // Setting borders to ptT_collidable
-  {
-    for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
-    {
-      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
-    }
-
-    for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
-    {
-      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-    }
-  }
-}
-
-lsResult spawnActors()
-{
-  lsResult result = lsR_Success;
-
-  for (size_t i = 0; i < 5; i++)
-  {
-    movement_actor actor;
-    actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-    actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
-
-    while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
-      actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
-
-    size_t index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
-
-    lumberjack_actor lj_actor;
-    lj_actor.state = laS_plant;
-    lj_actor.pActor = pool_get(&_Game.movementActors, index);
-
-    size_t la_index;
-    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
-
-    lsAssert(la_index == index); // Maybe we need to use `pool_insert_at`? Ask...
-
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = la_index;
-    ls_actor.type = eT_lumberjack;
-
-    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.nutritions); j++)
-      ls_actor.nutritions[j] = 0;
-
-    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.lunchbox); j++)
-      ls_actor.lunchbox[j] = 0;
-
-    size_t _unused;
-    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &ls_actor, &_unused));
-  }
-
-  goto epilogue;
-
-epilogue:
-  return result;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef _DEBUG
-__declspec(__forceinline)
-#endif
-void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const size_t parentDist, const pathfinding_element *pPathfindingMap)
-{
-  direction nextTile = (direction)pDirectionLookup[nextIndex].dir;
-
-  if (nextTile == d_unreachable && lsAbs((int8_t)parentElevation - (int8_t)pPathfindingMap[nextIndex].elevationLevel) <= 1)
-  {
-    pathfinding_info p;
-    p.dir = dir;
-    p.dist = (uint8_t)lsClamp((uint16_t)(parentDist + 1), (uint16_t)0, (uint16_t)255);
-    pDirectionLookup[nextIndex] = p;
-    queue_pushBack(&pathfindQueue, fill_step(nextIndex, p.dist));
-  }
-}
-
-bool floodfill(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const pathfinding_element *pPathfindingMap)
-{
-  fill_step current;
-  size_t stepCount = 0;
-
-  while (pathfindQueue.count)
-  {
-    if (stepCount > _FloodFillSteps)
-      return false;
-
-    queue_popFront(&pathfindQueue, &current);
-    lsAssert(current.index >= 0 && current.index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-
-    const size_t isOddBit = (current.index / _Game.levelInfo.map_size.x) & 1;
-    const size_t topLeftIndex = current.index - _Game.levelInfo.map_size.x - (size_t)!isOddBit;
-    const size_t bottomLeftIndex = current.index + _Game.levelInfo.map_size.x - (size_t)!isOddBit;
-
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap); // bottomRight and bottomLeft are flipped to not give the right side all the paths
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
-    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
-
-    stepCount++;
-  }
-
-  // if queue is empty: floodfill completed
-  return true;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
 template <pathfinding_target_type p>
 struct match_resource;
 
@@ -289,6 +144,101 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+
+void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
+{
+  _Game.levelInfo.map_size = { width, height };
+
+  lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
+  lsAllocZero(&_Game.levelInfo.pGameplayMap, height * width);
+  //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
+}
+
+void setTerrain()
+{
+  rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
+
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  {
+    _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = lsGetRand(seed) % 10;
+    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+  }
+
+  for (size_t i = 0; i < 3; i++)
+  {
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
+  }
+
+  for (size_t i = 0; i < ptT_Count; i++)
+  {
+    _Game.levelInfo.pGameplayMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = resource_type(i);
+    _Game.levelInfo.pPathfindingMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].elevationLevel = 1;
+  }
+
+  // Setting borders to ptT_collidable
+  {
+    for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
+    {
+      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
+    }
+
+    for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
+    {
+      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+    }
+  }
+}
+
+lsResult spawnActors()
+{
+  lsResult result = lsR_Success;
+
+  for (size_t i = 0; i < 5; i++)
+  {
+    movement_actor actor;
+    actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
+    actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
+
+    while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
+      actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
+
+    size_t index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
+
+    lumberjack_actor lj_actor;
+    lj_actor.state = laS_plant;
+    lj_actor.pActor = pool_get(&_Game.movementActors, index);
+
+    size_t la_index;
+    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
+
+    lsAssert(la_index == index); // Maybe we need to use `pool_insert_at`? Ask...
+
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = la_index;
+    ls_actor.type = eT_lumberjack;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.nutritions); j++)
+      ls_actor.nutritions[j] = 0;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.lunchbox); j++)
+      ls_actor.lunchbox[j] = 0;
+
+    size_t _unused;
+    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &ls_actor, &_unused));
+  }
+
+  goto epilogue;
+
+epilogue:
+  return result;
+}
+
 void initializeLevel()
 {
   mapInit(16, 16);
@@ -304,6 +254,56 @@ void initializeLevel()
   }
 
   lsAssert(spawnActors() == lsR_Success);
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+#ifndef _DEBUG
+__declspec(__forceinline)
+#endif
+void floodfill_suggestNextTarget(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const size_t nextIndex, const direction dir, const uint8_t parentElevation, const size_t parentDist, const pathfinding_element *pPathfindingMap)
+{
+  direction nextTile = (direction)pDirectionLookup[nextIndex].dir;
+
+  if (nextTile == d_unreachable && lsAbs((int8_t)parentElevation - (int8_t)pPathfindingMap[nextIndex].elevationLevel) <= 1)
+  {
+    pathfinding_info p;
+    p.dir = dir;
+    p.dist = (uint8_t)lsClamp((uint16_t)(parentDist + 1), (uint16_t)0, (uint16_t)255);
+    pDirectionLookup[nextIndex] = p;
+    queue_pushBack(&pathfindQueue, fill_step(nextIndex, p.dist));
+  }
+}
+
+bool floodfill(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLookup, const pathfinding_element *pPathfindingMap)
+{
+  fill_step current;
+  size_t stepCount = 0;
+
+  while (pathfindQueue.count)
+  {
+    if (stepCount > _FloodFillSteps)
+      return false;
+
+    queue_popFront(&pathfindQueue, &current);
+    lsAssert(current.index >= 0 && current.index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+    const size_t isOddBit = (current.index / _Game.levelInfo.map_size.x) & 1;
+    const size_t topLeftIndex = current.index - _Game.levelInfo.map_size.x - (size_t)!isOddBit;
+    const size_t bottomLeftIndex = current.index + _Game.levelInfo.map_size.x - (size_t)!isOddBit;
+
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index - 1, d_left, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, current.index + 1, d_right, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex, d_bottomLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, bottomLeftIndex + 1, d_bottomRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap); // bottomRight and bottomLeft are flipped to not give the right side all the paths
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex, d_topLeft, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+    floodfill_suggestNextTarget(pathfindQueue, pDirectionLookup, topLeftIndex + 1, d_topRight, pPathfindingMap[current.index].elevationLevel, current.dist, pPathfindingMap);
+
+    stepCount++;
+  }
+
+  // if queue is empty: floodfill completed
+  return true;
 }
 
 void updateFloodfill()
@@ -327,8 +327,6 @@ void updateFloodfill()
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-// TODO: To conclude from the movementActor to the associated actor have a lookUp for every map tile who is on it.
 
 size_t worldPosToTileIndex(const vec2f pos)
 {
@@ -422,6 +420,8 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   value = (T)lsClamp<int64_t>(val, min, max);
   return value - prevVal;
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 void update_lifesupportActors()
 {
