@@ -443,76 +443,84 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
+    movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
-    // TODO: Add range in pathfinding and walk to nearest item with best score.
-
-    bool anyNeededNutrion = false;
-
-    for (size_t j = 0; j < nutritionsCount; j++)
-      if (_actor.pItem->nutritions[j] < EatingThreshold)
-        anyNeededNutrion = true;
-
-    if (anyNeededNutrion) // Should we actually just do this once we've obtained the food we currently want to get? so we don't calculate the best item alltough we're already on our way and we don't 
+    if (pActor->target < _ptT_nutrition_start || pActor->target > _ptT_nutrition_end)
     {
-      int8_t bestScore = 0;
-      size_t bestIndex = 0;
+      // TODO: Add range in pathfinding and walk to nearest item with best score.
 
-      for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+      bool anyNeededNutrion = false;
+
+      for (size_t j = 0; j < nutritionsCount; j++)
+        if (_actor.pItem->nutritions[j] < EatingThreshold)
+          anyNeededNutrion = true;
+
+      if (anyNeededNutrion) // Should we actually just do this once we've obtained the food we currently want to get? so we don't calculate the best item alltough we're already on our way and we don't 
       {
-        if (_actor.pItem->lunchbox[i])
+        int8_t bestScore = 0;
+        size_t bestIndex = 0;
+
+        for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
         {
-          int8_t score = 0;
+          if (_actor.pItem->lunchbox[i])
+          {
+            int8_t score = 0;
+
+            for (size_t j = 0; j < nutritionsCount; j++)
+              if (FoodToNutrition[i][j] > 0)
+                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1;
+
+            if (score > bestScore)
+            {
+              bestScore = score;
+              bestIndex = i;
+            }
+          }
+        }
+
+        // eat best item
+        if (bestScore > 0)
+        {
+          for (size_t j = 0; j < nutritionsCount; j++)
+            modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
+
+          // remove from lunchbox
+          modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+        }
+        else // if no item: set actor target
+        {
+          size_t lowest = MaxNutritionValue;
+          pathfinding_target_type lowestNutrient = ptT_Count; // Maybe we should prefere meals, when there is several nutrients missing
 
           for (size_t j = 0; j < nutritionsCount; j++)
-            if (FoodToNutrition[i][j] > 0)
-              score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1;
-
-          if (score > bestScore)
           {
-            bestScore = score;
-            bestIndex = i;
+            if (_actor.pItem->nutritions[j] < lowest)
+            {
+              lowest = _actor.pItem->nutritions[j];
+              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_start);
+            }
           }
+
+          lsAssert(lowestNutrient <= _ptT_nutrition_end);
+          pActor->target = lowestNutrient;
+          pActor->atDestination = false;
         }
-      }
-
-      // eat best item
-      if (bestScore > 0)
-      {
-        for (size_t j = 0; j < nutritionsCount; j++)
-          modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
-
-        // remove from lunchbox
-        modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
-      }
-      else // if no item: set actor target
-      {
-        size_t lowest = MaxNutritionValue;
-        pathfinding_target_type lowestNutrient = ptT_Count;
-
-        for (size_t j = 0; j < nutritionsCount; j++)
-        {
-          if (_actor.pItem->nutritions[j] < lowest)
-          {
-            lowest = _actor.pItem->nutritions[j];
-            lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_start);
-          }
-        }
-
-        lsAssert(lowestNutrient <= _ptT_nutrition_end);
-
-        movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
-        pActor->target = lowestNutrient;
       }
     }
-
-    // add food to lunchbox if at dest and dest == fooditem
-    movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
-    const size_t actorIdx = worldPosToTileIndex(pActor->pos);
-
-    if (pActor->atDestination && _Game.levelInfo.resources[pActor->target].pDirectionLookup[_Game.levelInfo.resources[pActor->target].write_direction_idx][actorIdx].dir == d_atDestination)
+    else
     {
-      // TODO remove item from map
-      modify_with_clamp(_actor.pItem->lunchbox[_Game.levelInfo.pGameplayMap[worldPosToTileIndex(pActor->pos)].tileType], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+      // add food to lunchbox if at dest and dest == fooditem
+      if (pActor->atDestination)
+      {
+        // TODO remove item from map
+
+        const size_t worldIdx = worldPosToTileIndex(pActor->pos);
+        const resource_type resourceAtTile = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+        lsAssert(resourceAtTile - _tile_type_food_begin >= 0 && resourceAtTile - _tile_type_food_begin <= _tile_type_food_last);
+
+        modify_with_clamp(_actor.pItem->lunchbox[resourceAtTile - _tile_type_food_begin], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+        lsAssert(true);
+      }
     }
   }
 }
@@ -529,15 +537,13 @@ void update_lumberjack() // WIP I guess...
 
     if (pLumberjack->pActor->atDestination)
     {
-      const size_t idx = worldPosToTileIndex(pLumberjack->pActor->pos);
-
-      if (_Game.levelInfo.resources[target_from_state[pLumberjack->state]].pDirectionLookup[_Game.levelInfo.resources[pLumberjack->state].write_direction_idx][idx].dir == d_atDestination)
+      if (pLumberjack->pActor->target == target_from_state[pLumberjack->state])
       {
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pLumberjack->pActor->target = target_from_state[pLumberjack->state];
         pLumberjack->pActor->atDestination = false;
       }
-      else
+      else // add `if target >= nutrition_start && target <= nutrition_end` here in case there will be more options for overwriting the lumberjack target (like fire etc.)
       {
         pLumberjack->pActor->target = target_from_state[pLumberjack->state];
       }
