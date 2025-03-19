@@ -198,11 +198,12 @@ lsResult spawnActors()
 {
   lsResult result = lsR_Success;
 
-  for (size_t i = 0; i < 5; i++)
+  //for (size_t i = 0; i < 5; i++)
   {
     movement_actor actor;
     actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-    actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
+    //actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
+    actor.pos = vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y));
 
     while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
       actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
@@ -490,7 +491,7 @@ void update_lifesupportActors()
         else // if no item: set actor target
         {
           size_t lowest = MaxNutritionValue;
-          pathfinding_target_type lowestNutrient = ptT_Count; // Maybe we should prefere meals, when there is several nutrients missing
+          pathfinding_target_type lowestNutrient = ptT_Count;
 
           for (size_t j = 0; j < nutritionsCount; j++)
           {
@@ -542,10 +543,16 @@ void update_lumberjack() // WIP I guess...
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pLumberjack->pActor->target = target_from_state[pLumberjack->state];
         pLumberjack->pActor->atDestination = false;
+
+        const size_t tileIdx = worldPosToTileIndex(pLumberjack->pActor->pos);
+
+        _Game.levelInfo.pGameplayMap[(lsGetRand() % (_Game.levelInfo.map_size.y - 2) + 1) * _Game.levelInfo.map_size.x + (lsGetRand() % (_Game.levelInfo.map_size.x - 2) + 1)].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
       }
-      else // add `if target >= nutrition_start && target <= nutrition_end` here in case there will be more options for overwriting the lumberjack target (like fire etc.)
+      else
       {
         pLumberjack->pActor->target = target_from_state[pLumberjack->state];
+        pLumberjack->pActor->atDestination = false;
       }
     }
   }
