@@ -269,11 +269,11 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
   const vec4f colors[tT_count] = { 
     vec4f(0.1f, 0.4f, 0, 0), // tT_grass 
     vec4f(0, 0.2f, 0.4f, 0), // tT_water 
-    vec4f(0.4f, 0.35f, 0.2f, 0), // tT_sand 
-    vec4f(0.1f, 0.3f, 0.1f, 0), // tT_sapling 
-    vec4f(0.2f, 0.3f, 0.1f, 0), // tT_tree 
-    vec4f(0.3f, 0.2f, 0.1f, 0), // tT_trunk 
-    vec4f(0.3f, 0.2f, 0.2f, 0), // tT_wood 
+    vec4f(0.4f, 0.35f, 0.2f, 0), // tT_sand
+    vec4f(0.45f, 0.5f, 0.4f, 0), // tT_sapling
+    vec4f(0.4f, 0.5f, 0.44f, 0), // tT_tree 
+    vec4f(0.46f, 0.4f, 0.5f, 0), // tT_trunk 
+    vec4f(0.5f, 0.42f, 0.4f, 0), // tT_wood 
     vec4f(0.2f, 0, 0.5f, 0), // tT_tomato 
     vec4f(0.3f, 0, 0.4f, 0), // tT_bean 
     vec4f(0.4f, 0, 0.3f, 0), // tT_wheat 

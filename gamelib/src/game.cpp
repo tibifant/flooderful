@@ -546,7 +546,12 @@ void update_lumberjack() // WIP I guess...
 
         const size_t tileIdx = worldPosToTileIndex(pLumberjack->pActor->pos);
 
-        _Game.levelInfo.pGameplayMap[(lsGetRand() % (_Game.levelInfo.map_size.y - 2) + 1) * _Game.levelInfo.map_size.x + (lsGetRand() % (_Game.levelInfo.map_size.x - 2) + 1)].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
+        const vec2u32 randPos = vec2u32((uint32_t)(lsGetRand()) % (_Game.levelInfo.map_size.x - 2) + 1, (uint32_t)(lsGetRand()) % (_Game.levelInfo.map_size.y - 2) + 1);
+
+        lsAssert(randPos.x > 0 && randPos.x < _Game.levelInfo.map_size.x - 1 && randPos.y > 0 && randPos.y < _Game.levelInfo.map_size.y - 1);
+        lsAssert(_Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType < tT_sapling || _Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType == tT_mountain);
+
+        _Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
         _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
       }
       else

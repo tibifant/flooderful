@@ -119,7 +119,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
     render_setTicksSinceOrigin(ticksSinceOrigin);
 
     // rendered objects
-    render_drawMap(pView->pGame->levelInfo, pAppState, ptT_protein);
+    render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 0)->target);
 
     for (const auto &&_actor : pView->pGame->movementActors)
       render_drawActor(*_actor.pItem, _actor.index);
