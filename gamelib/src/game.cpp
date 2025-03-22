@@ -151,7 +151,7 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   _Game.levelInfo.map_size = { width, height };
 
   lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
-  lsAllocZero(&_Game.levelInfo.pGameplayMap, height * width);
+  lsAlloc(&_Game.levelInfo.pGameplayMap, height * width);
   //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
 }
 
@@ -174,8 +174,10 @@ void setTerrain()
 
   for (size_t i = 0; i < ptT_Count; i++)
   {
-    _Game.levelInfo.pGameplayMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = resource_type(i);
-    _Game.levelInfo.pPathfindingMap[(i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].elevationLevel = 1;
+    const size_t index = (i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
+    _Game.levelInfo.pGameplayMap[index].ressourceCount = 1;
+    _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
   // Setting borders to ptT_collidable
@@ -456,7 +458,7 @@ void update_lifesupportActors()
         if (_actor.pItem->nutritions[j] < EatingThreshold)
           anyNeededNutrion = true;
 
-      if (anyNeededNutrion) // Should we actually just do this once we've obtained the food we currently want to get? so we don't calculate the best item alltough we're already on our way and we don't 
+      if (anyNeededNutrion)
       {
         int8_t bestScore = 0;
         size_t bestIndex = 0;
@@ -513,14 +515,16 @@ void update_lifesupportActors()
       // add food to lunchbox if at dest and dest == fooditem
       if (pActor->atDestination)
       {
-        // TODO remove item from map
-
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-        const resource_type resourceAtTile = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
-        lsAssert(resourceAtTile - _tile_type_food_begin >= 0 && resourceAtTile - _tile_type_food_begin <= _tile_type_food_last);
+        
+        if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+        {
+          const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+          lsAssert(tileType - _tile_type_food_begin >= 0 && tileType - _tile_type_food_begin <= _tile_type_food_last);
+          modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_begin], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-        modify_with_clamp(_actor.pItem->lunchbox[resourceAtTile - _tile_type_food_begin], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
-        lsAssert(true);
+          _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+        }
       }
     }
   }
@@ -546,6 +550,7 @@ void update_lumberjack() // WIP I guess...
 
         const size_t tileIdx = worldPosToTileIndex(pLumberjack->pActor->pos);
 
+        // For testing: Respawning targets at random positions
         vec2u32 randPos = vec2u32((uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.x - 2)) + 1, (uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.y - 3)) + 2);
 
         for (size_t i = 0; i < 3; i++)

@@ -154,7 +154,7 @@ struct gameplay_element
 {
   resource_type tileType;
   size_t ressourceCount;
-  size_t maxRessourceCount;
+  const size_t maxRessourceCount = 16;
   bool hasHouse;
 };
 
