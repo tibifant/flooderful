@@ -215,7 +215,7 @@ lsResult spawnActors()
 
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
-    lj_actor.pActor = pool_get(&_Game.movementActors, index);
+    lj_actor.index = index;
 
     size_t la_index;
     LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
@@ -532,23 +532,24 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
-void update_lumberjack() // WIP I guess...
+void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
 
   for (const auto _actor : _LumberjackActors)
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
+    movement_actor *pActor = pool_get(_Game.movementActors, pLumberjack->index);
 
-    if (pLumberjack->pActor->atDestination)
+    if (pActor->atDestination)
     {
-      if (pLumberjack->pActor->target == target_from_state[pLumberjack->state])
+      if (pActor->target == target_from_state[pLumberjack->state])
       {
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pLumberjack->pActor->target = target_from_state[pLumberjack->state];
-        pLumberjack->pActor->atDestination = false;
+        pActor->target = target_from_state[pLumberjack->state];
+        pActor->atDestination = false;
 
-        const size_t tileIdx = worldPosToTileIndex(pLumberjack->pActor->pos);
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
         // For testing: Respawning targets at random positions
         vec2u32 randPos = vec2u32((uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.x - 2)) + 1, (uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.y - 3)) + 2);
@@ -567,8 +568,8 @@ void update_lumberjack() // WIP I guess...
       }
       else
       {
-        pLumberjack->pActor->target = target_from_state[pLumberjack->state];
-        pLumberjack->pActor->atDestination = false;
+        pActor->target = target_from_state[pLumberjack->state];
+        pActor->atDestination = false;
       }
     }
   }

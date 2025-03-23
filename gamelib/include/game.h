@@ -210,7 +210,7 @@ enum lumberjack_actor_state
 struct lumberjack_actor
 {
   lumberjack_actor_state state;
-  movement_actor *pActor; // TODO: Remove because of shared index
+  size_t index; // TODO: Remove because of shared index
 };
 
 //////////////////////////////////////////////////////////////////////////
