@@ -27,6 +27,7 @@ constexpr size_t _FloodFillSteps = 100;
 //////////////////////////////////////////////////////////////////////////
 
 static pool<lumberjack_actor> _LumberjackActors; // Do we need this in the header?
+static pool<cook_actor> _CookActors; // Do we need this in the header?
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -217,13 +218,10 @@ lsResult spawnActors()
     lj_actor.state = laS_plant;
     lj_actor.index = index;
 
-    size_t la_index;
-    LS_ERROR_CHECK(pool_add(&_LumberjackActors, &lj_actor, &la_index));
-
-    lsAssert(la_index == index); // Maybe we need to use `pool_insert_at`? Ask...
+    LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
 
     lifesupport_actor ls_actor;
-    ls_actor.entityIndex = la_index;
+    ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
 
     for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.nutritions); j++)
@@ -232,8 +230,34 @@ lsResult spawnActors()
     for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.lunchbox); j++)
       ls_actor.lunchbox[j] = 0;
 
-    size_t _unused;
-    LS_ERROR_CHECK(pool_add(&_Game.lifesupportActors, &ls_actor, &_unused));
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
+  }
+
+  {
+    movement_actor foodActor;
+    foodActor.target = _ptT_nutrition_start;
+    foodActor.pos = vec2f(10.f, 10.f);
+
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
+
+    cook_actor cook;
+    cook.state = caS_fruit;
+    cook.index = f_index;
+
+    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
+
+    lifesupport_actor lsF_actor;
+    lsF_actor.entityIndex = f_index;
+    lsF_actor.type = eT_lumberjack;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(lsF_actor.nutritions); j++)
+      lsF_actor.nutritions[j] = 0;
+
+    for (size_t j = 0; j < LS_ARRAYSIZE(lsF_actor.lunchbox); j++)
+      lsF_actor.lunchbox[j] = 0;
+
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
   }
 
   goto epilogue;

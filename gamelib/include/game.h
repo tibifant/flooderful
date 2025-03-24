@@ -174,6 +174,7 @@ enum entity_type
 {
   eT_lumberjack,
   eT_stonemason,
+  eT_cook,
 
   eT_count,
 };
@@ -211,6 +212,25 @@ struct lumberjack_actor
 {
   lumberjack_actor_state state;
   size_t index; // TODO: Remove because of shared index
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+// only temporary
+enum cook_actor_state
+{
+  caS_fruit,
+  caS_bean,
+  caS_grain,
+  caS_fat,
+
+  caS_count,
+};
+
+struct cook_actor
+{
+  cook_actor_state state;
+  size_t index;
 };
 
 //////////////////////////////////////////////////////////////////////////
