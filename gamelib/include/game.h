@@ -229,7 +229,7 @@ enum cook_actor_state
 
 struct cook_actor
 {
-  cook_actor_state state;
+  cook_actor_state state; // TODO: Starting State and maybe the look up in the actor?
   size_t index;
 };
 

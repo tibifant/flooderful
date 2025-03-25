@@ -556,6 +556,8 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
+// TODO: How could we have actors stay at their targets for longer (no target/same target) for target specific times?
+
 void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
