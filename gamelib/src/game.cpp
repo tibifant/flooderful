@@ -398,7 +398,7 @@ void movementActor_move()
 
   for (auto _actor : _Game.movementActors)
   {
-    const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
+    //const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
 
     // Reset lastTile every so often to handle map changes.
     if ((_actor.index & 63) == r)
@@ -411,7 +411,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        _actor.pItem->direction = (tileIndexToWorldPos(lastTileIdx) - _actor.pItem->pos).Normalize();
+        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
       }
       else if (currentTileDirectionType == d_atDestination)
       {
