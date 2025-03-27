@@ -601,6 +601,37 @@ void update_lumberjack()
   }
 }
 
+void update_cook()
+{
+  static const pathfinding_target_type target_from_state[caS_count] = { ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat };
+
+  for (const auto _actor : _CookActors)
+  {
+    cook_actor *pCook = _actor.pItem;
+    movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
+
+    if (pActor->atDestination)
+    {
+      if (pActor->target == target_from_state[pCook->state])
+      {
+        const int64_t _AddedResourceCount = 1;
+        const uint8_t _MinResourceCount = 0;
+        const size_t worldIdx = worldPosToTileIndex(pActor->pos);
+        modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, _AddedResourceCount, _MinResourceCount, _Game.levelInfo.pGameplayMap[worldIdx].maxRessourceCount);
+
+        pCook->state = (cook_actor_state)((pCook->state + 1) % laS_count);
+        pActor->target = target_from_state[pCook->state];
+        pActor->atDestination = false;
+      }
+      else
+      {
+        pActor->target = target_from_state[pCook->state];
+        pActor->atDestination = false;
+      }
+    }
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 void game_update()
@@ -609,6 +640,7 @@ void game_update()
   movementActor_move();
   update_lifesupportActors();
   update_lumberjack();
+  update_cook();
 }
 
 //////////////////////////////////////////////////////////////////////////

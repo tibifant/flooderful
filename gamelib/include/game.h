@@ -153,8 +153,8 @@ struct pathfinding_element // hmm i don't like this name
 struct gameplay_element
 {
   resource_type tileType;
-  size_t ressourceCount;
-  const size_t maxRessourceCount = 16;
+  uint8_t ressourceCount;
+  const uint8_t maxRessourceCount = 16;
   bool hasHouse;
 };
 
