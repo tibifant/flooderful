@@ -181,6 +181,8 @@ void setTerrain()
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
+  _Game.levelInfo.pGameplayMap[(tT_meal + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_grass; // Removing meal for testing
+
   // Setting borders to ptT_collidable
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
