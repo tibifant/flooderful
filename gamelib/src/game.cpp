@@ -580,18 +580,18 @@ void update_lumberjack()
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
         // For testing: Respawning targets at random positions
-        vec2u32 randPos = vec2u32((uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.x - 2)) + 1, (uint32_t)((lsGetRand()) % (_Game.levelInfo.map_size.y - 3)) + 2);
+        size_t rand = ((size_t)(lsGetRand()) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y - 2 * _Game.levelInfo.map_size.x)) + _Game.levelInfo.map_size.x;
 
         for (size_t i = 0; i < 3; i++)
-          if (_Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType >= tT_sapling || _Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType < tT_mountain)
-            randPos.x = ((randPos.x + 1) % (_Game.levelInfo.map_size.x - 2)) + 1;
+          if (_Game.levelInfo.pGameplayMap[rand].tileType >= tT_sapling)
+            rand = (rand + 1) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
           else
             break;
 
-        lsAssert(randPos.x > 0 && randPos.x < _Game.levelInfo.map_size.x - 1 && randPos.y > 0 && randPos.y < _Game.levelInfo.map_size.y - 1);
-        lsAssert(_Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType < tT_sapling || _Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType == tT_mountain);
+        lsAssert(rand > 0 && rand < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y - 1);
+        lsAssert(_Game.levelInfo.pGameplayMap[rand].tileType < tT_sapling && _Game.levelInfo.pGameplayMap[rand].tileType != tT_mountain);
 
-        _Game.levelInfo.pGameplayMap[randPos.y * _Game.levelInfo.map_size.x + randPos.x].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
+        _Game.levelInfo.pGameplayMap[rand].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
         _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
       }
       else
