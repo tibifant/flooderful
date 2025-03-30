@@ -573,6 +573,8 @@ void update_lumberjack()
     {
       if (pActor->target == target_from_state[pLumberjack->state])
       {
+        // TODO: Update tile: e.g. sapling will become tree, when watered...
+
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
