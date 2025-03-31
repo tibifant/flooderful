@@ -563,6 +563,7 @@ void update_lifesupportActors()
 void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
+  static const pathfinding_target_type transitions_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood }; // would this always be the same as the other lut? also we need a lut for the resource_types or a function to get them...
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -584,6 +585,7 @@ void update_lumberjack()
 
         // should movementactors have inventories? maybe an actor should be able to carry one item (besides lunchbox) so `hasItem`?
         // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
+        // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
 
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pActor->target = target_from_state[pLumberjack->state];
