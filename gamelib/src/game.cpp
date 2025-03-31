@@ -574,6 +574,16 @@ void update_lumberjack()
       if (pActor->target == target_from_state[pLumberjack->state])
       {
         // TODO: Update tile: e.g. sapling will become tree, when watered...
+        // 1) get sapling 
+        // 2) plant sapling on soil                   soil    ---> sapling // if we have to get saplings first, we need a resource type for planted sapling
+        // 3) get water 
+        // 4) water sapling (different grow states?)  sapling ---> tree 
+        // 5) (get tool?) chop tree                   tree    ---> trunk
+        // 6) (take wood to sawmill?) cut wood        trunk   ---> wood 
+        // once all wood is taken away: wood ---> soil or take to sawmill first, then directly from trunk to soil (needs fertilizer?)
+
+        // should movementactors have inventories? maybe an actor should be able to carry one item (besides lunchbox) so `hasItem`?
+        // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
 
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pActor->target = target_from_state[pLumberjack->state];
