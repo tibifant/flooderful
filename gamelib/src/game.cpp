@@ -562,8 +562,11 @@ void update_lifesupportActors()
 
 void update_lumberjack()
 {
-  static const pathfinding_target_type target_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
-  static const pathfinding_target_type transitions_from_state[laS_count] = { ptT_sapling, ptT_tree, ptT_trunk, ptT_wood }; // would this always be the same as the other lut? also we need a lut for the resource_types or a function to get them...
+  static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
+  static const pathfinding_target_type target_transitions_from_state[laS_count] = { ptT_sapling, , ptT_tree, ptT_trunk, ptT_wood }; // resource_type values should match as long as we're below multitypes.
+  // for some we need no transition... we could save how much to add to our current target value, but that's realy sketchy... maybe a new type:
+  // struct lumberjack_state_info { ptt target, bool hasTransition, ptt tranistion, tt transition } but then we always save a transition even if there is none?
+  // in la: const lumberjack_state_info state[laS_count] { ... }; ?
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -586,6 +589,8 @@ void update_lumberjack()
         // should movementactors have inventories? maybe an actor should be able to carry one item (besides lunchbox) so `hasItem`?
         // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
         // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
+        
+
 
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pActor->target = target_from_state[pLumberjack->state];
