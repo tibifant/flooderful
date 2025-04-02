@@ -542,7 +542,7 @@ void update_lifesupportActors()
       if (pActor->atDestination)
       {
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-        
+
         if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
         {
           const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
@@ -563,10 +563,7 @@ void update_lifesupportActors()
 void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
-  static const pathfinding_target_type target_transitions_from_state[laS_count] = { ptT_sapling, , ptT_tree, ptT_trunk, ptT_wood }; // resource_type values should match as long as we're below multitypes.
-  // for some we need no transition... we could save how much to add to our current target value, but that's realy sketchy... maybe a new type:
-  // struct lumberjack_state_info { ptt target, bool hasTransition, ptt tranistion, tt transition } but then we always save a transition even if there is none?
-  // in la: const lumberjack_state_info state[laS_count] { ... }; ?
+  static const resource_type target_from_state[laS_count] = { tT_grass, tT_water, tT_sapling, tT_tree, tT_trunk, tT_wood };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -589,29 +586,25 @@ void update_lumberjack()
         // should movementactors have inventories? maybe an actor should be able to carry one item (besides lunchbox) so `hasItem`?
         // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
         // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
-        
 
+        switch (pLumberjack->state)
+        {
+        case laS_getWater:
+        {
+          // add water to inventory
+          break;
+        }
+        case laS_water:
+        {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
+          break;
+        }
+        }
 
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
-
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-
-        // For testing: Respawning targets at random positions
-        size_t rand = ((size_t)(lsGetRand()) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y - 2 * _Game.levelInfo.map_size.x)) + _Game.levelInfo.map_size.x;
-
-        for (size_t i = 0; i < 3; i++)
-          if (_Game.levelInfo.pGameplayMap[rand].tileType >= tT_sapling)
-            rand = (rand + 1) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-          else
-            break;
-
-        lsAssert(rand > 0 && rand < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y - 1);
-        lsAssert(_Game.levelInfo.pGameplayMap[rand].tileType < tT_sapling && _Game.levelInfo.pGameplayMap[rand].tileType != tT_mountain);
-
-        _Game.levelInfo.pGameplayMap[rand].tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
-        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
       }
       else
       {
