@@ -173,15 +173,13 @@ void setTerrain()
     _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
   }
 
-  for (size_t i = 0; i < ptT_Count; i++)
+  for (size_t i = _tile_type_food_begin; i < _tile_type_food_last; i++) // without tt_meal for testing
   {
     const size_t index = (i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
     _Game.levelInfo.pGameplayMap[index].ressourceCount = 1;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
-
-  _Game.levelInfo.pGameplayMap[(tT_meal + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_grass; // Removing meal for testing
 
   // Setting borders to ptT_collidable
   {
@@ -563,7 +561,6 @@ void update_lifesupportActors()
 void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
-  static const resource_type target_from_state[laS_count] = { tT_grass, tT_water, tT_sapling, tT_tree, tT_trunk, tT_wood };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -587,22 +584,28 @@ void update_lumberjack()
         // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
         // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
 
-        switch (pLumberjack->state)
-        {
-        case laS_getWater:
-        {
-          // add water to inventory
-          break;
-        }
-        case laS_water:
-        {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
-          break;
-        }
-        }
 
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+
+        // argh redot this...
+        // why aren't we overwrting always the same tile?
+        if (pActor->target == ptT_water)
+        {
+          // add water to inevntory
+        }
+        else if (pActor->target == ptT_grass)
+        {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos); // TODO?
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling; // change to next target.
+        }
+        else
+        {
+          // ahh this is wrong
+          lsAssert(target_from_state[pLumberjack->state] < _ptt_multi_types); 
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos); // TODO?
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)target_from_state[pLumberjack->state]; // change to next target.
+        }
+
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
       }
