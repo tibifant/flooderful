@@ -588,7 +588,7 @@ void update_lumberjack()
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
 
         // argh redot this...
-        // why aren't we overwrting always the same tile?
+        // why aren't we overwrting always the same tile? -> because the floodfill lookup doesn't get updated immediately, so we walki towards the nearest grass.
         if (pActor->target == ptT_water)
         {
           // add water to inevntory
