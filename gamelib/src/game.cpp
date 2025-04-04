@@ -585,27 +585,57 @@ void update_lumberjack()
         // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
 
 
+        switch (pLumberjack->state)
+        {
+        case laS_plant:
+        {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
+          break;
+        }
+        case laS_getWater:
+        {
+          // TODO: get water.
+          break;
+        }
+        case laS_water:
+        {
+          // TODO: remove water.
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
+          break;
+        }
+        case laS_grow:
+        {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
+          break;
+        }
+        case laS_chop:
+        {
+          // TODO: add amount
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood;
+          break;
+        }
+        case laS_cut: // the states don't allign right now namewise, because getting back to grass will probably not be a state, but happen, once all wood is taken away.
+        {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_wood);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
+          break;
+        }
+        default:
+        {
+          lsFail(); // not implemented.
+        }
+        }
+
         pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-
-        // argh redot this...
-        // why aren't we overwrting always the same tile? -> because the floodfill lookup doesn't get updated immediately, so we walki towards the nearest grass.
-        if (pActor->target == ptT_water)
-        {
-          // add water to inevntory
-        }
-        else if (pActor->target == ptT_grass)
-        {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos); // TODO?
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling; // change to next target.
-        }
-        else
-        {
-          // ahh this is wrong
-          lsAssert(target_from_state[pLumberjack->state] < _ptt_multi_types); 
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos); // TODO?
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)target_from_state[pLumberjack->state]; // change to next target.
-        }
-
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
       }
