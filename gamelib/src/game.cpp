@@ -558,6 +558,8 @@ void update_lifesupportActors()
 
 // TODO: How could we have actors stay at their targets for longer (no target/same target) for target specific times?
 
+// Can we achieve actors going to a target further away, as long as the nearest target is, full/empty/whatever? I don't know how, besides from adding loads of tile types, or maybe flags for full types, and then more direction lookups (one for all the empty once, one for the full once). As there will also be actors who would want to go to full ones.
+
 void update_lumberjack()
 {
   static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
@@ -620,13 +622,12 @@ void update_lumberjack()
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood;
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
           break;
         }
         case laS_cut: // the states don't allign right now namewise, because getting back to grass will probably not be a state, but happen, once all wood is taken away.
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_wood);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_grass;
+          // the tile stays wood until all the wood has been taken away.
           break;
         }
         default:
