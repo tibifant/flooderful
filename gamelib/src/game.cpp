@@ -170,7 +170,9 @@ void setTerrain()
   for (size_t i = 0; i < 3; i++)
   {
     _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_water;
+    const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
+    _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
   }
 
   for (size_t i = _tile_type_food_begin; i < _tile_type_food_last; i++) // without tt_meal for testing
@@ -201,6 +203,7 @@ lsResult spawnActors()
 {
   lsResult result = lsR_Success;
 
+  // Lumberjacks
   //for (size_t i = 0; i < 5; i++)
   {
     movement_actor actor;
@@ -217,6 +220,7 @@ lsResult spawnActors()
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
     lj_actor.index = index;
+    lj_actor.hasItem = false;
 
     LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
 
@@ -233,6 +237,7 @@ lsResult spawnActors()
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
   }
 
+  // Cook
   {
     movement_actor foodActor;
     foodActor.target = _ptT_nutrition_start;
@@ -594,19 +599,52 @@ void update_lumberjack()
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
+
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+
           break;
         }
         case laS_getWater:
         {
           // TODO: get water.
+          lsAssert(!pLumberjack->hasItem);
+
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water);
+
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+          {
+            pLumberjack->hasItem = true;
+            pLumberjack->item = tT_water;
+            _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
+
+            if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+
+            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+            pActor->target = target_from_state[pLumberjack->state];
+            pActor->atDestination = false;
+          }
+
           break;
         }
         case laS_water:
         {
-          // TODO: remove water.
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
+
+          if (pLumberjack->hasItem && pLumberjack->item == tT_water)
+          {
+            pLumberjack->hasItem = false;
+            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
+          
+            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+            pActor->target = target_from_state[pLumberjack->state];
+            pActor->atDestination = false;
+          }
+
           break;
         }
         case laS_grow:
@@ -614,20 +652,34 @@ void update_lumberjack()
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
+          
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+
           break;
         }
         case laS_chop:
         {
-          // TODO: add amount
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood;
           _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
+
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+
           break;
         }
         case laS_cut: // the states don't allign right now namewise, because getting back to grass will probably not be a state, but happen, once all wood is taken away.
         {
           // the tile stays wood until all the wood has been taken away.
+
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+
           break;
         }
         default:
@@ -635,10 +687,6 @@ void update_lumberjack()
           lsFail(); // not implemented.
         }
         }
-
-        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pActor->target = target_from_state[pLumberjack->state];
-        pActor->atDestination = false;
       }
       else
       {

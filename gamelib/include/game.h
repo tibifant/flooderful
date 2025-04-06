@@ -214,6 +214,8 @@ struct lumberjack_actor
 {
   lumberjack_actor_state state;
   size_t index; // TODO: Remove because of shared index
+  bool hasItem; // Maybe change this to several inevntory spots if needed.
+  resource_type item;
 };
 
 //////////////////////////////////////////////////////////////////////////
