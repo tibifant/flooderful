@@ -567,7 +567,7 @@ void update_lifesupportActors()
 
 void update_lumberjack()
 {
-  static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_wood };
+  static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -608,7 +608,6 @@ void update_lumberjack()
         }
         case laS_getWater:
         {
-          // TODO: get water.
           lsAssert(!pLumberjack->hasItem);
 
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
@@ -647,34 +646,24 @@ void update_lumberjack()
 
           break;
         }
-        case laS_grow:
+        case laS_chop:
         {
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
-          
+
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
           pActor->atDestination = false;
 
           break;
         }
-        case laS_chop:
+        case laS_cut:
         {
           const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood;
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood; // the tile stays wood until all the wood has been taken away.
           _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
-
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
-
-          break;
-        }
-        case laS_cut: // the states don't allign right now namewise, because getting back to grass will probably not be a state, but happen, once all wood is taken away.
-        {
-          // the tile stays wood until all the wood has been taken away.
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];

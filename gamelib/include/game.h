@@ -203,7 +203,6 @@ enum lumberjack_actor_state
   laS_plant,
   laS_getWater,
   laS_water,
-  laS_grow,
   laS_chop,
   laS_cut,
 
