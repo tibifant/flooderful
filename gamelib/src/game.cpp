@@ -704,7 +704,7 @@ void update_cook()
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
         modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, _AddedResourceCount, _MinResourceCount, _Game.levelInfo.pGameplayMap[worldIdx].maxRessourceCount);
 
-        pCook->state = (cook_actor_state)((pCook->state + 1) % laS_count);
+        pCook->state = (cook_actor_state)((pCook->state + 1) % caS_count);
         pActor->target = target_from_state[pCook->state];
         pActor->atDestination = false;
       }
