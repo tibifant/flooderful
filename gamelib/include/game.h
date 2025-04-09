@@ -75,12 +75,12 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_wood,
 
   _ptt_multi_types,
-  _ptT_nutrition_start = _ptt_multi_types,
-  ptT_vitamin = _ptT_nutrition_start,
+  _ptT_nutrition_begin = _ptt_multi_types,
+  ptT_vitamin = _ptT_nutrition_begin,
   ptT_protein,
   ptT_carbohydrates,
   ptT_fat,
-  _ptT_nutrition_end = ptT_fat, // always +1 for nutrition_count!
+  _ptT_nutrition_last = ptT_fat, // always +1 for nutrition_count!
 
   ptT_collidable,
 
@@ -109,6 +109,15 @@ enum resource_type
 
   tT_count,
 };
+
+// food thoughts:
+// there should be the nutrient sources and the differnt foods
+// e.g. sunflower -> sunflower seed sandwich (idk lol)
+// so the cook will walk to different sources and then put them together to food at a kitchen.
+// i'm sorry i can't concentrate and want to commit at least something
+// maybe some food can be eaten directly like tomatoes and other stuff has to be in meals, like salt?
+
+// TODO: fires to go to in the dark?
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -192,7 +201,7 @@ struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  uint8_t nutritions[(_ptT_nutrition_end + 1) - _ptT_nutrition_start];
+  uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_begin];
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
 };
 
