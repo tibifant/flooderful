@@ -97,7 +97,7 @@ enum resource_type
   tT_trunk, // we probably don't need trunk as resource, as we just walk to the sawmill, once the tree is felled...
   tT_wood,
 
-  _tile_type_food_begin, 
+  _tile_type_food_begin,
   tT_tomato = _tile_type_food_begin,
   tT_bean,
   tT_wheat,
@@ -257,8 +257,8 @@ struct level_info
   } resources[ptT_Count];
 
   pathfinding_element *pPathfindingMap = nullptr; // don't needed anymore as we will conclude from the ressurce type to the pathfinfing target type in templated func (see notes)
-  gameplay_element *pGameplayMap = nullptr; // change name, but like that?
-  render_element *pRenderMap = nullptr; // change name, but like that?
+  gameplay_element *pGameplayMap = nullptr;
+  render_element *pRenderMap = nullptr;
   vec2s map_size;
 };
 

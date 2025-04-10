@@ -240,7 +240,7 @@ lsResult spawnActors()
   // Cook
   {
     movement_actor foodActor;
-    foodActor.target = _ptT_nutrition_start;
+    foodActor.target = _ptT_nutrition_begin;
     foodActor.pos = vec2f(10.f, 10.f);
 
     size_t f_index;
@@ -465,7 +465,7 @@ void update_lifesupportActors()
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
-  static const size_t nutritionsCount = (_ptT_nutrition_end + 1) - _ptT_nutrition_start;
+  static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_begin;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
   static const int64_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
@@ -477,7 +477,7 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
-    if (pActor->target < _ptT_nutrition_start || pActor->target > _ptT_nutrition_end)
+    if (pActor->target < _ptT_nutrition_begin || pActor->target > _ptT_nutrition_last)
     {
       // TODO: Add range in pathfinding and walk to nearest item with best score.
 
@@ -529,11 +529,11 @@ void update_lifesupportActors()
             if (_actor.pItem->nutritions[j] < lowest)
             {
               lowest = _actor.pItem->nutritions[j];
-              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_start);
+              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_begin);
             }
           }
 
-          lsAssert(lowestNutrient <= _ptT_nutrition_end);
+          lsAssert(lowestNutrient <= _ptT_nutrition_last);
           pActor->target = lowestNutrient;
           pActor->atDestination = false;
         }
