@@ -63,18 +63,17 @@ struct gameEvent
 
 //////////////////////////////////////////////////////////////////////////
 
-// for rendering map have enum values for what should be rendered there that simply have the same enum value. food (and possibly other stuff) that consists of several targetables needs to be handled seperatly.
 enum pathfinding_target_type // 32 different terrain_types possible.
 {
-  ptT_grass,
-  ptT_water,
-  ptT_sand,
-  ptT_sapling,
-  ptT_tree,
-  ptT_trunk,
-  ptT_wood,
+  ptT_grass, // matches the corresponding `resource_type`
+  ptT_water, // matches the corresponding `resource_type`
+  ptT_sand, // matches the corresponding `resource_type`
+  ptT_sapling, // matches the corresponding `resource_type`
+  ptT_tree, // matches the corresponding `resource_type`
+  ptT_trunk, // matches the corresponding `resource_type`
+  ptT_wood, // matches the corresponding `resource_type`
 
-  _ptt_multi_types,
+  _ptt_multi_types, // up until here the types match the corresponding `resource_types`
   _ptT_nutrition_begin = _ptt_multi_types,
   ptT_vitamin = _ptT_nutrition_begin,
   ptT_protein,
@@ -82,20 +81,20 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_fat,
   _ptT_nutrition_last = ptT_fat, // always +1 for nutrition_count!
 
-  ptT_collidable,
+  ptT_collidable, // ptT_collidable always has to be last!
 
   ptT_Count,
 };
 
 enum resource_type
 {
-  tT_grass,
-  tT_water,
-  tT_sand,
-  tT_sapling,
-  tT_tree,
-  tT_trunk, // we probably don't need trunk as resource, as we just walk to the sawmill, once the tree is felled...
-  tT_wood,
+  tT_grass, // matches the corresponding `pathfinding_target_type`
+  tT_water, // matches the corresponding `pathfinding_target_type`
+  tT_sand, // matches the corresponding `pathfinding_target_type`
+  tT_sapling, // matches the corresponding `pathfinding_target_type`
+  tT_tree, // matches the corresponding `pathfinding_target_type`
+  tT_trunk, // matches the corresponding `pathfinding_target_type`
+  tT_wood, // matches the corresponding `pathfinding_target_type`
 
   _tile_type_food_begin,
   tT_tomato = _tile_type_food_begin,
@@ -153,12 +152,11 @@ struct fill_step
 
 //////////////////////////////////////////////////////////////////////////
 
-struct pathfinding_element // hmm i don't like this name
+struct pathfinding_element
 {
   uint8_t elevationLevel;
 };
 
-// TODO: gameplay element: ressource count, bool house?
 struct gameplay_element
 {
   resource_type tileType;
@@ -174,8 +172,6 @@ struct render_element
   // rotation
   uint8_t elevationLevel;
 };
-// render map
-
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +198,7 @@ struct lifesupport_actor
   entity_type type;
   size_t entityIndex;
   uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_begin];
-  uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin]; // either this simply counts the amount of nutrition and we eat it as we need it or it contains different foods?
+  uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin];
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -221,7 +217,7 @@ enum lumberjack_actor_state
 struct lumberjack_actor
 {
   lumberjack_actor_state state;
-  size_t index; // TODO: Remove because of shared index
+  size_t index;
   bool hasItem; // Maybe change this to several inevntory spots if needed.
   resource_type item;
 };
@@ -252,11 +248,11 @@ struct level_info
   struct resource_info
   {
     queue<fill_step> pathfinding_queue;
-    pathfinding_info *pDirectionLookup[2] = {}; // add elevation level to this map
+    pathfinding_info *pDirectionLookup[2] = {};
     size_t write_direction_idx = 0;
-  } resources[ptT_Count];
+  } resources[ptT_Count - 1]; // Skipping ptT_collidable - ptT_collidable always has to be last!
 
-  pathfinding_element *pPathfindingMap = nullptr; // don't needed anymore as we will conclude from the ressurce type to the pathfinfing target type in templated func (see notes)
+  pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
   render_element *pRenderMap = nullptr;
   vec2s map_size;

@@ -277,7 +277,7 @@ void initializeLevel()
   setTerrain();
 
   // Set up floodfill queue and lookup
-  for (size_t i = 0; i < ptT_Count; i++) // tT_mountain isn't part of pathfinfing_target_type so we don't need to skip it anymore
+  for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
   {
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[0], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     lsAllocZero(&_Game.levelInfo.resources[i].pDirectionLookup[1], _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
@@ -340,7 +340,7 @@ bool floodfill(queue<fill_step> &pathfindQueue, pathfinding_info *pDirectionLook
 
 void updateFloodfill()
 {
-  for (size_t i = 0; i < ptT_Count - 1; i++) // tT_mountain isn't part of pathfinfing_target_type so we don't need to skip it anymore
+  for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
   {
     size_t writeIndex = _Game.levelInfo.resources[i].write_direction_idx;
 
@@ -393,8 +393,6 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
   return tilePos;
 }
 
-// TODO: Spawn random things that need to be taken to random places.
-
 static size_t r = 0;
 
 void movementActor_move()
@@ -420,7 +418,6 @@ void movementActor_move()
       }
       else if (currentTileDirectionType == d_atDestination)
       {
-        //_actor.pItem->target = _actor.pItem->target == ptT_water ? ptT_sand : ptT_water;
         _actor.pItem->atDestination = true;
         _actor.pItem->direction = vec2f(0);
         continue;
