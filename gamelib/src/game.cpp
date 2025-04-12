@@ -175,7 +175,7 @@ void setTerrain()
     _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
   }
 
-  for (size_t i = _tile_type_food_begin; i < _tile_type_food_last; i++) // without tt_meal for testing
+  for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
   {
     const size_t index = (i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
@@ -228,11 +228,8 @@ lsResult spawnActors()
     ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
 
-    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.nutritions); j++)
-      ls_actor.nutritions[j] = 0;
-
-    for (size_t j = 0; j < LS_ARRAYSIZE(ls_actor.lunchbox); j++)
-      ls_actor.lunchbox[j] = 0;
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
 
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
   }
@@ -240,7 +237,7 @@ lsResult spawnActors()
   // Cook
   {
     movement_actor foodActor;
-    foodActor.target = _ptT_nutrition_begin;
+    foodActor.target = _ptT_nutrition_first;
     foodActor.pos = vec2f(10.f, 10.f);
 
     size_t f_index;
@@ -250,17 +247,16 @@ lsResult spawnActors()
     cook.state = caS_fruit;
     cook.index = f_index;
 
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+
     LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
 
     lifesupport_actor lsF_actor;
     lsF_actor.entityIndex = f_index;
     lsF_actor.type = eT_lumberjack;
 
-    for (size_t j = 0; j < LS_ARRAYSIZE(lsF_actor.nutritions); j++)
-      lsF_actor.nutritions[j] = 0;
-
-    for (size_t j = 0; j < LS_ARRAYSIZE(lsF_actor.lunchbox); j++)
-      lsF_actor.lunchbox[j] = 0;
+    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
+    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
 
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
   }
@@ -462,8 +458,8 @@ void update_lifesupportActors()
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
-  static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_begin;
-  static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_begin;
+  static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
+  static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
   static const int64_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
@@ -474,7 +470,7 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
-    if (pActor->target < _ptT_nutrition_begin || pActor->target > _ptT_nutrition_last)
+    if (pActor->target < _ptT_nutrition_first || pActor->target > _ptT_nutrition_last)
     {
       // TODO: Add range in pathfinding and walk to nearest item with best score.
 
@@ -497,7 +493,7 @@ void update_lifesupportActors()
 
             for (size_t j = 0; j < nutritionsCount; j++)
               if (FoodToNutrition[i][j] > 0)
-                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1;
+                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1; // TODO: consider range here?
 
             if (score > bestScore)
             {
@@ -526,7 +522,7 @@ void update_lifesupportActors()
             if (_actor.pItem->nutritions[j] < lowest)
             {
               lowest = _actor.pItem->nutritions[j];
-              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_begin);
+              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
             }
           }
 
@@ -546,8 +542,8 @@ void update_lifesupportActors()
         if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
         {
           const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
-          lsAssert(tileType - _tile_type_food_begin >= 0 && tileType - _tile_type_food_begin <= _tile_type_food_last);
-          modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_begin], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+          lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
+          modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
           _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
         }

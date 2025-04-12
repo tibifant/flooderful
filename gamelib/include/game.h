@@ -74,8 +74,8 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_wood, // matches the corresponding `resource_type`
 
   _ptt_multi_types, // up until here the types match the corresponding `resource_types`
-  _ptT_nutrition_begin = _ptt_multi_types,
-  ptT_vitamin = _ptT_nutrition_begin,
+  _ptT_nutrition_first = _ptt_multi_types,
+  ptT_vitamin = _ptT_nutrition_first,
   ptT_protein,
   ptT_carbohydrates,
   ptT_fat,
@@ -96,8 +96,8 @@ enum resource_type
   tT_trunk, // matches the corresponding `pathfinding_target_type`
   tT_wood, // matches the corresponding `pathfinding_target_type`
 
-  _tile_type_food_begin,
-  tT_tomato = _tile_type_food_begin,
+  _tile_type_food_first,
+  tT_tomato = _tile_type_food_first,
   tT_bean,
   tT_wheat,
   tT_sunflower,
@@ -197,8 +197,8 @@ struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_begin];
-  uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_begin];
+  uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
+  uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_first];
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -239,6 +239,7 @@ struct cook_actor
 {
   cook_actor_state state; // TODO: Starting State and maybe the look up in the actor?
   size_t index;
+  uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
 };
 
 //////////////////////////////////////////////////////////////////////////
