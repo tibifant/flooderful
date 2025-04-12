@@ -681,6 +681,7 @@ void update_lumberjack()
 
 void update_cook()
 {
+  // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
   static const pathfinding_target_type target_from_state[caS_count] = { ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat };
 
   for (const auto _actor : _CookActors)
