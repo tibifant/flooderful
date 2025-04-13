@@ -698,7 +698,7 @@ inline lsResult small_string_GetByteSize(const small_string<TCount> &str, _Out_ 
 
   LS_ERROR_IF(pSize == nullptr, lsR_ArgumentNull);
 
-  *pSize = string.bytes;
+  *pSize = str.bytes;
 
 epilogue:
   return result;
@@ -711,7 +711,7 @@ inline lsResult small_string_GetCount(const small_string<TCount> &str, _Out_ siz
 
   LS_ERROR_IF(pLength == nullptr, lsR_ArgumentNull);
 
-  *pLength = string.count;
+  *pLength = str.count;
 
 epilogue:
   return result;

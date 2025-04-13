@@ -65,6 +65,8 @@ lsResult lsAppState_Create(lsAppState *pAppState, const char *title, const vec2s
   pAppState->pWindow = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int32_t)size.x, (int32_t)size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
   LS_ERROR_IF(pAppState->pWindow == nullptr, lsR_InternalError);
 
+  SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
