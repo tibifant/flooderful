@@ -684,6 +684,8 @@ void update_cook()
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
   static const pathfinding_target_type target_from_state[caS_count] = { ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat };
 
+  // TODO: collect items, make meal, collect items, make next meal
+
   for (const auto _actor : _CookActors)
   {
     cook_actor *pCook = _actor.pItem;
