@@ -237,10 +237,11 @@ struct lumberjack_actor
 // only temporary
 enum cook_actor_state
 {
-  caS_fruit,
-  caS_bean,
-  caS_grain,
-  caS_fat,
+  caS_find_soil,
+  caS_plant,
+  caS_water,
+  caS_harvest,
+  caS_cook,
 
   caS_count,
 };
@@ -248,6 +249,7 @@ enum cook_actor_state
 struct cook_actor
 {
   cook_actor_state state; // TODO: Starting State and maybe the look up in the actor?
+  resource_type currentCookingItem;
   size_t index;
   uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
 };

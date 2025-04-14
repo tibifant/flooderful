@@ -683,7 +683,6 @@ void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
   // hmm we're having issues: if i want to have the actor to be able to add meals to the `meal-spot` once he finished making one, i can't pathfind towards meals.
-  static const pathfinding_target_type target_from_state[caS_count] = { ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat };
   
   // TODO: collect items, make meal, collect items, make next meal
 
@@ -694,8 +693,11 @@ void update_cook()
 
     if (pActor->atDestination)
     {
-      if (pActor->target == target_from_state[pCook->state])
+      if (pActor->target == target_from_state[pCook->state]) // todo...
       {
+        // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
+        // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
+
         const int64_t _AddedResourceCount = 1;
         const uint8_t _MinResourceCount = 0;
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
