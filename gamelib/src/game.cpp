@@ -698,6 +698,14 @@ void update_cook()
         // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
         // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
 
+        // check inventory for plant item
+        // if not in inventory: check for plant
+        // if no plant: plant plant
+        // cook
+        // drop food item
+
+        // but maybe we just want another actor that will plant all the plants?
+
         const int64_t _AddedResourceCount = 1;
         const uint8_t _MinResourceCount = 0;
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
