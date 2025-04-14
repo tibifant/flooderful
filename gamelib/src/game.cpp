@@ -682,8 +682,9 @@ void update_lumberjack()
 void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
+  // hmm we're having issues: if i want to have the actor to be able to add meals to the `meal-spot` once he finished making one, i can't pathfind towards meals.
   static const pathfinding_target_type target_from_state[caS_count] = { ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat };
-
+  
   // TODO: collect items, make meal, collect items, make next meal
 
   for (const auto _actor : _CookActors)
