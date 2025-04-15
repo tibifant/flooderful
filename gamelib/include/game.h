@@ -237,10 +237,11 @@ struct lumberjack_actor
 // only temporary
 enum cook_actor_state
 {
+  caS_check_inventory,
   caS_find_soil,
   caS_plant,
   caS_water,
-  caS_harvest,
+  caS_harvest_plant,
   caS_cook,
 
   caS_count,

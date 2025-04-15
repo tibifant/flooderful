@@ -679,6 +679,32 @@ void update_lumberjack()
   }
 }
 
+bool isMealComponent(const pathfinding_target_type component, const resource_type mealType)
+{
+  lsAssert(mealType >= _tile_type_food_first && mealType <= _tile_type_food_last);
+
+  switch (mealType)
+  {
+  case tT_tomato:
+    return component == ptT_vitamin;
+
+  case tT_bean:
+    return component == ptT_protein;
+
+  case tT_wheat:
+    return component == ptT_carbohydrates;
+
+  case tT_sunflower:
+    return component == ptT_fat;
+
+  case tT_meal:
+    return component >= _ptT_nutrition_first && component <= _ptT_nutrition_last;
+
+  default:
+    lsFail(); // not implemented;
+  }
+}
+
 void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
@@ -698,11 +724,61 @@ void update_cook()
         // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
         // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
 
+        // if tomatoplant in inventory -> cook, add to vitamin pile, else -> walk towards tomato plant
+
+        // check plant, take, cook
+
+        // check inventory, gather, check inventtory, cook
+
+        switch (pCook->state)
+        {
+        case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of if (atdest) to set the target?
+        {
+          bool noItemMissing = true;
+          pathfinding_target_type missingItem = ptT_Count;
+
+          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
+          {
+            // if item is missing
+            if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
+            {
+              // TODO: check if there is a plant on the map.
+              pCook->state = caS_harvest_plant;
+              pActor->target = (pathfinding_target_type)(i + _ptT_nutrition_first);
+              break;
+            }
+          }
+
+          // if all items in inventory
+          pCook->state = caS_cook;
+          
+          break;
+        }
+
+        case caS_harvest_plant:
+        {
+          // assert we're at the plant
+          // check if plant has items left
+          // take item
+        }
+        
+        case caS_cook:
+        {
+          // remove from inventory
+          // add to map
+          
+          // change top next food item
+        }
+        }
+
+
         // check inventory for plant item
+        
         // if not in inventory: check for plant
         // if no plant: plant plant
         // cook
         // drop food item
+        // switch to next plant item
 
         // but maybe we just want another actor that will plant all the plants?
 
