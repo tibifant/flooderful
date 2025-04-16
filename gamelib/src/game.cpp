@@ -742,7 +742,7 @@ void update_cook()
             // if item is missing
             if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
             {
-              // TODO: check if there is a plant on the map.
+              // TODO: check if there is a plant on the map -> else: state = plant
               pCook->state = caS_harvest_plant;
               pActor->target = (pathfinding_target_type)(i + _ptT_nutrition_first);
               break;
@@ -758,10 +758,31 @@ void update_cook()
         case caS_harvest_plant:
         {
           // assert we're at the plant
-          // check if plant has items left
+          // check if plant has items left -> else: state = plant
           // take item
         }
+
+        case caS_plant:
+        {
+          // assert we're at soil
+          // change soil to plant
+        }
         
+        case caS_getWater: // then we need a water inventory
+        {
+          // assert at water
+          // take water
+          // set target to plant - ehhhhh we can't ever choose to walk back to this ecakt plant... so we'd need an extra resource_type for plants that need water...
+        }
+
+        case caS_water:
+        {
+          // assert tile
+          // check if we have water
+          // remove water
+          // change state to harvest
+        }
+
         case caS_cook:
         {
           // remove from inventory
