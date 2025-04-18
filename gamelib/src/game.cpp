@@ -716,10 +716,10 @@ void update_cook()
   {
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
-
+    
     if (pActor->atDestination)
     {
-      if (pActor->target == target_from_state[pCook->state]) // todo...
+      if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways
       {
         // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
         // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
@@ -785,6 +785,7 @@ void update_cook()
 
         case caS_cook:
         {
+          // assert alle items are there
           // remove from inventory
           // add to map
           
@@ -812,7 +813,7 @@ void update_cook()
         pActor->target = target_from_state[pCook->state];
         pActor->atDestination = false;
       }
-      else
+      else // i think this does not work out like this with actors have food items as targets anyways, as they may have the specific food as their current target...
       {
         pActor->target = target_from_state[pCook->state];
         pActor->atDestination = false;
