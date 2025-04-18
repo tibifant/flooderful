@@ -705,6 +705,20 @@ bool isMealComponent(const pathfinding_target_type component, const resource_typ
   }
 }
 
+pathfinding_target_type nutrition_to_plant(const pathfinding_target_type nutrient)
+{
+  lsAssert(nutrient >= _ptT_nutrition_first && nutrient <= _ptT_nutrition_last);
+
+  switch (nutrient)
+  {
+  case ptT_vitamin: return ptT_tomato_plant;
+  case ptT_protein: return ptT_bean_plant;
+  case ptT_carbohydrates: return ptT_wheat_plant;
+  case ptT_fat: return ptT_sunflower_plant;
+  default: lsFail(); // not implemented.
+  }
+}
+
 void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
@@ -719,7 +733,7 @@ void update_cook()
     
     if (pActor->atDestination)
     {
-      if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways
+      if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways as targets from eating and cooking can be the same
       {
         // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
         // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
@@ -744,7 +758,7 @@ void update_cook()
             {
               // TODO: check if there is a plant on the map -> else: state = plant
               pCook->state = caS_harvest_plant;
-              pActor->target = (pathfinding_target_type)(i + _ptT_nutrition_first);
+              pActor->target = nutrition_to_plant((pathfinding_target_type)(i + _ptT_nutrition_first)); // maybe this can be a lookup.
               break;
             }
           }
