@@ -631,7 +631,7 @@ void update_lumberjack()
           {
             pLumberjack->hasItem = false;
             _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
-          
+
             pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
             pActor->target = target_from_state[pLumberjack->state];
             pActor->atDestination = false;
@@ -723,14 +723,24 @@ void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
   // hmm we're having issues: if i want to have the actor to be able to add meals to the `meal-spot` once he finished making one, i can't pathfind towards meals.
-  
+
   // TODO: collect items, make meal, collect items, make next meal
 
   for (const auto _actor : _CookActors)
   {
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
-    
+
+    // if atdest && survival target
+    // ...
+    // return;
+
+    // if state = check_inventory
+    // ...
+
+    // if atdest
+    // switch case ...
+
     if (pActor->atDestination)
     {
       if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways as targets from eating and cooking can be the same
@@ -746,9 +756,9 @@ void update_cook()
 
         switch (pCook->state)
         {
-        case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of if (atdest) to set the target?
+        case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
         {
-          bool noItemMissing = true;
+          bool anyItemMissing = false;;
           pathfinding_target_type missingItem = ptT_Count;
 
           for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
@@ -756,16 +766,29 @@ void update_cook()
             // if item is missing
             if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
             {
-              // TODO: check if there is a plant on the map -> else: state = plant
-              pCook->state = caS_harvest_plant;
-              pActor->target = nutrition_to_plant((pathfinding_target_type)(i + _ptT_nutrition_first)); // maybe this can be a lookup.
+              anyItemMissing = true;
+
+              const pathfinding_target_type targetPlant = nutrition_to_plant((pathfinding_target_type)(i + _ptT_nutrition_first)); // maybe this can be a lookup?
+
+              if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
+              {
+                pCook->state = caS_plant;
+                pActor->target = ptT_grass;
+              }
+              else
+              {
+                pCook->state = caS_harvest_plant;
+                pActor->target = targetPlant;
+              }
+
               break;
             }
           }
 
           // if all items in inventory
-          pCook->state = caS_cook;
-          
+          if (!anyItemMissing)
+            pCook->state = caS_cook;
+
           break;
         }
 
@@ -781,7 +804,7 @@ void update_cook()
           // assert we're at soil
           // change soil to plant
         }
-        
+
         case caS_getWater: // then we need a water inventory
         {
           // assert at water
@@ -802,14 +825,14 @@ void update_cook()
           // assert alle items are there
           // remove from inventory
           // add to map
-          
+
           // change top next food item
         }
         }
 
 
         // check inventory for plant item
-        
+
         // if not in inventory: check for plant
         // if no plant: plant plant
         // cook
