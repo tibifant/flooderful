@@ -794,9 +794,27 @@ void update_cook()
 
         case caS_harvest_plant:
         {
+          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+
           // assert we're at the plant
+          lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+          lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
+          
           // check if plant has items left -> else: state = plant
-          // take item
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+          {
+            // take item
+            constexpr int16_t AddedResourceAmount = 1;
+            modify_with_clamp(pCook->inventory[pActor->target + (_ptT_nutrition_first - _ptT_nutrient_sources_first)], AddedResourceAmount);
+
+            // remove
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
+          }
+          else
+          {
+            pCook->state = caS_plant;
+            pActor->target = ptT_grass;
+          }
         }
 
         case caS_plant:
