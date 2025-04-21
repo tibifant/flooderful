@@ -743,6 +743,9 @@ void update_cook()
 
     if (pActor->atDestination)
     {
+      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+      lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+
       if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways as targets from eating and cooking can be the same
       {
         // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
@@ -794,10 +797,6 @@ void update_cook()
 
         case caS_harvest_plant:
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-
-          // assert we're at the plant
-          lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
           lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
           
           // check if plant has items left -> else: state = plant
@@ -815,19 +814,25 @@ void update_cook()
             pCook->state = caS_plant;
             pActor->target = ptT_grass;
           }
+
+          break;
         }
 
         case caS_plant:
         {
-          // assert we're at soil
+          lsAssert(pActor->target == ptT_grass);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
+
           // change soil to plant
+          // ahh problem... we don't know anymore which plant we wanted...
+          // TODO: make item choosing easily redoable or have a slot in the cook actor for which nutrient we currently need? oooorrr just skip this and change the plant in harvest, that is empty to a new plant?
         }
 
         case caS_getWater: // then we need a water inventory
         {
           // assert at water
           // take water
-          // set target to plant - ehhhhh we can't ever choose to walk back to this ecakt plant... so we'd need an extra resource_type for plants that need water...
+          // set target to plant - ehhhhh we can't ever choose to walk back to this exakt plant... so we'd need an extra resource_type for plants that need water...
         }
 
         case caS_water:
