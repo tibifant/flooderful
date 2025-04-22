@@ -776,11 +776,11 @@ void update_cook()
               if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
               {
                 pCook->state = caS_plant;
-                pActor->target = ptT_grass;
+                pActor->target = ptT_grass; // this ain't gonna work... so we actually DO need to save which plant we want to plant...
               }
               else
               {
-                pCook->state = caS_harvest_plant;
+                pCook->state = caS_harvest;
                 pActor->target = targetPlant;
               }
 
@@ -790,14 +790,18 @@ void update_cook()
 
           // if all items in inventory
           if (!anyItemMissing)
+          {
             pCook->state = caS_cook;
+            pActor->target = ptT_grass; // TODO
+          }
 
           break;
         }
 
-        case caS_harvest_plant:
+        case caS_harvest:
         {
           lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
           
           // check if plant has items left -> else: state = plant
           if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
@@ -808,11 +812,12 @@ void update_cook()
 
             // remove
             modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
+
+            pCook->state = caS_check_inventory;
           }
           else
           {
             pCook->state = caS_plant;
-            pActor->target = ptT_grass;
           }
 
           break;
@@ -820,36 +825,31 @@ void update_cook()
 
         case caS_plant:
         {
-          lsAssert(pActor->target == ptT_grass);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
+          lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
 
-          // change soil to plant
-          // ahh problem... we don't know anymore which plant we wanted...
-          // TODO: make item choosing easily redoable or have a slot in the cook actor for which nutrient we currently need? oooorrr just skip this and change the plant in harvest, that is empty to a new plant?
-        }
+          // renew plant
+          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(4)); // TODO!
 
-        case caS_getWater: // then we need a water inventory
-        {
-          // assert at water
-          // take water
-          // set target to plant - ehhhhh we can't ever choose to walk back to this exakt plant... so we'd need an extra resource_type for plants that need water...
-        }
-
-        case caS_water:
-        {
-          // assert tile
-          // check if we have water
-          // remove water
-          // change state to harvest
+          pCook->state = caS_harvest;
         }
 
         case caS_cook:
         {
-          // assert alle items are there
+          // TODO assert alle items are there
           // remove from inventory
+          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory; i++)
+          {
+            if (isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
+            {
+              lsAssert(pCook->inventory[i] > 0); // TODO! look up for each meal for every nutrient how much we need... wow krass mindblown. this makes so much more sense lol.
+
+              modify_with_clamp(pCook->inventory[i], )
+            }
+          }
           // add to map
 
-          // change top next food item
+          // change to next food item
         }
         }
 
