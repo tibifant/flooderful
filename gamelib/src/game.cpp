@@ -679,31 +679,7 @@ void update_lumberjack()
   }
 }
 
-bool isMealComponent(const pathfinding_target_type component, const resource_type mealType)
-{
-  lsAssert(mealType >= _tile_type_food_first && mealType <= _tile_type_food_last);
-
-  switch (mealType)
-  {
-  case tT_tomato:
-    return component == ptT_vitamin;
-
-  case tT_bean:
-    return component == ptT_protein;
-
-  case tT_wheat:
-    return component == ptT_carbohydrates;
-
-  case tT_sunflower:
-    return component == ptT_fat;
-
-  case tT_meal:
-    return component >= _ptT_nutrition_first && component <= _ptT_nutrition_last;
-
-  default:
-    lsFail(); // not implemented;
-  }
-}
+///////////////////////////////////////////////////////////////////////////////////////////
 
 pathfinding_target_type nutrition_to_plant(const pathfinding_target_type nutrient)
 {
@@ -725,6 +701,15 @@ void update_cook()
   // hmm we're having issues: if i want to have the actor to be able to add meals to the `meal-spot` once he finished making one, i can't pathfind towards meals.
 
   // TODO: collect items, make meal, collect items, make next meal
+
+  constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrition_last + 1) - _ptT_nutrition_first] =
+  { // nutrients: ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat
+    { 1, 0, 0, 0 }, // tT_tomato
+    { 0, 1, 0, 0 }, // tT_bean
+    { 0, 0, 1, 0 }, // tT_wheat
+    { 0, 0, 0, 1 }, // tT_sunflower
+    { 1, 1, 1, 1 } // tT_meal
+  };
 
   for (const auto _actor : _CookActors)
   {
@@ -767,7 +752,7 @@ void update_cook()
           for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
           {
             // if item is missing
-            if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
+            if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem)) // TODO!
             {
               anyItemMissing = true;
 
