@@ -681,20 +681,6 @@ void update_lumberjack()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-pathfinding_target_type nutrition_to_plant(const pathfinding_target_type nutrient)
-{
-  lsAssert(nutrient >= _ptT_nutrition_first && nutrient <= _ptT_nutrition_last);
-
-  switch (nutrient)
-  {
-  case ptT_vitamin: return ptT_tomato_plant;
-  case ptT_protein: return ptT_bean_plant;
-  case ptT_carbohydrates: return ptT_wheat_plant;
-  case ptT_fat: return ptT_sunflower_plant;
-  default: lsFail(); // not implemented.
-  }
-}
-
 void update_cook()
 {
   // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
@@ -749,14 +735,14 @@ void update_cook()
           bool anyItemMissing = false;;
           pathfinding_target_type missingItem = ptT_Count;
 
-          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++) // TODO this can be without iterating can't it?
+          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
           {
             // if item is missing
-            if (pCook->inventory[i] <= 0 && IngridientAmountPerFood[pCook->currentCookingItem][i] > 0) // TODO!
+            if (pCook->inventory[i] <= 0 && IngridientAmountPerFood[pCook->currentCookingItem - _ptT_nutrition_first][i] > 0)
             {
               anyItemMissing = true;
 
-              const pathfinding_target_type targetPlant = nutrition_to_plant((pathfinding_target_type)(i + _ptT_nutrition_first)); // maybe this can be a lookup?
+              const pathfinding_target_type targetPlant = (pathfinding_target_type)((i + _ptT_nutrition_first) - _ptT_nutrient_sources_first);
 
               if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
               {
@@ -787,13 +773,13 @@ void update_cook()
         {
           lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
-          
+
           // check if plant has items left -> else: state = plant
           if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
           {
             // take item
             constexpr int16_t AddedResourceAmount = 1;
-            modify_with_clamp(pCook->inventory[pActor->target + (_ptT_nutrition_first - _ptT_nutrient_sources_first)], AddedResourceAmount);
+            modify_with_clamp(pCook->inventory[pActor->target + (_ptT_nutrition_first - _tile_type_food_first)], AddedResourceAmount);
 
             // remove
             modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
@@ -817,16 +803,28 @@ void update_cook()
           modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(4)); // TODO!
 
           pCook->state = caS_harvest;
+
+          break;
         }
 
         case caS_cook:
         {
-          // TODO assert alle items are there
-          // remove from inventory
-          
-          // add to map
+          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
+          {
+            lsAssert(pCook->inventory[i] >= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i]);
+            pCook->inventory[i] -= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i];
+          }
+
+          constexpr uint8_t AddedCookedItemAmount = 4;
+
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
 
           // change to next food item
+          pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
+
+          break;
         }
         }
 

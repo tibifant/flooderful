@@ -79,7 +79,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_wheat_plant,
   ptT_sunflower_plant,
   _ptT_nutrient_sources_last = ptT_sunflower_plant,
-  // do not insert anything here!
+  // do not insert anything here! We depend on the plants matching up with their nutrients!
   _ptt_multi_types, // up until here the types match the corresponding `resource_types`
   _ptT_nutrition_first = _ptt_multi_types,
   ptT_vitamin = _ptT_nutrition_first,
@@ -109,7 +109,7 @@ enum resource_type
   tT_wheat_plant,
   tT_sunflower_plant,
   _tile_type_food_resources_last = tT_sunflower_plant,
-  // do not insert anything here!
+  // do not insert anything here! We depend on the plants matching up with their nutrients!
   _tile_type_food_first,
   tT_tomato = _tile_type_food_first,
   tT_bean,
