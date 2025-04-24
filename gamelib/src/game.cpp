@@ -749,10 +749,10 @@ void update_cook()
           bool anyItemMissing = false;;
           pathfinding_target_type missingItem = ptT_Count;
 
-          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
+          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++) // TODO this can be without iterating can't it?
           {
             // if item is missing
-            if (pCook->inventory[i] < 0 && !isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem)) // TODO!
+            if (pCook->inventory[i] <= 0 && IngridientAmountPerFood[pCook->currentCookingItem][i] > 0) // TODO!
             {
               anyItemMissing = true;
 
@@ -823,15 +823,7 @@ void update_cook()
         {
           // TODO assert alle items are there
           // remove from inventory
-          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory; i++)
-          {
-            if (isMealComponent((pathfinding_target_type)(i + _ptT_nutrition_first), pCook->currentCookingItem))
-            {
-              lsAssert(pCook->inventory[i] > 0); // TODO! look up for each meal for every nutrient how much we need... wow krass mindblown. this makes so much more sense lol.
-
-              modify_with_clamp(pCook->inventory[i], )
-            }
-          }
+          
           // add to map
 
           // change to next food item
