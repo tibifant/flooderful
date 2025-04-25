@@ -756,7 +756,7 @@ void update_cook()
           const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
           pCook->searchingPlant = targetPlant;
 
-          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
+          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
           {
             pCook->state = caS_plant;
             pActor->target = ptT_grass;
@@ -786,7 +786,7 @@ void update_cook()
       if (pActor->atDestination)
       {
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
         lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_last);
@@ -820,7 +820,7 @@ void update_cook()
       if (pActor->atDestination)
       {
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
         lsAssert(pActor->target == ptT_grass);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
@@ -843,7 +843,7 @@ void update_cook()
       if (pActor->atDestination)
       {
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass); // TODO: We could update this so we drop food of at places where te same food already is. (to handle multitype: set actor dest to nutrienttype, at nutrienttype: check tiletype: if matches current cooking item: add to it, else set target to grass.
         pActor->atDestination = false;
