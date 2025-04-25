@@ -742,12 +742,13 @@ void update_cook()
             {
               anyItemMissing = true;
 
-              const pathfinding_target_type targetPlant = (pathfinding_target_type)((i + _ptT_nutrition_first) - _ptT_nutrient_sources_first);
+              const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
+              pCook->searchingPlant = targetPlant;
 
               if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
               {
                 pCook->state = caS_plant;
-                pActor->target = ptT_grass; // this ain't gonna work... so we actually DO need to save which plant we want to plant...
+                pActor->target = ptT_grass;
               }
               else
               {
@@ -774,6 +775,8 @@ void update_cook()
           lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
 
+          pActor->atDestination = false;
+
           // check if plant has items left -> else: state = plant
           if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
           {
@@ -789,6 +792,7 @@ void update_cook()
           else
           {
             pCook->state = caS_plant;
+            pActor->target = ptT_grass;
           }
 
           break;
@@ -796,19 +800,26 @@ void update_cook()
 
         case caS_plant:
         {
-          lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
+          lsAssert(pActor->target == ptT_grass);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
 
-          // renew plant
-          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(4)); // TODO!
+          pActor->atDestination = false;
+
+          constexpr uint8_t AddedAmountToPlant = 3;
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
 
           pCook->state = caS_harvest;
+          pActor->target = pCook->searchingPlant;
 
           break;
         }
 
         case caS_cook:
         {
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass); // TODO: We could update this so we drop food of at places where te same food already is. (to handle multitype: set actor dest to nutrienttype, at nutrienttype: check tiletype: if matches current cooking item: add to it, else set target to grass.
+          pActor->atDestination = false;
+
           for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
           {
             lsAssert(pCook->inventory[i] >= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i]);
@@ -817,7 +828,6 @@ void update_cook()
 
           constexpr uint8_t AddedCookedItemAmount = 4;
 
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
           _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
 
