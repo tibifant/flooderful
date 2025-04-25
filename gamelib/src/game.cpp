@@ -35,33 +35,15 @@ template <pathfinding_target_type p>
 struct match_resource;
 
 template<>
-struct match_resource<pathfinding_target_type::ptT_carbohydrates>
-{
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat || resourceType == tT_meal; };
-};
-
-template<>
-struct match_resource<pathfinding_target_type::ptT_collidable>
-{
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
-};
-
-template<>
-struct match_resource<pathfinding_target_type::ptT_fat>
-{
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower || resourceType == tT_meal; };
-};
-
-template<>
 struct match_resource<pathfinding_target_type::ptT_grass>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_grass; };
 };
 
 template<>
-struct match_resource<pathfinding_target_type::ptT_protein>
+struct match_resource<pathfinding_target_type::ptT_water>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean || resourceType == tT_meal; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
 };
 
 template<>
@@ -89,21 +71,63 @@ struct match_resource<pathfinding_target_type::ptT_trunk>
 };
 
 template<>
+struct match_resource<pathfinding_target_type::ptT_wood>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wood; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_tomato_plant>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato_plant; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_bean_plant>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean_plant; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_wheat_plant>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat_plant; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_sunflower_plant>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower_plant; };
+};
+
+template<>
 struct match_resource<pathfinding_target_type::ptT_vitamin>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato || resourceType == tT_meal; };
 };
 
 template<>
-struct match_resource<pathfinding_target_type::ptT_water>
+struct match_resource<pathfinding_target_type::ptT_protein>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_bean || resourceType == tT_meal; };
 };
 
 template<>
-struct match_resource<pathfinding_target_type::ptT_wood>
+struct match_resource<pathfinding_target_type::ptT_carbohydrates>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wood; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_wheat || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_fat>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_sunflower || resourceType == tT_meal; };
+};
+
+template<>
+struct match_resource<pathfinding_target_type::ptT_collidable>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
 };
 
 template<pathfinding_target_type p>
@@ -136,6 +160,10 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_tree: fill_resource_info<ptT_tree>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_trunk: fill_resource_info<ptT_trunk>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_wood: fill_resource_info<ptT_wood>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_tomato_plant: fill_resource_info<ptT_tomato_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_bean_plant: fill_resource_info<ptT_bean_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_wheat_plant: fill_resource_info<ptT_wheat_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_sunflower_plant: fill_resource_info<ptT_sunflower_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_vitamin: fill_resource_info<ptT_vitamin>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_protein: fill_resource_info<ptT_protein>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_carbohydrates: fill_resource_info<ptT_carbohydrates>(pDirectionLookup, pathfindQueue, pResourceMap); break;
@@ -244,7 +272,11 @@ lsResult spawnActors()
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
 
     cook_actor cook;
-    cook.state = caS_fruit;
+    cook.state = caS_check_inventory;
+    cook.currentCookingItem = tT_tomato;
+    cook.survivalActorActive = false;
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+    
     cook.index = f_index;
 
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
@@ -514,6 +546,9 @@ void update_lifesupportActors()
         }
         else // if no item: set actor target
         {
+          if (_actor.pItem->type == eT_cook) // TODO: we could consider just giving every actor a state for survival.
+            pool_get(_CookActors, _actor.index)->survivalActorActive = true;
+
           size_t lowest = MaxNutritionValue;
           pathfinding_target_type lowestNutrient = ptT_Count;
 
@@ -683,11 +718,6 @@ void update_lumberjack()
 
 void update_cook()
 {
-  // TODO: make actor collect items to make meal? ahh this can't work out because he's going to stay at the meal...
-  // hmm we're having issues: if i want to have the actor to be able to add meals to the `meal-spot` once he finished making one, i can't pathfind towards meals.
-
-  // TODO: collect items, make meal, collect items, make next meal
-
   constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrition_last + 1) - _ptT_nutrition_first] =
   { // nutrients: ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat
     { 1, 0, 0, 0 }, // tT_tomato
@@ -702,167 +732,139 @@ void update_cook()
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
-    // if atdest && survival target
-    // ...
-    // return;
-
-    // if state = check_inventory
-    // ...
-
-    // if atdest
-    // switch case ...
-
-    if (pActor->atDestination)
+    if (pActor->atDestination && pCook->survivalActorActive)
     {
-      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-      lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+      pCook->survivalActorActive = false;
+      pCook->state = caS_check_inventory;
+    }
 
-      if (pActor->target == target_from_state[pCook->state]) // todo... this needs a different solution anyways as targets from eating and cooking can be the same
+    lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
+
+    switch (pCook->state)
+    {
+    case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
+    {
+      bool anyItemMissing = false;
+
+      for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
       {
-        // each state for all cooking items -> lut which plant for which item. special case for meal (does this work out, or do we need a special case for that as we can't know what plant we want to plant, when trying to plant all of them)
-        // maybe first: look if there still is a plant, if there isn't plant the plant. if there is: take item from plant.
-
-        // if tomatoplant in inventory -> cook, add to vitamin pile, else -> walk towards tomato plant
-
-        // check plant, take, cook
-
-        // check inventory, gather, check inventtory, cook
-
-        switch (pCook->state)
+        // if item is missing
+        if (pCook->inventory[i] <= 0 && IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i] > 0)
         {
-        case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
-        {
-          bool anyItemMissing = false;;
-          pathfinding_target_type missingItem = ptT_Count;
+          anyItemMissing = true;
 
-          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
-          {
-            // if item is missing
-            if (pCook->inventory[i] <= 0 && IngridientAmountPerFood[pCook->currentCookingItem - _ptT_nutrition_first][i] > 0)
-            {
-              anyItemMissing = true;
+          const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
+          pCook->searchingPlant = targetPlant;
 
-              const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
-              pCook->searchingPlant = targetPlant;
-
-              if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
-              {
-                pCook->state = caS_plant;
-                pActor->target = ptT_grass;
-              }
-              else
-              {
-                pCook->state = caS_harvest;
-                pActor->target = targetPlant;
-              }
-
-              break;
-            }
-          }
-
-          // if all items in inventory
-          if (!anyItemMissing)
-          {
-            pCook->state = caS_cook;
-            pActor->target = ptT_grass; // TODO
-          }
-
-          break;
-        }
-
-        case caS_harvest:
-        {
-          lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _ptT_nutrient_sources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _ptT_nutrient_sources_last);
-
-          pActor->atDestination = false;
-
-          // check if plant has items left -> else: state = plant
-          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
-          {
-            // take item
-            constexpr int16_t AddedResourceAmount = 1;
-            modify_with_clamp(pCook->inventory[pActor->target + (_ptT_nutrition_first - _tile_type_food_first)], AddedResourceAmount);
-
-            // remove
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
-
-            pCook->state = caS_check_inventory;
-          }
-          else
+          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[worldPosToTileIndex(pActor->pos)]->dir == d_unreachable)
           {
             pCook->state = caS_plant;
             pActor->target = ptT_grass;
           }
-
-          break;
-        }
-
-        case caS_plant:
-        {
-          lsAssert(pActor->target == ptT_grass);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
-
-          pActor->atDestination = false;
-
-          constexpr uint8_t AddedAmountToPlant = 3;
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
-
-          pCook->state = caS_harvest;
-          pActor->target = pCook->searchingPlant;
-
-          break;
-        }
-
-        case caS_cook:
-        {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass); // TODO: We could update this so we drop food of at places where te same food already is. (to handle multitype: set actor dest to nutrienttype, at nutrienttype: check tiletype: if matches current cooking item: add to it, else set target to grass.
-          pActor->atDestination = false;
-
-          for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
+          else
           {
-            lsAssert(pCook->inventory[i] >= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i]);
-            pCook->inventory[i] -= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i];
+            pCook->state = caS_harvest;
+            pActor->target = targetPlant;
           }
 
-          constexpr uint8_t AddedCookedItemAmount = 4;
-
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
-
-          // change to next food item
-          pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
-
           break;
         }
+      }
+
+      // if all items in inventory
+      if (!anyItemMissing)
+      {
+        pCook->state = caS_cook;
+        pActor->target = ptT_grass; // TODO see below.
+      }
+
+      break;
+    }
+
+    case caS_harvest:
+    {
+      if (pActor->atDestination)
+      {
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+
+        lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_last);
+
+        pActor->atDestination = false;
+
+        // check if plant has items left -> else: state = plant
+        if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+        {
+          // take item
+          constexpr int16_t AddedResourceAmount = 1;
+          modify_with_clamp(pCook->inventory[pActor->target], AddedResourceAmount);
+
+          // remove
+          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
+
+          pCook->state = caS_check_inventory;
+        }
+        else
+        {
+          pCook->state = caS_plant;
+          pActor->target = ptT_grass;
+        }
+      }
+
+      break;
+    }
+
+    case caS_plant:
+    {
+      if (pActor->atDestination)
+      {
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+
+        lsAssert(pActor->target == ptT_grass);
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
+
+        pActor->atDestination = false;
+
+        constexpr uint8_t AddedAmountToPlant = 3;
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
+        _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
+
+        pCook->state = caS_harvest;
+        pActor->target = pCook->searchingPlant;
+      }
+
+      break;
+    }
+
+    case caS_cook:
+    {
+      if (pActor->atDestination)
+      {
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[tileIdx]->dir == d_atDestination);
+
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass); // TODO: We could update this so we drop food of at places where te same food already is. (to handle multitype: set actor dest to nutrienttype, at nutrienttype: check tiletype: if matches current cooking item: add to it, else set target to grass.
+        pActor->atDestination = false;
+
+        for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
+        {
+          lsAssert(pCook->inventory[i] >= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i]);
+          pCook->inventory[i] -= IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i];
         }
 
+        constexpr uint8_t AddedCookedItemAmount = 4;
 
-        // check inventory for plant item
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
+        _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
 
-        // if not in inventory: check for plant
-        // if no plant: plant plant
-        // cook
-        // drop food item
-        // switch to next plant item
-
-        // but maybe we just want another actor that will plant all the plants?
-
-        const int64_t _AddedResourceCount = 1;
-        const uint8_t _MinResourceCount = 0;
-        const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-        modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, _AddedResourceCount, _MinResourceCount, _Game.levelInfo.pGameplayMap[worldIdx].maxRessourceCount);
-
-        pCook->state = (cook_actor_state)((pCook->state + 1) % caS_count);
-        pActor->target = target_from_state[pCook->state];
-        pActor->atDestination = false;
+        // change to next food item
+        pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
       }
-      else // i think this does not work out like this with actors have food items as targets anyways, as they may have the specific food as their current target...
-      {
-        pActor->target = target_from_state[pCook->state];
-        pActor->atDestination = false;
-      }
+
+      break;
+    }
     }
   }
 }

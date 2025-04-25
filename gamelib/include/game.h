@@ -253,9 +253,10 @@ struct cook_actor
 {
   cook_actor_state state; // TODO: Starting State in the actor?
   resource_type currentCookingItem;
-  pathfinding_target_type currentSearchingItem; // actor's don't always search for items so this won't always represent what the actor is currently up to.
+  pathfinding_target_type searchingPlant; // actor's don't always search for items so this won't always represent what the actor is currently up to.
   size_t index;
   uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
+  bool survivalActorActive = false;
 };
 
 //////////////////////////////////////////////////////////////////////////
