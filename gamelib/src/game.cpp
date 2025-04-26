@@ -205,7 +205,7 @@ void setTerrain()
 
   for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
   {
-    const size_t index = (i + 1 + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    const size_t index = (i + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
     _Game.levelInfo.pGameplayMap[index].ressourceCount = 1;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
@@ -263,35 +263,35 @@ lsResult spawnActors()
   }
 
   // Cook
-  {
-    movement_actor foodActor;
-    foodActor.target = _ptT_nutrition_first;
-    foodActor.pos = vec2f(10.f, 10.f);
-
-    size_t f_index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
-
-    cook_actor cook;
-    cook.state = caS_check_inventory;
-    cook.currentCookingItem = tT_tomato;
-    cook.survivalActorActive = false;
-    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-    
-    cook.index = f_index;
-
-    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-
-    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
-
-    lifesupport_actor lsF_actor;
-    lsF_actor.entityIndex = f_index;
-    lsF_actor.type = eT_lumberjack;
-
-    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
-    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
-
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
-  }
+  //{
+  //  movement_actor foodActor;
+  //  foodActor.target = _ptT_nutrition_first;
+  //  foodActor.pos = vec2f(10.f, 10.f);
+  //
+  //  size_t f_index;
+  //  LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
+  //
+  //  cook_actor cook;
+  //  cook.state = caS_check_inventory;
+  //  cook.currentCookingItem = tT_tomato;
+  //  cook.survivalActorActive = false;
+  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  //
+  //  cook.index = f_index;
+  //
+  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  //
+  //  LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
+  //
+  //  lifesupport_actor lsF_actor;
+  //  lsF_actor.entityIndex = f_index;
+  //  lsF_actor.type = eT_cook;
+  //
+  //  lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
+  //  lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
+  //
+  //  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
+  //}
 
   goto epilogue;
 
@@ -732,10 +732,18 @@ void update_cook()
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
-    if (pActor->atDestination && pCook->survivalActorActive)
+    if (pCook->survivalActorActive)
     {
-      pCook->survivalActorActive = false;
-      pCook->state = caS_check_inventory;
+      if (pActor->atDestination)
+      {
+        pCook->survivalActorActive = false;
+        pActor->atDestination = false;
+        pCook->state = caS_check_inventory;
+      }
+      else
+      {
+        continue;
+      }
     }
 
     lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
@@ -755,16 +763,21 @@ void update_cook()
 
           const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
           pCook->searchingPlant = targetPlant;
-
-          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+          
+          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir != d_unfillable)
           {
-            pCook->state = caS_plant;
-            pActor->target = ptT_grass;
-          }
-          else
-          {
-            pCook->state = caS_harvest;
-            pActor->target = targetPlant;
+            if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            {
+              pCook->state = caS_plant;
+              pActor->target = ptT_grass;
+              pActor->atDestination = false;
+            }
+            else
+            {
+              pCook->state = caS_harvest;
+              pActor->target = targetPlant;
+              pActor->atDestination = false;
+            }
           }
 
           break;
@@ -776,6 +789,7 @@ void update_cook()
       {
         pCook->state = caS_cook;
         pActor->target = ptT_grass; // TODO see below.
+        pActor->atDestination = false;
       }
 
       break;
@@ -789,7 +803,7 @@ void update_cook()
         lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
         lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_last);
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_last);
 
         pActor->atDestination = false;
 
