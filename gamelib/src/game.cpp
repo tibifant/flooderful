@@ -263,35 +263,35 @@ lsResult spawnActors()
   }
 
   // Cook
-  //{
-  //  movement_actor foodActor;
-  //  foodActor.target = _ptT_nutrition_first;
-  //  foodActor.pos = vec2f(10.f, 10.f);
-  //
-  //  size_t f_index;
-  //  LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
-  //
-  //  cook_actor cook;
-  //  cook.state = caS_check_inventory;
-  //  cook.currentCookingItem = tT_tomato;
-  //  cook.survivalActorActive = false;
-  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  //
-  //  cook.index = f_index;
-  //
-  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
-  //
-  //  lifesupport_actor lsF_actor;
-  //  lsF_actor.entityIndex = f_index;
-  //  lsF_actor.type = eT_cook;
-  //
-  //  lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
-  //  lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
-  //}
+  {
+    movement_actor foodActor;
+    foodActor.target = _ptT_nutrition_first;
+    foodActor.pos = vec2f(10.f, 10.f);
+  
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
+  
+    cook_actor cook;
+    cook.state = caS_check_inventory;
+    cook.currentCookingItem = tT_tomato;
+    cook.survivalActorActive = false;
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  
+    cook.index = f_index;
+  
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  
+    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
+  
+    lifesupport_actor lsF_actor;
+    lsF_actor.entityIndex = f_index;
+    lsF_actor.type = eT_cook;
+  
+    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
+    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
+  
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
+  }
 
   goto epilogue;
 
@@ -737,8 +737,8 @@ void update_cook()
       if (pActor->atDestination)
       {
         pCook->survivalActorActive = false;
-        pActor->atDestination = false;
         pCook->state = caS_check_inventory;
+        pActor->atDestination = false;
       }
       else
       {
@@ -805,13 +805,11 @@ void update_cook()
         lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_last);
 
-        pActor->atDestination = false;
-
-        // check if plant has items left -> else: state = plant
+        // check if plant has items left
         if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
         {
           // take item
-          constexpr int16_t AddedResourceAmount = 1;
+          constexpr int16_t AddedResourceAmount = 20; // TODO: why is the cook still only making the same plant/food?
           modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
           // remove
@@ -824,6 +822,8 @@ void update_cook()
           pCook->state = caS_plant;
           pActor->target = ptT_grass;
         }
+
+        pActor->atDestination = false;
       }
 
       break;
@@ -839,7 +839,6 @@ void update_cook()
         lsAssert(pActor->target == ptT_grass);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
 
-        pActor->atDestination = false;
 
         constexpr uint8_t AddedAmountToPlant = 3;
         _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
@@ -847,6 +846,8 @@ void update_cook()
 
         pCook->state = caS_harvest;
         pActor->target = pCook->searchingPlant;
+
+        pActor->atDestination = false;
       }
 
       break;
@@ -860,7 +861,8 @@ void update_cook()
         lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass); // TODO: We could update this so we drop food of at places where te same food already is. (to handle multitype: set actor dest to nutrienttype, at nutrienttype: check tiletype: if matches current cooking item: add to it, else set target to grass.
-        pActor->atDestination = false;
+
+        // TODO! Assert is being hit because the resource_type has been changed, but the direction lookup hasn't been updated yet...
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
@@ -875,6 +877,8 @@ void update_cook()
 
         // change to next food item
         pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
+        
+        pActor->atDestination = false;
       }
 
       break;
