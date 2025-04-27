@@ -812,7 +812,7 @@ void update_cook()
         {
           // take item
           constexpr int16_t AddedResourceAmount = 1;
-          modify_with_clamp(pCook->inventory[pActor->target], AddedResourceAmount);
+          modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
           // remove
           modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
@@ -878,6 +878,11 @@ void update_cook()
       }
 
       break;
+    }
+
+    default:
+    {
+      lsFail(); // not implemented.
     }
     }
   }
