@@ -897,6 +897,7 @@ void update_cook()
 
         // change to next food item
         pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
+        pCook->state = caS_check_inventory;
 
         pActor->atDestination = false;
       }
