@@ -878,7 +878,7 @@ void update_cook()
           else // if we are at grass as alternative dropoff point
           {
             // Change tile to food item
-            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == ptT_grass);
+            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
 
             _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
             _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
