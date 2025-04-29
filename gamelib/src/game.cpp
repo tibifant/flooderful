@@ -727,6 +727,7 @@ void update_cook()
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
+    // Handle Survival
     if (pCook->survivalActorActive)
     {
       if (pActor->atDestination)
@@ -743,7 +744,9 @@ void update_cook()
 
     lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
 
-    if (pCook->state == caS_check_inventory)
+    // Handle Cook States
+
+    if (pCook->state == caS_check_inventory) // Handling `caS_check_inventory` here because it does not need to be checked for `atDestination`
     {
       bool anyItemMissing = false;
 
@@ -792,6 +795,7 @@ void update_cook()
       continue;
     }
 
+    // Handling remaining Cook States
     if (pActor->atDestination)
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
@@ -799,9 +803,9 @@ void update_cook()
 
       switch (pCook->state)
       {
-      case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
+      case caS_check_inventory:
       {
-        lsAssert(false);
+        lsAssert(false); // Should've been handled above.
         break;
       }
 
