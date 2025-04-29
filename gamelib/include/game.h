@@ -90,7 +90,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
 
   ptT_collidable, // ptT_collidable always has to be last!
 
-  ptT_Count,
+  ptT_Count
 };
 
 enum resource_type
@@ -120,7 +120,7 @@ enum resource_type
 
   tT_mountain,
 
-  tT_count,
+  tT_count
 };
 
 // food thoughts:
@@ -195,7 +195,7 @@ enum entity_type
   eT_stonemason,
   eT_cook,
 
-  eT_count,
+  eT_count
 };
 
 struct movement_actor
@@ -225,7 +225,7 @@ enum lumberjack_actor_state
   laS_chop,
   laS_cut,
 
-  laS_count,
+  laS_count
 };
 
 struct lumberjack_actor
@@ -246,7 +246,7 @@ enum cook_actor_state
   caS_harvest,
   caS_cook,
 
-  caS_count,
+  caS_count
 };
 
 struct cook_actor

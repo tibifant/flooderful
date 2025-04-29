@@ -619,12 +619,12 @@ void update_lumberjack()
         // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
         // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
 
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
         switch (pLumberjack->state)
         {
         case laS_plant:
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
 
@@ -637,8 +637,6 @@ void update_lumberjack()
         case laS_getWater:
         {
           lsAssert(!pLumberjack->hasItem);
-
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water);
 
           if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
@@ -659,7 +657,6 @@ void update_lumberjack()
         }
         case laS_water:
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
 
           if (pLumberjack->hasItem && pLumberjack->item == tT_water)
@@ -676,7 +673,6 @@ void update_lumberjack()
         }
         case laS_chop:
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
 
@@ -688,7 +684,6 @@ void update_lumberjack()
         }
         case laS_cut:
         {
-          const size_t tileIdx = worldPosToTileIndex(pActor->pos);
           lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood; // the tile stays wood until all the wood has been taken away.
           _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
@@ -748,9 +743,7 @@ void update_cook()
 
     lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
 
-    switch (pCook->state)
-    {
-    case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
+    if (pCook->state == caS_check_inventory)
     {
       bool anyItemMissing = false;
 
@@ -779,7 +772,7 @@ void update_cook()
             }
           }
 
-          break;
+          continue;
         }
       }
 
@@ -796,16 +789,24 @@ void update_cook()
         pActor->atDestination = false;
       }
 
-      break;
+      continue;
     }
 
-    case caS_harvest:
+    if (pActor->atDestination)
     {
-      if (pActor->atDestination)
-      {
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
+      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+      lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
 
+      switch (pCook->state)
+      {
+      case caS_check_inventory: // one sec... this state does not have a target, so this would need to be handled outside of `if (atdest)` to set the target.
+      {
+        lsAssert(false);
+        break;
+      }
+
+      case caS_harvest:
+      {
         lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_last);
 
@@ -828,21 +829,14 @@ void update_cook()
         }
 
         pActor->atDestination = false;
+
+        break;
       }
 
-      break;
-    }
-
-    case caS_plant:
-    {
-      if (pActor->atDestination)
+      case caS_plant:
       {
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
-
         lsAssert(pActor->target == ptT_grass);
         lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
-
 
         constexpr uint8_t AddedAmountToPlant = 3;
         _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
@@ -852,18 +846,12 @@ void update_cook()
         pActor->target = pCook->searchingPlant;
 
         pActor->atDestination = false;
+
+        break;
       }
 
-      break;
-    }
-
-    case caS_cook:
-    {
-      if (pActor->atDestination)
+      case caS_cook:
       {
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-        lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
-            
         constexpr uint8_t AddedCookedItemAmount = 4;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
@@ -900,15 +888,15 @@ void update_cook()
         pCook->state = caS_check_inventory;
 
         pActor->atDestination = false;
+
+        break;
       }
 
-      break;
-    }
-
-    default:
-    {
-      lsFail(); // not implemented.
-    }
+      default:
+      {
+        lsFail(); // not implemented.
+      }
+      }
     }
   }
 }
