@@ -73,12 +73,12 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_trunk, // matches the corresponding `resource_type`
   ptT_wood, // matches the corresponding `resource_type`
 
-  _ptT_nutrient_sources_first,
-  ptT_tomato_plant = _ptT_nutrient_sources_first,
-  ptT_bean_plant,
-  ptT_wheat_plant,
-  ptT_sunflower_plant,
-  _ptT_nutrient_sources_last = ptT_sunflower_plant,
+  _ptT_nutrient_sources_first, // matches the corresponding `resource_type`
+  ptT_tomato_plant = _ptT_nutrient_sources_first, // matches the corresponding `resource_type`
+  ptT_bean_plant, // matches the corresponding `resource_type`
+  ptT_wheat_plant, // matches the corresponding `resource_type`
+  ptT_sunflower_plant, // matches the corresponding `resource_type`
+  _ptT_nutrient_sources_last = ptT_sunflower_plant, // matches the corresponding `resource_type`
   // do not insert anything here! We depend on the plants matching up with their nutrients!
   _ptt_multi_types, // up until here the types match the corresponding `resource_types`
   _ptT_nutrition_first = _ptt_multi_types,
@@ -95,20 +95,20 @@ enum pathfinding_target_type // 32 different terrain_types possible.
 
 enum resource_type
 {
-  tT_grass, // matches the corresponding `pathfinding_target_type`
-  tT_water, // matches the corresponding `pathfinding_target_type`
-  tT_sand, // matches the corresponding `pathfinding_target_type`
-  tT_sapling, // matches the corresponding `pathfinding_target_type`
-  tT_tree, // matches the corresponding `pathfinding_target_type`
-  tT_trunk, // matches the corresponding `pathfinding_target_type`
-  tT_wood, // matches the corresponding `pathfinding_target_type`
+  tT_grass, // matching the corresponding `pathfinding_target_type`
+  tT_water, // matching the corresponding `pathfinding_target_type`
+  tT_sand, // matching the corresponding `pathfinding_target_type`
+  tT_sapling, // matching the corresponding `pathfinding_target_type`
+  tT_tree, // matching the corresponding `pathfinding_target_type`
+  tT_trunk, // matching the corresponding `pathfinding_target_type`
+  tT_wood, // matching the corresponding `pathfinding_target_type`
 
-  _tile_type_food_resources_first,
-  tT_tomato_plant = _tile_type_food_resources_first,
-  tT_bean_plant,
-  tT_wheat_plant,
-  tT_sunflower_plant,
-  _tile_type_food_resources_last = tT_sunflower_plant,
+  _tile_type_food_resources_first, // matching the corresponding `pathfinding_target_type`
+  tT_tomato_plant = _tile_type_food_resources_first, // matching the corresponding `pathfinding_target_type`
+  tT_bean_plant, // matching the corresponding `pathfinding_target_type`
+  tT_wheat_plant, // matching the corresponding `pathfinding_target_type`
+  tT_sunflower_plant, // matching the corresponding `pathfinding_target_type`
+  _tile_type_food_resources_last = tT_sunflower_plant, // matching the corresponding `pathfinding_target_type`
   // do not insert anything here! We depend on the plants matching up with their nutrients!
   _tile_type_food_first,
   tT_tomato = _tile_type_food_first,
@@ -122,13 +122,6 @@ enum resource_type
 
   tT_count
 };
-
-// food thoughts:
-// there should be the nutrient sources and the differnt foods
-// e.g. sunflower -> sunflower seed sandwich (idk lol)
-// so the cook will walk to different sources and then put them together to food at a kitchen.
-// i'm sorry i can't concentrate and want to commit at least something
-// maybe some food can be eaten directly like tomatoes and other stuff has to be in meals, like salt?
 
 // TODO: fires to go to in the dark?
 
