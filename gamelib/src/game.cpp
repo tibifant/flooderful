@@ -546,7 +546,7 @@ void update_lifesupportActors()
         }
         else // if no item: set actor target
         {
-          if (_actor.pItem->type == eT_cook) // TODO: we could consider just giving every actor a state for survival.
+          if (_actor.pItem->type == eT_cook) // TODO: we could consider just giving every actor a state for survival, would make it consistent, but we would need to switch case through all actor types here, to get them from their pool. so maybe instead a bool in the movement actors?
             pool_get(_CookActors, _actor.index)->survivalActorActive = true;
 
           size_t lowest = MaxNutritionValue;
@@ -589,9 +589,15 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: How could we have actors stay at their targets for longer (no target/same target) for target specific times?
-
 // Can we achieve actors going to a target further away, as long as the nearest target is, full/empty/whatever? I don't know how, besides from adding loads of tile types, or maybe flags for full types, and then more direction lookups (one for all the empty once, one for the full once). As there will also be actors who would want to go to full ones.
+
+// currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
+// how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
+
+// TO FIX: pathfinding towards multitypes like `meals` specififcally e.g. to add more of the resource
+// TO FIX: handling the `gameplay map` and the `pathfinding lookup` not matching because the tile's resourcetype was only changes recently
+
+//////////////////////////////////////////////////////////////////////////
 
 void update_lumberjack()
 {
@@ -606,19 +612,6 @@ void update_lumberjack()
     {
       if (pActor->target == target_from_state[pLumberjack->state])
       {
-        // TODO: Update tile: e.g. sapling will become tree, when watered...
-        // 1) get sapling 
-        // 2) plant sapling on soil                   soil    ---> sapling // if we have to get saplings first, we need a resource type for planted sapling
-        // 3) get water 
-        // 4) water sapling (different grow states?)  sapling ---> tree 
-        // 5) (get tool?) chop tree                   tree    ---> trunk
-        // 6) (take wood to sawmill?) cut wood        trunk   ---> wood 
-        // once all wood is taken away: wood ---> soil or take to sawmill first, then directly from trunk to soil (needs fertilizer?)
-
-        // should movementactors have inventories? maybe an actor should be able to carry one item (besides lunchbox) so `hasItem`?
-        // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
-        // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
-
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
         switch (pLumberjack->state)
@@ -700,7 +693,7 @@ void update_lumberjack()
         }
         }
       }
-      else
+      else // movement actor was active
       {
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
