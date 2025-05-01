@@ -65,28 +65,29 @@ struct gameEvent
 
 enum pathfinding_target_type // 32 different terrain_types possible.
 {
-  ptT_grass, // matches the corresponding `resource_type`
-  ptT_water, // matches the corresponding `resource_type`
-  ptT_sand, // matches the corresponding `resource_type`
-  ptT_sapling, // matches the corresponding `resource_type`
-  ptT_tree, // matches the corresponding `resource_type`
-  ptT_trunk, // matches the corresponding `resource_type`
-  ptT_wood, // matches the corresponding `resource_type`
+  // all values match their corresponding `resource_type` up until `_ptt_multi_types`
+  ptT_grass,
+  ptT_water,
+  ptT_sand,
+  ptT_sapling,
+  ptT_tree,
+  ptT_trunk,
+  ptT_wood,
 
-  _ptT_nutrient_sources_first, // matches the corresponding `resource_type`
-  ptT_tomato_plant = _ptT_nutrient_sources_first, // matches the corresponding `resource_type`
-  ptT_bean_plant, // matches the corresponding `resource_type`
-  ptT_wheat_plant, // matches the corresponding `resource_type`
-  ptT_sunflower_plant, // matches the corresponding `resource_type`
-  _ptT_nutrient_sources_last = ptT_sunflower_plant, // matches the corresponding `resource_type`
+  _ptT_nutrient_sources_first, // nutrient sources match the corresponding nutritient! (e.g.: tomato plant + (nutrition first - nutrient sources first) = vitamin)
+  ptT_tomato_plant = _ptT_nutrient_sources_first,
+  ptT_bean_plant,
+  ptT_wheat_plant,
+  ptT_sunflower_plant,
+  _ptT_nutrient_sources_last = ptT_sunflower_plant, // up until here (including) the types match the corresponding `resource_types`!
   // do not insert anything here! We depend on the plants matching up with their nutrients!
-  _ptt_multi_types, // up until here the types match the corresponding `resource_types`
+  _ptt_multi_types, // from here on no longer necessarily matching up with `resource_type`s!
   _ptT_nutrition_first = _ptt_multi_types,
   ptT_vitamin = _ptT_nutrition_first,
   ptT_protein,
   ptT_carbohydrates,
   ptT_fat,
-  _ptT_nutrition_last = ptT_fat, // always +1 for nutrition_count!
+  _ptT_nutrition_last = ptT_fat,
 
   ptT_collidable, // ptT_collidable always has to be last!
 
@@ -95,22 +96,23 @@ enum pathfinding_target_type // 32 different terrain_types possible.
 
 enum resource_type
 {
-  tT_grass, // matching the corresponding `pathfinding_target_type`
-  tT_water, // matching the corresponding `pathfinding_target_type`
-  tT_sand, // matching the corresponding `pathfinding_target_type`
-  tT_sapling, // matching the corresponding `pathfinding_target_type`
-  tT_tree, // matching the corresponding `pathfinding_target_type`
-  tT_trunk, // matching the corresponding `pathfinding_target_type`
-  tT_wood, // matching the corresponding `pathfinding_target_type`
+  // all values match their corresponding `pathfinding_target_type` up until `_tile_type_food_first`
+  tT_grass,
+  tT_water,
+  tT_sand,
+  tT_sapling,
+  tT_tree,
+  tT_trunk,
+  tT_wood,
 
-  _tile_type_food_resources_first, // matching the corresponding `pathfinding_target_type`
-  tT_tomato_plant = _tile_type_food_resources_first, // matching the corresponding `pathfinding_target_type`
-  tT_bean_plant, // matching the corresponding `pathfinding_target_type`
-  tT_wheat_plant, // matching the corresponding `pathfinding_target_type`
-  tT_sunflower_plant, // matching the corresponding `pathfinding_target_type`
-  _tile_type_food_resources_last = tT_sunflower_plant, // matching the corresponding `pathfinding_target_type`
+  _tile_type_food_resources_first, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
+  tT_tomato_plant = _tile_type_food_resources_first,
+  tT_bean_plant,
+  tT_wheat_plant,
+  tT_sunflower_plant,
+  _tile_type_food_resources_last = tT_sunflower_plant, // up until here (including) the types match the corresponding `pathfinding_target_type`!
   // do not insert anything here! We depend on the plants matching up with their nutrients!
-  _tile_type_food_first,
+  _tile_type_food_first, // from here on no longer necessarily matching up with `pathfinding_target_type`s!
   tT_tomato = _tile_type_food_first,
   tT_bean,
   tT_wheat,
