@@ -67,6 +67,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
 {
   // all values match their corresponding `resource_type` up until `_ptt_multi_types`
   ptT_grass,
+  ptT_soil,
   ptT_water,
   ptT_sand,
   ptT_sapling,
@@ -98,6 +99,7 @@ enum resource_type
 {
   // all values match their corresponding `pathfinding_target_type` up until `_tile_type_food_first`
   tT_grass,
+  tT_soil,
   tT_water,
   tT_sand,
   tT_sapling,

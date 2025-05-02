@@ -41,6 +41,12 @@ struct match_resource<pathfinding_target_type::ptT_grass>
 };
 
 template<>
+struct match_resource<pathfinding_target_type::ptT_soil>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_soil; };
+};
+
+template<>
 struct match_resource<pathfinding_target_type::ptT_water>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_water; };
@@ -154,6 +160,7 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   switch (type)
   {
   case ptT_grass: fill_resource_info<ptT_grass>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_soil: fill_resource_info<ptT_soil>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_water: fill_resource_info<ptT_water>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_sand: fill_resource_info<ptT_sand>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_sapling: fill_resource_info<ptT_sapling>(pDirectionLookup, pathfindQueue, pResourceMap); break;
@@ -201,13 +208,15 @@ void setTerrain()
     const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
     _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
+
+    _Game.levelInfo.pGameplayMap[i + 36].tileType = tT_soil;
   }
 
   for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
   {
-    const size_t index = (i + _Game.levelInfo.map_size.x) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    const size_t index = i + 5;
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
-    _Game.levelInfo.pGameplayMap[index].ressourceCount = 1;
+    _Game.levelInfo.pGameplayMap[index].ressourceCount = 4;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
