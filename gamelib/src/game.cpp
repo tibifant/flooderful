@@ -198,9 +198,13 @@ void setTerrain()
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
-    _Game.levelInfo.pGameplayMap[i].ressourceCount = lsGetRand(seed) % 10;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = 1;
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
+
+  for (size_t i = 0; i < 10; i++)
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
+  
 
   for (size_t i = 0; i < 3; i++)
   {
@@ -208,8 +212,6 @@ void setTerrain()
     const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
     _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
-
-    _Game.levelInfo.pGameplayMap[i + 36].tileType = tT_soil;
   }
 
   for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
@@ -610,7 +612,7 @@ void update_lifesupportActors()
 
 void update_lumberjack()
 {
-  static const pathfinding_target_type target_from_state[laS_count] = { ptT_grass, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
+  static const pathfinding_target_type target_from_state[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
   for (const auto _actor : _LumberjackActors)
   {
@@ -627,7 +629,7 @@ void update_lumberjack()
         {
         case laS_plant:
         {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
+          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
@@ -766,7 +768,7 @@ void update_cook()
             if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
             {
               pCook->state = caS_plant;
-              pActor->target = ptT_grass;
+              pActor->target = ptT_soil;
               pActor->atDestination = false;
             }
             else
@@ -831,7 +833,7 @@ void update_cook()
         else
         {
           pCook->state = caS_plant;
-          pActor->target = ptT_grass;
+          pActor->target = ptT_soil;
         }
 
         pActor->atDestination = false;
@@ -841,8 +843,8 @@ void update_cook()
 
       case caS_plant:
       {
-        lsAssert(pActor->target == ptT_grass);
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
+        lsAssert(pActor->target == ptT_soil);
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
 
         constexpr uint8_t AddedAmountToPlant = 3;
         _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
@@ -890,7 +892,7 @@ void update_cook()
         }
 
         // change to next food item
-        pCook->currentCookingItem = (resource_type)(((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1) + _tile_type_food_first);
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
         pCook->state = caS_check_inventory;
 
         pActor->atDestination = false;
