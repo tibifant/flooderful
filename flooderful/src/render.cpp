@@ -275,6 +275,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, pathfind
     vec4f(0.4f, 0.5f, 0.44f, 0), // tT_tree 
     vec4f(0.46f, 0.4f, 0.5f, 0), // tT_trunk 
     vec4f(0.5f, 0.42f, 0.4f, 0), // tT_wood
+    vec4f(0.8f, 0.1f, 0.f, 0), // tT_fire
     vec4f(0.3f, 0, 0.6f, 0), // tT_tomato_plant
     vec4f(0.4f, 0, 0.5f, 0), // tT_bean_plant
     vec4f(0.5f, 0, 0.4f, 0), // tT_wheat_plant

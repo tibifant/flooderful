@@ -83,6 +83,12 @@ struct match_resource<pathfinding_target_type::ptT_wood>
 };
 
 template<>
+struct match_resource<pathfinding_target_type::ptT_fire>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_fire; };
+};
+
+template<>
 struct match_resource<pathfinding_target_type::ptT_tomato_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato_plant; };
@@ -167,6 +173,7 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_tree: fill_resource_info<ptT_tree>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_trunk: fill_resource_info<ptT_trunk>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_wood: fill_resource_info<ptT_wood>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_fire: fill_resource_info<ptT_fire>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_tomato_plant: fill_resource_info<ptT_tomato_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_bean_plant: fill_resource_info<ptT_bean_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_wheat_plant: fill_resource_info<ptT_wheat_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
@@ -490,6 +497,8 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+// fire: when too cold: go to fire: food has priority?
 
 void update_lifesupportActors()
 {

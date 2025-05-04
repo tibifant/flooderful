@@ -74,6 +74,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_tree,
   ptT_trunk,
   ptT_wood,
+  ptT_fire,
 
   _ptT_nutrient_sources_first, // nutrient sources match the corresponding nutritient! (e.g.: tomato plant + (nutrition first - nutrient sources first) = vitamin)
   ptT_tomato_plant = _ptT_nutrient_sources_first,
@@ -106,6 +107,7 @@ enum resource_type
   tT_tree,
   tT_trunk,
   tT_wood,
+  tT_fire,
 
   _tile_type_food_resources_first, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
   tT_tomato_plant = _tile_type_food_resources_first,
