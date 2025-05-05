@@ -211,7 +211,6 @@ void setTerrain()
 
   for (size_t i = 0; i < 10; i++)
     _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
-  
 
   for (size_t i = 0; i < 3; i++)
   {
@@ -228,6 +227,8 @@ void setTerrain()
     _Game.levelInfo.pGameplayMap[index].ressourceCount = 4;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
+
+  _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
 
   // Setting borders to ptT_collidable
   {
@@ -499,6 +500,10 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 //////////////////////////////////////////////////////////////////////////
 
 // fire: when too cold: go to fire: food has priority?
+// fire actor: collect wood, add to fire
+// fire: resource count: how much fire lifetime left? -> remove 1 every tick? (how to update? list of all fires that get updated? or should we have a simulation func that iterates all tiles anyways, to update other stuff as well?
+  // first: just remove one after fires has been visited
+// fire and fire_place
 
 void update_lifesupportActors()
 {
