@@ -89,6 +89,12 @@ struct match_resource<pathfinding_target_type::ptT_fire>
 };
 
 template<>
+struct match_resource<pathfinding_target_type::ptT_fire_pit>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_fire_pit; };
+};
+
+template<>
 struct match_resource<pathfinding_target_type::ptT_tomato_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_tomato_plant; };
@@ -174,6 +180,7 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_trunk: fill_resource_info<ptT_trunk>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_wood: fill_resource_info<ptT_wood>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_fire: fill_resource_info<ptT_fire>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_fire_pit: fill_resource_info<ptT_fire_pit>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_tomato_plant: fill_resource_info<ptT_tomato_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_bean_plant: fill_resource_info<ptT_bean_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_wheat_plant: fill_resource_info<ptT_wheat_plant>(pDirectionLookup, pathfindQueue, pResourceMap); break;
@@ -229,6 +236,7 @@ void setTerrain()
   }
 
   _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
   {
