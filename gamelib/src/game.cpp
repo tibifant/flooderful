@@ -28,6 +28,7 @@ constexpr size_t _FloodFillSteps = 100;
 
 static pool<lumberjack_actor> _LumberjackActors; // Do we need this in the header?
 static pool<cook_actor> _CookActors; // Do we need this in the header?
+static pool<fire_actor> _FireActors; // Do we need this in the header?
 
 //////////////////////////////////////////////////////////////////////////
 

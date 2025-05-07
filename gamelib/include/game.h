@@ -214,6 +214,7 @@ struct lifesupport_actor
   size_t entityIndex;
   uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_first];
+  uint8_t temperature_index;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -253,11 +254,31 @@ enum cook_actor_state
 struct cook_actor
 {
   cook_actor_state state; // TODO: Starting State in the actor?
+  size_t index;
   resource_type currentCookingItem;
   pathfinding_target_type searchingPlant; // actor's don't always search for items so this won't always represent what the actor is currently up to.
-  size_t index;
   uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
   bool survivalActorActive = false;
+};
+
+//////////////////////////////////////////////////////////////////////////
+
+// walk to all fire pits and start fire
+// -> get wood to start fire
+
+enum fire_actor_state
+{
+  faS_get_wood,
+  faS_start_fire,
+
+  faS_count
+};
+
+struct fire_actor
+{
+  fire_actor_state state;
+  size_t index;
+  uint8_t inventory_wood_count;
 };
 
 //////////////////////////////////////////////////////////////////////////
