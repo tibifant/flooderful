@@ -533,6 +533,9 @@ void update_lifesupportActors()
     // just for testing!!!!
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
+    // TODO remove from temperature
+
+    // TODO check temperature and possibly set fire as target
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
@@ -930,6 +933,15 @@ void update_cook()
       }
     }
   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+void update_fireActor()
+{
+  // walk to fire pit
+  // if has wood: add wood to fire
+  // else: walk to wood -> take wood
 }
 
 //////////////////////////////////////////////////////////////////////////
