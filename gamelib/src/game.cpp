@@ -848,11 +848,11 @@ void update_cook()
         if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
         {
           // take item
-          constexpr int16_t AddedResourceAmount = 20; // TODO: why is the cook still only making the same plant/food?
+          constexpr int16_t AddedResourceAmount = 4; // TODO: why is the cook still only making the same plant/food?
           modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
           // remove
-          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1));
+          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O?
 
           pCook->state = caS_check_inventory;
         }
@@ -953,14 +953,33 @@ void update_fireActor()
       {
       case faS_get_wood:
       {
+        constexpr int16_t AddedWood = 3;
+
         lsAssert(_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood);
+
         if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
+        {
+          modify_with_clamp(pFireActor->inventory_wood_count, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
+          modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
+        }
+
+        break;
+      }
+      case faS_start_fire:
+      {
+        // if has wood: add wood to fire
+
+        // else: set state: get_wood
+
+        break;
+      }
+      default:
+      {
+        lsFail(); // not implemented.
       }
       }
     }
   }
-  // if has wood: add wood to fire
-  // else: walk to wood -> take wood
 }
 
 //////////////////////////////////////////////////////////////////////////
