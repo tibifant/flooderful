@@ -939,7 +939,26 @@ void update_cook()
 
 void update_fireActor()
 {
-  // walk to fire pit
+  constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit };
+
+  for (const auto _actor : _FireActors)
+  {
+    fire_actor *pFireActor = _actor.pItem;
+    movement_actor *pActor = pool_get(_Game.movementActors, pFireActor->index);
+
+    if (pActor->atDestination)
+    {
+      const size_t posIdx = worldPosToTileIndex(pActor->pos);
+      switch (_actor.pItem->state)
+      {
+      case faS_get_wood:
+      {
+        lsAssert(_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood);
+        if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
+      }
+      }
+    }
+  }
   // if has wood: add wood to fire
   // else: walk to wood -> take wood
 }
