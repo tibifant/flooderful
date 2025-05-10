@@ -948,6 +948,14 @@ void update_fireActor()
 
     if (pActor->atDestination)
     {
+      // Handle Survival
+      if (pFireActor->survivalActorActive)
+      {
+        pFireActor->survivalActorActive = false;
+        pActor->target = target_from_state[pFireActor->state];
+        pActor->atDestination = false;
+      }
+
       const size_t posIdx = worldPosToTileIndex(pActor->pos);
       switch (_actor.pItem->state)
       {
@@ -959,17 +967,33 @@ void update_fireActor()
 
         if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
         {
-          modify_with_clamp(pFireActor->inventory_wood_count, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
+          modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
           modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
+
+          pFireActor->state = faS_start_fire;
+          pActor->target = target_from_state[faS_start_fire];
         }
 
         break;
       }
       case faS_start_fire:
       {
-        // if has wood: add wood to fire
+        constexpr int16_t WoodPerFire = 3;
 
-        // else: set state: get_wood
+        lsAssert(_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit);
+
+        // if has wood: add wood to fire
+        if (pFireActor->wood_inventory >= WoodPerFire)
+        {
+          pFireActor->wood_inventory -= WoodPerFire;
+          _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
+          _Game.levelInfo.pGameplayMap[posIdx].ressourceCount = WoodPerFire;
+        }
+        else
+        {
+          pFireActor->state = faS_get_wood;
+          pActor->target = target_from_state[faS_get_wood];
+        }
 
         break;
       }

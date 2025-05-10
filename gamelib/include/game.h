@@ -278,7 +278,8 @@ struct fire_actor
 {
   fire_actor_state state;
   size_t index;
-  uint8_t inventory_wood_count;
+  uint8_t wood_inventory;
+  bool survivalActorActive = false; // i probably want to change this to a variable in the movement actor so all actors have it.
 };
 
 //////////////////////////////////////////////////////////////////////////
