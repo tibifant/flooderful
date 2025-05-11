@@ -302,7 +302,6 @@ lsResult spawnActors()
     cook_actor cook;
     cook.state = caS_check_inventory;
     cook.currentCookingItem = tT_tomato;
-    cook.survivalActorActive = false;
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
 
     cook.index = f_index;
@@ -583,9 +582,6 @@ void update_lifesupportActors()
         }
         else // if no item: set actor target
         {
-          if (_actor.pItem->type == eT_cook) // TODO: we could consider just giving every actor a state for survival, would make it consistent, but we would need to switch case through all actor types here, to get them from their pool. so maybe instead a bool in the movement actors?
-            pool_get(_CookActors, _actor.index)->survivalActorActive = true;
-
           size_t lowest = MaxNutritionValue;
           pathfinding_target_type lowestNutrient = ptT_Count;
 
@@ -599,6 +595,7 @@ void update_lifesupportActors()
           }
 
           lsAssert(lowestNutrient <= _ptT_nutrition_last);
+          pActor->survivalActorActive = true;
           pActor->target = lowestNutrient;
           pActor->atDestination = false;
         }
@@ -647,93 +644,94 @@ void update_lumberjack()
 
     if (pActor->atDestination)
     {
-      if (pActor->target == target_from_state[pLumberjack->state])
+      // Handle Survival
+      if (pActor->survivalActorActive)
       {
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-
-        switch (pLumberjack->state)
-        {
-        case laS_plant:
-        {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
-
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
-
-          break;
-        }
-        case laS_getWater:
-        {
-          lsAssert(!pLumberjack->hasItem);
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water);
-
-          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
-          {
-            pLumberjack->hasItem = true;
-            pLumberjack->item = tT_water;
-            _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
-
-            if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
-
-            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-            pActor->target = target_from_state[pLumberjack->state];
-            pActor->atDestination = false;
-          }
-
-          break;
-        }
-        case laS_water:
-        {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
-
-          if (pLumberjack->hasItem && pLumberjack->item == tT_water)
-          {
-            pLumberjack->hasItem = false;
-            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
-
-            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-            pActor->target = target_from_state[pLumberjack->state];
-            pActor->atDestination = false;
-          }
-
-          break;
-        }
-        case laS_chop:
-        {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
-
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
-
-          break;
-        }
-        case laS_cut:
-        {
-          lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood; // the tile stays wood until all the wood has been taken away.
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
-
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
-
-          break;
-        }
-        default:
-        {
-          lsFail(); // not implemented.
-        }
-        }
-      }
-      else // movement actor was active
-      {
+        pActor->survivalActorActive = false;
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
+        continue;
+      }
+
+      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
+
+      switch (pLumberjack->state)
+      {
+      case laS_plant:
+      {
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
+
+        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+        pActor->target = target_from_state[pLumberjack->state];
+        pActor->atDestination = false;
+
+        break;
+      }
+      case laS_getWater:
+      {
+        lsAssert(!pLumberjack->hasItem);
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water);
+
+        if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+        {
+          pLumberjack->hasItem = true;
+          pLumberjack->item = tT_water;
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
+
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+        }
+
+        break;
+      }
+      case laS_water:
+      {
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
+
+        if (pLumberjack->hasItem && pLumberjack->item == tT_water)
+        {
+          pLumberjack->hasItem = false;
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
+
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+        }
+
+        break;
+      }
+      case laS_chop:
+      {
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
+
+        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+        pActor->target = target_from_state[pLumberjack->state];
+        pActor->atDestination = false;
+
+        break;
+      }
+      case laS_cut:
+      {
+        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
+        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood; // the tile stays wood until all the wood has been taken away.
+        _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
+
+        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+        pActor->target = target_from_state[pLumberjack->state];
+        pActor->atDestination = false;
+
+        break;
+      }
+      default:
+      {
+        lsFail(); // not implemented.
+      }
       }
     }
   }
@@ -758,18 +756,16 @@ void update_cook()
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
     // Handle Survival
-    if (pCook->survivalActorActive)
+    if (pActor->survivalActorActive)
     {
       if (pActor->atDestination)
       {
-        pCook->survivalActorActive = false;
+        pActor->survivalActorActive = false;
         pCook->state = caS_check_inventory;
         pActor->atDestination = false;
       }
-      else
-      {
-        continue;
-      }
+
+      continue;
     }
 
     lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
@@ -949,11 +945,13 @@ void update_fireActor()
     if (pActor->atDestination)
     {
       // Handle Survival
-      if (pFireActor->survivalActorActive)
+      if (pActor->survivalActorActive)
       {
-        pFireActor->survivalActorActive = false;
+        pActor->survivalActorActive = false;
         pActor->target = target_from_state[pFireActor->state];
         pActor->atDestination = false;
+
+        continue;
       }
 
       const size_t posIdx = worldPosToTileIndex(pActor->pos);

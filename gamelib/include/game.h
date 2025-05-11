@@ -195,6 +195,7 @@ enum entity_type
   eT_lumberjack,
   eT_stonemason,
   eT_cook,
+  eT_fire_actor,
 
   eT_count
 };
@@ -206,6 +207,7 @@ struct movement_actor
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
+  bool survivalActorActive = false;
 };
 
 struct lifesupport_actor
@@ -258,13 +260,9 @@ struct cook_actor
   resource_type currentCookingItem;
   pathfinding_target_type searchingPlant; // actor's don't always search for items so this won't always represent what the actor is currently up to.
   uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
-  bool survivalActorActive = false;
 };
 
 //////////////////////////////////////////////////////////////////////////
-
-// walk to all fire pits and start fire
-// -> get wood to start fire
 
 enum fire_actor_state
 {
@@ -279,7 +277,6 @@ struct fire_actor
   fire_actor_state state;
   size_t index;
   uint8_t wood_inventory;
-  bool survivalActorActive = false; // i probably want to change this to a variable in the movement actor so all actors have it.
 };
 
 //////////////////////////////////////////////////////////////////////////
