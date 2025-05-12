@@ -538,7 +538,7 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
-    if (pActor->target < _ptT_nutrition_first || pActor->target > _ptT_nutrition_last)
+    if (!pActor->survivalActorActive)
     {
       // TODO: Add range in pathfinding and walk to nearest item with best score.
 
@@ -600,9 +600,19 @@ void update_lifesupportActors()
           pActor->atDestination = false;
         }
       }
+      else
+      {
+        if (pActor->temperature < ColdThreshold) // maybe we want to weigh between food and fire instead of always prefering food
+        {
+          pActor->survivalActorActive = true;
+          pActor->target = ptT_fire;
+          pActor->atDestination = false;
+        }
+      }
     }
     else
     {
+      // TODO if (food) else -> fire
       // add food to lunchbox if at dest and dest == fooditem
       if (pActor->atDestination)
       {
