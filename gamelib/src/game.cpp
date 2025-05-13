@@ -507,12 +507,6 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 
 //////////////////////////////////////////////////////////////////////////
 
-// fire: when too cold: go to fire: food has priority?
-// fire actor: collect wood, add to fire
-// fire: resource count: how much fire lifetime left? -> remove 1 every tick? (how to update? list of all fires that get updated? or should we have a simulation func that iterates all tiles anyways, to update other stuff as well?
-  // first: just remove one after fires has been visited
-// fire and fire_place
-
 void update_lifesupportActors()
 {
   // TODO: ADAPT VALUES TO MAKE SENSE!
@@ -537,8 +531,6 @@ void update_lifesupportActors()
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
     modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
-
-    // TODO check temperature and possibly set fire as target
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
@@ -606,7 +598,7 @@ void update_lifesupportActors()
       }
       else
       {
-        if (_actor.pItem->temperature < ColdThreshold) // maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold) // TODO maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -621,7 +613,7 @@ void update_lifesupportActors()
       if (pActor->atDestination)
       {
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-        
+
         if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
         {
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last);
@@ -638,12 +630,16 @@ void update_lifesupportActors()
         else if (pActor->target == ptT_fire)
         {
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire);
-          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
 
-          // for testing only: remove from fire.
+          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+            modify_with_clamp(_actor.pItem->temperature, MaxTemperature);
+
+          // for testing only: remove from fire & remove fire when empty
+          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
           _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
-          
-          modify_with_clamp(_actor.pItem->temperature, MaxTemperature);
+
+          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
+            _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
         }
       }
     }
