@@ -216,7 +216,7 @@ struct lifesupport_actor
   size_t entityIndex;
   uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_first];
-  uint8_t temperature_index;
+  uint8_t temperature;
 };
 
 //////////////////////////////////////////////////////////////////////////

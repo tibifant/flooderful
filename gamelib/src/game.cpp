@@ -523,6 +523,9 @@ void update_lifesupportActors()
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
+  static const uint8_t ColdThreshold = 10;
+  static const uint8_t MaxTemperature = 255;
+
   static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
   static const int64_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
@@ -532,7 +535,8 @@ void update_lifesupportActors()
     // just for testing!!!!
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
-    // TODO remove from temperature
+
+    modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
 
     // TODO check temperature and possibly set fire as target
 
@@ -602,7 +606,7 @@ void update_lifesupportActors()
       }
       else
       {
-        if (pActor->temperature < ColdThreshold) // maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold) // maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -617,14 +621,29 @@ void update_lifesupportActors()
       if (pActor->atDestination)
       {
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-
-        if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+        
+        if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
         {
-          const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
-          lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
-          modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last);
 
+          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+          {
+            const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+            lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
+            modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+
+            _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+          }
+        }
+        else if (pActor->target == ptT_fire)
+        {
+          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire);
+          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
+
+          // for testing only: remove from fire.
           _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+          
+          modify_with_clamp(_actor.pItem->temperature, MaxTemperature);
         }
       }
     }
