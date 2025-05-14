@@ -236,7 +236,7 @@ void setTerrain()
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
-  _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
   _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
@@ -313,6 +313,33 @@ lsResult spawnActors()
     lifesupport_actor lsF_actor;
     lsF_actor.entityIndex = f_index;
     lsF_actor.type = eT_cook;
+
+    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
+    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
+
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
+  }
+
+  // Fire Actor
+  {
+    movement_actor actor;
+    actor.target = _ptT_nutrition_first;
+    actor.pos = vec2f(13.f, 13.f);
+
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
+
+    fire_actor fireActor;
+    fireActor.state = faS_start_fire;
+    fireActor.wood_inventory = 0;
+
+    fireActor.index = f_index;
+
+    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, f_index));
+
+    lifesupport_actor lsF_actor;
+    lsF_actor.entityIndex = f_index;
+    lsF_actor.type = eT_fire_actor;
 
     lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
     lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
@@ -1038,6 +1065,7 @@ void game_update()
   update_lifesupportActors();
   update_lumberjack();
   update_cook();
+  update_fireActor();
 }
 
 //////////////////////////////////////////////////////////////////////////
