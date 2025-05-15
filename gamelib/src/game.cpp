@@ -236,7 +236,8 @@ void setTerrain()
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
-  //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  _Game.levelInfo.pGameplayMap[120].ressourceCount = 3;
   _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
@@ -1022,6 +1023,7 @@ void update_fireActor()
 
           pFireActor->state = faS_start_fire;
           pActor->target = target_from_state[faS_start_fire];
+          pActor->atDestination = false;
         }
 
         break;
@@ -1043,6 +1045,7 @@ void update_fireActor()
         {
           pFireActor->state = faS_get_wood;
           pActor->target = target_from_state[faS_get_wood];
+          pActor->atDestination = false;
         }
 
         break;
