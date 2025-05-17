@@ -237,7 +237,7 @@ void setTerrain()
   }
 
   _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
-  _Game.levelInfo.pGameplayMap[120].ressourceCount = 9;
+  _Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
   _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
@@ -546,7 +546,7 @@ void update_lifesupportActors()
   static const uint8_t MinFoodItemCount = 0;
 
   static const uint8_t ColdThreshold = 10;
-  static const uint8_t TemperatureIncrease = 10;
+  static const int64_t TemperatureIncrease = 10;
   static const uint8_t MaxTemperature = 40;
 
   static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
@@ -661,7 +661,7 @@ void update_lifesupportActors()
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire);
 
           if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
-            modify_with_clamp(_actor.pItem->temperature, TemperatureIncrease, (uint8_t)(0), MaxTemperature);
+            modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
           // for testing only: remove from fire & remove fire when empty
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
