@@ -237,7 +237,7 @@ void setTerrain()
   }
 
   _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
-  _Game.levelInfo.pGameplayMap[120].ressourceCount = 3;
+  _Game.levelInfo.pGameplayMap[120].ressourceCount = 9;
   _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
@@ -546,7 +546,8 @@ void update_lifesupportActors()
   static const uint8_t MinFoodItemCount = 0;
 
   static const uint8_t ColdThreshold = 10;
-  static const uint8_t MaxTemperature = 255;
+  static const uint8_t TemperatureIncrease = 10;
+  static const uint8_t MaxTemperature = 40;
 
   static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
@@ -636,14 +637,13 @@ void update_lifesupportActors()
     }
     else
     {
-      // TODO if (food) else -> fire
-      // add food to lunchbox if at dest and dest == fooditem
       if (pActor->atDestination)
       {
         const size_t worldIdx = worldPosToTileIndex(pActor->pos);
 
         if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
         {
+          // add food to lunchbox
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last);
 
           if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
@@ -657,10 +657,11 @@ void update_lifesupportActors()
         }
         else if (pActor->target == ptT_fire)
         {
+          // warm up at fire
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire);
 
           if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
-            modify_with_clamp(_actor.pItem->temperature, MaxTemperature);
+            modify_with_clamp(_actor.pItem->temperature, TemperatureIncrease, (uint8_t)(0), MaxTemperature);
 
           // for testing only: remove from fire & remove fire when empty
           lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
