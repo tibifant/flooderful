@@ -236,8 +236,8 @@ void setTerrain()
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
-  _Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
-  _Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
+  //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
   _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
@@ -559,7 +559,8 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
-    modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+    
+    //modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
