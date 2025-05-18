@@ -63,7 +63,7 @@ struct gameEvent
 
 //////////////////////////////////////////////////////////////////////////
 
-enum pathfinding_target_type // 32 different terrain_types possible.
+enum pathfinding_target_type : uint8_t
 {
   // all values match their corresponding `resource_type` up until `_ptt_multi_types`
   ptT_grass,
@@ -97,7 +97,7 @@ enum pathfinding_target_type // 32 different terrain_types possible.
   ptT_Count
 };
 
-enum resource_type
+enum resource_type : uint8_t
 {
   // all values match their corresponding `pathfinding_target_type` up until `_tile_type_food_first`
   tT_grass,

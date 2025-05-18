@@ -535,6 +535,13 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 
 //////////////////////////////////////////////////////////////////////////
 
+bool gameplay_map_matches(const resource_type expectedTileType, const size_t idx)
+{
+  // check map or check if pathfinding target type for equivalent type is at_dest?
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 void update_lifesupportActors()
 {
   // TODO: ADAPT VALUES TO MAKE SENSE!
