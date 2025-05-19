@@ -535,9 +535,19 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 
 //////////////////////////////////////////////////////////////////////////
 
-bool gameplay_map_matches(const resource_type expectedTileType, const size_t idx)
+bool action_on_gameplay_map_matches(const resource_type expectedTileType, const size_t idx, actionFunc) //?
 {
-  // check map or check if pathfinding target type for equivalent type is at_dest?
+  // TODO: assert that the pathfinding map is on `at_dest` for teh coresponding ptt (lookup?)
+  
+  if (_Game.levelInfo.pGameplayMap[idx].tileType == expectedTileType)
+  {
+    actionFunc();
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
