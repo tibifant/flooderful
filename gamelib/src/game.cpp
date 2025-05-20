@@ -535,20 +535,23 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
 
 //////////////////////////////////////////////////////////////////////////
 
-bool action_on_gameplay_map_matches(const resource_type expectedTileType, const size_t idx, actionFunc) //?
+bool change_tile_to(const resource_type targetType, const resource_type expectedCurrentType, const size_t tileIdx)
 {
-  // TODO: assert that the pathfinding map is on `at_dest` for teh coresponding ptt (lookup?)
-  
-  if (_Game.levelInfo.pGameplayMap[idx].tileType == expectedTileType)
+  // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
+
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
   {
-    actionFunc();
+    // what free assert did coc talk about?
+    _Game.levelInfo.pGameplayMap[tileIdx].tileType = targetType;
     return true;
   }
-  else
-  {
-    return false;
-  }
+
+  return false;
 }
+
+// TODO: add ifs to every action that relies on the tile being a specific tileType
+// TODO: handle setting actor.atDest to false, when if was false, so it won't be falsely true once the pathfindignLookUp updates and he walks somewhere else.
+// TODO use change_tile func and ask coc about the assert - i guess coc is talking about the assert, that the tile is what we axpected, but that would definetifly still get triggered as I can't resolve the underlying issue.
 
 //////////////////////////////////////////////////////////////////////////
 
