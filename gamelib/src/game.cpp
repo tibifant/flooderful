@@ -579,7 +579,7 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionsCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
-    
+
     //modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
@@ -665,31 +665,35 @@ void update_lifesupportActors()
         if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
         {
           // add food to lunchbox
-          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last);
-
-          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last)
           {
-            const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
-            lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
-            modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-            _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+            {
+              const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+              lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
+              modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+
+              _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+            }
           }
         }
         else if (pActor->target == ptT_fire)
         {
           // warm up at fire
-          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire);
+          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
+          {
 
-          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
-            modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
+            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+              modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
-          // for testing only: remove from fire & remove fire when empty
-          lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
-          _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+            // for testing only: remove from fire & remove fire when empty
+            lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
+            _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
 
-          if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
-            _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
+            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
+              _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
+          }
         }
       }
     }
@@ -734,60 +738,66 @@ void update_lumberjack()
       {
       case laS_plant:
       {
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
-        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling;
-
-        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pActor->target = target_from_state[pLumberjack->state];
-        pActor->atDestination = false;
-
-        break;
-      }
-      case laS_getWater:
-      {
-        lsAssert(!pLumberjack->hasItem);
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water);
-
-        if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
         {
-          pLumberjack->hasItem = true;
-          pLumberjack->item = tT_water;
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
-
-          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
-            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling; // TODO!
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
           pActor->atDestination = false;
+        }
+        break;
+      }
+      case laS_getWater:
+      {
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water)
+        {
+          lsAssert(!pLumberjack->hasItem);
+
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+          {
+            pLumberjack->hasItem = true;
+            pLumberjack->item = tT_water;
+            _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
+
+            if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+
+            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+            pActor->target = target_from_state[pLumberjack->state];
+            pActor->atDestination = false;
+          }
         }
 
         break;
       }
       case laS_water:
       {
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling);
-
-        if (pLumberjack->hasItem && pLumberjack->item == tT_water)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling)
         {
-          pLumberjack->hasItem = false;
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree;
+          if (pLumberjack->hasItem && pLumberjack->item == tT_water)
+          {
+            pLumberjack->hasItem = false;
+            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree; // TODO!
 
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
+            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+            pActor->target = target_from_state[pLumberjack->state];
+            pActor->atDestination = false;
+          }
         }
 
         break;
       }
       case laS_chop:
       {
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
-        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk;
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
+        {
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk; // TODO!
 
-        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pActor->target = target_from_state[pLumberjack->state];
-        pActor->atDestination = false;
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+          pActor->atDestination = false;
+        }
 
         break;
       }
@@ -912,46 +922,49 @@ void update_cook()
 
       case caS_harvest:
       {
-        lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_last);
-
-        // check if plant has items left
-        if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_resources_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_resources_last)
         {
-          // take item
-          constexpr int16_t AddedResourceAmount = 4; // TODO: why is the cook still only making the same plant/food?
-          modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
+          lsAssert(pActor->target >= _ptT_nutrient_sources_first && pActor->target <= _ptT_nutrient_sources_last);
 
-          // remove
-          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O?
+          // check if plant has items left
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
+          {
+            // take item
+            constexpr int16_t AddedResourceAmount = 4; // TODO: why is the cook still only making the same plant/food?
+            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
-          pCook->state = caS_check_inventory;
+            // remove
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O?
+
+            pCook->state = caS_check_inventory;
+          }
+          else
+          {
+            pCook->state = caS_plant;
+            pActor->target = ptT_soil;
+          }
+
+          pActor->atDestination = false;
         }
-        else
-        {
-          pCook->state = caS_plant;
-          pActor->target = ptT_soil;
-        }
-
-        pActor->atDestination = false;
 
         break;
       }
 
       case caS_plant:
       {
-        lsAssert(pActor->target == ptT_soil);
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil);
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+        {
+          lsAssert(pActor->target == ptT_soil);
 
-        constexpr uint8_t AddedAmountToPlant = 3;
-        _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
-        _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
+          constexpr uint8_t AddedAmountToPlant = 3;
+          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
 
-        pCook->state = caS_harvest;
-        pActor->target = pCook->searchingPlant;
+          pCook->state = caS_harvest;
+          pActor->target = pCook->searchingPlant;
 
-        pActor->atDestination = false;
-
+          pActor->atDestination = false;
+        }
         break;
       }
 
@@ -971,10 +984,11 @@ void update_cook()
           else // if we are at grass as alternative dropoff point
           {
             // Change tile to food item
-            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass);
-
-            _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
-            _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
+            if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_grass) // TODO!
+            {
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = pCook->currentCookingItem;
+              _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
+            }
           }
         }
         else // if we are at the correct foodtype.
