@@ -533,10 +533,10 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   return value - prevVal;
 }
 
-//////////////////////////////////////////////////////////////////////////
-
 bool change_tile_to(const resource_type targetType, const resource_type expectedCurrentType, const size_t tileIdx)
 {
+  // is this even right or did coc mean that it returns wether or not the tile is actually changed in the pathfinding map? -> then we wouldn't need to check anywhere else wether or not the tile type is right, don't we? hmmmm....
+
   // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
 
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
@@ -667,7 +667,6 @@ void update_lifesupportActors()
           // add food to lunchbox
           if (_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last)
           {
-
             if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
             {
               const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
@@ -677,13 +676,16 @@ void update_lifesupportActors()
               _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
             }
           }
+          else
+          {
+            pActor->atDestination = false;
+          }
         }
         else if (pActor->target == ptT_fire)
         {
           // warm up at fire
           if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
           {
-
             if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
               modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
@@ -693,6 +695,10 @@ void update_lifesupportActors()
 
             if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
               _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
+          }
+          else
+          {
+            pActor->atDestination = false;
           }
         }
       }
@@ -738,77 +744,73 @@ void update_lumberjack()
       {
       case laS_plant:
       {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+        if (change_tile_to(tT_sapling, tT_soil, tileIdx))
         {
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sapling; // TODO!
-
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
         }
+
+        pActor->atDestination = false;
+        
         break;
       }
       case laS_getWater:
       {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water && _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
         {
           lsAssert(!pLumberjack->hasItem);
 
-          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
-          {
-            pLumberjack->hasItem = true;
-            pLumberjack->item = tT_water;
-            _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
+          pLumberjack->hasItem = true;
+          pLumberjack->item = tT_water;
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
 
-            if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
 
-            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-            pActor->target = target_from_state[pLumberjack->state];
-            pActor->atDestination = false;
-          }
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
         }
+
+        pActor->atDestination = false;
 
         break;
       }
       case laS_water:
       {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_sapling)
+        if (change_tile_to(tT_tree, tT_sapling, tileIdx))
         {
-          if (pLumberjack->hasItem && pLumberjack->item == tT_water)
-          {
-            pLumberjack->hasItem = false;
-            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_tree; // TODO!
+          pLumberjack->hasItem = false;
 
-            pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-            pActor->target = target_from_state[pLumberjack->state];
-            pActor->atDestination = false;
-          }
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
         }
+
+        pActor->atDestination = false;
 
         break;
       }
       case laS_chop:
       {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_tree);
+        if (change_tile_to(tT_trunk, tT_tree, tileIdx))
         {
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_trunk; // TODO!
-
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
-          pActor->atDestination = false;
         }
+
+        pActor->atDestination = false;
 
         break;
       }
       case laS_cut:
       {
-        lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_trunk);
-        _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_wood; // the tile stays wood until all the wood has been taken away.
-        _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
+        if (change_tile_to(tT_wood, tT_trunk, tileIdx))
+        {
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
 
-        pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-        pActor->target = target_from_state[pLumberjack->state];
+          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+          pActor->target = target_from_state[pLumberjack->state];
+        }
+
         pActor->atDestination = false;
 
         break;
@@ -930,11 +932,11 @@ void update_cook()
           if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount > 0)
           {
             // take item
-            constexpr int16_t AddedResourceAmount = 4; // TODO: why is the cook still only making the same plant/food?
+            constexpr int16_t AddedResourceAmount = 4;
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
             // remove
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O?
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O? maybe adjust numbers
 
             pCook->state = caS_check_inventory;
           }
@@ -943,9 +945,9 @@ void update_cook()
             pCook->state = caS_plant;
             pActor->target = ptT_soil;
           }
-
-          pActor->atDestination = false;
         }
+
+        pActor->atDestination = false;
 
         break;
       }
@@ -962,9 +964,10 @@ void update_cook()
 
           pCook->state = caS_harvest;
           pActor->target = pCook->searchingPlant;
-
-          pActor->atDestination = false;
         }
+
+        pActor->atDestination = false;
+
         break;
       }
 
@@ -984,10 +987,8 @@ void update_cook()
           else // if we are at grass as alternative dropoff point
           {
             // Change tile to food item
-            if (change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx)) // TODO!
-            {
+            if (change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx))
               _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
-            }
           }
         }
         else // if we are at the correct foodtype.
@@ -1049,15 +1050,20 @@ void update_fireActor()
       {
         constexpr int16_t AddedWood = 3;
 
-        lsAssert(_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood);
-
-        if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
+        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood)
         {
-          modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
-          modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
+          if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
+          {
+            modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
 
-          pFireActor->state = faS_start_fire;
-          pActor->target = target_from_state[faS_start_fire];
+            pFireActor->state = faS_start_fire;
+            pActor->target = target_from_state[faS_start_fire];
+            pActor->atDestination = false;
+          }
+        }
+        else
+        {
           pActor->atDestination = false;
         }
 
@@ -1067,19 +1073,24 @@ void update_fireActor()
       {
         constexpr int16_t WoodPerFire = 3;
 
-        lsAssert(_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit);
-
-        // if has wood: add wood to fire
-        if (pFireActor->wood_inventory >= WoodPerFire)
+        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit)
         {
-          pFireActor->wood_inventory -= WoodPerFire;
-          _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
-          _Game.levelInfo.pGameplayMap[posIdx].ressourceCount = WoodPerFire;
+          // if has wood: add wood to fire
+          if (pFireActor->wood_inventory >= WoodPerFire)
+          {
+            pFireActor->wood_inventory -= WoodPerFire;
+            _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
+            _Game.levelInfo.pGameplayMap[posIdx].ressourceCount = WoodPerFire;
+          }
+          else
+          {
+            pFireActor->state = faS_get_wood;
+            pActor->target = target_from_state[faS_get_wood];
+            pActor->atDestination = false;
+          }
         }
         else
         {
-          pFireActor->state = faS_get_wood;
-          pActor->target = target_from_state[faS_get_wood];
           pActor->atDestination = false;
         }
 
