@@ -539,13 +539,23 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
   // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
 
-  lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType);
+  lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType); // i think we still need an if for this as we can't be sure someoneelse didn't change the tile in the meantime, right?
+
+  // TODO: maybe handle resetting `atTarget` for the actor here?
+
+
+
+  // mm I don't think this actually solves our issue and gives us the benefit of not needing to check if tiles are correct when interacting with them as another actor could still have changed the tile?
 
   pathfinding_target_type pathfindingTargetType;
 
   if (targetType < _tile_type_multi_types)
   {
     pathfindingTargetType = (pathfinding_target_type)(targetType);
+  }
+  else
+  {
+
   }
 
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != targetType)
