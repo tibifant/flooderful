@@ -533,17 +533,33 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   return value - prevVal;
 }
 
-bool change_tile_to(const resource_type targetType, const resource_type expectedCurrentType, const size_t tileIdx)
+bool change_tile_to(const resource_type targetType, const resource_type expectedPreviousType, const size_t tileIdx)
 {
   // is this even right or did coc mean that it returns wether or not the tile is actually changed in the pathfinding map? -> then we wouldn't need to check anywhere else wether or not the tile type is right, don't we? hmmmm....
 
   // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
 
-  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
+  lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType);
+
+  pathfinding_target_type pathfindingTargetType;
+
+  if (targetType < _tile_type_multi_types)
+  {
+    pathfindingTargetType = (pathfinding_target_type)(targetType);
+  }
+
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != targetType)
   {
     // what free assert did coc talk about?
     _Game.levelInfo.pGameplayMap[tileIdx].tileType = targetType;
-    return true;
+    return false;
+  }
+  else
+  {
+    if (_Game.levelInfo.resources[pathfindingTargetType].pDirectionLookup[tileIdx]->dir != d_atDestination)
+      return false;
+    else
+      return true;
   }
 
   return false;

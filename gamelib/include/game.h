@@ -118,7 +118,8 @@ enum resource_type : uint8_t
   tT_sunflower_plant,
   _tile_type_food_resources_last = tT_sunflower_plant, // up until here (including) the types match the corresponding `pathfinding_target_type`!
   // do not insert anything here! We depend on the plants matching up with their nutrients!
-  _tile_type_food_first, // from here on no longer necessarily matching up with `pathfinding_target_type`s!
+  _tile_type_multi_types,// from here on no longer necessarily matching up with `pathfinding_target_type`s!
+  _tile_type_food_first = _tile_type_multi_types, 
   tT_tomato = _tile_type_food_first,
   tT_bean,
   tT_wheat,
