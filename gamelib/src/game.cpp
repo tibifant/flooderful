@@ -749,7 +749,7 @@ void update_lumberjack()
         }
 
         pActor->atDestination = false;
-        
+
         break;
       }
       case laS_getWater:
@@ -1055,15 +1055,15 @@ void update_fireActor()
             modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
             modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
 
+            if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount == 0)
+              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_grass;
+
             pFireActor->state = faS_start_fire;
             pActor->target = target_from_state[faS_start_fire];
-            pActor->atDestination = false;
           }
         }
-        else
-        {
-          pActor->atDestination = false;
-        }
+
+        pActor->atDestination = false;
 
         break;
       }
