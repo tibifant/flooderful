@@ -1084,13 +1084,10 @@ void update_fireActor()
           {
             pFireActor->state = faS_get_wood;
             pActor->target = target_from_state[faS_get_wood];
-            pActor->atDestination = false;
           }
         }
-        else
-        {
-          pActor->atDestination = false;
-        }
+
+        pActor->atDestination = false;
 
         break;
       }

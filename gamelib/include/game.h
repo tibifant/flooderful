@@ -132,8 +132,6 @@ enum resource_type : uint8_t
   tT_count
 };
 
-// TODO: fires to go to in the dark?
-
 //////////////////////////////////////////////////////////////////////////
 
 enum direction : uint8_t
