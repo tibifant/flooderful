@@ -803,7 +803,7 @@ void update_lumberjack()
       {
         if (change_tile_to(tT_wood, tT_trunk, tileIdx))
         {
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8;
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8; // todo adapt this, but should be fine, also look after how often they go to fire
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
