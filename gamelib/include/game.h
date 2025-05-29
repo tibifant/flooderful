@@ -112,18 +112,18 @@ enum resource_type : uint8_t
   tT_fire_pit,
 
   _tile_type_food_resources_first, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
-  tT_tomato_plant = _tile_type_food_resources_first,
-  tT_bean_plant,
-  tT_wheat_plant,
-  tT_sunflower_plant,
+  tT_tomato_plant = _tile_type_food_resources_first, // same order as the food
+  tT_bean_plant, // same order as the food
+  tT_wheat_plant, // same order as the food
+  tT_sunflower_plant, // same order as the food
   _tile_type_food_resources_last = tT_sunflower_plant, // up until here (including) the types match the corresponding `pathfinding_target_type`!
   // do not insert anything here! We depend on the plants matching up with their nutrients!
   _tile_type_multi_types,// from here on no longer necessarily matching up with `pathfinding_target_type`s!
-  _tile_type_food_first = _tile_type_multi_types, 
-  tT_tomato = _tile_type_food_first,
-  tT_bean,
-  tT_wheat,
-  tT_sunflower,
+  _tile_type_food_first = _tile_type_multi_types, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
+  tT_tomato = _tile_type_food_first, // same order as the food resources
+  tT_bean, // same order as the food resources
+  tT_wheat, // same order as the food resources
+  tT_sunflower, // same order as the food resources
   tT_meal, // insert meal types here
   _tile_type_food_last = tT_meal,
 

@@ -232,7 +232,7 @@ void setTerrain()
   {
     const size_t index = i + 5;
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
-    _Game.levelInfo.pGameplayMap[index].ressourceCount = 4;
+    _Game.levelInfo.pGameplayMap[index].ressourceCount = 16;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
@@ -567,14 +567,14 @@ void update_lifesupportActors()
   static const int64_t TemperatureIncrease = 10;
   static const uint8_t MaxTemperature = 40;
 
-  static const size_t nutritionsCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
+  static const size_t nutritionTypeCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
-  static const int64_t FoodToNutrition[foodTypeCount][nutritionsCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
+  static const int64_t FoodToNutrition[foodTypeCount][nutritionTypeCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
   for (auto _actor : _Game.lifesupportActors)
   {
     // just for testing!!!!
-    for (size_t j = 0; j < nutritionsCount; j++)
+    for (size_t j = 0; j < nutritionTypeCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
 
@@ -588,7 +588,7 @@ void update_lifesupportActors()
 
       bool anyNeededNutrion = false;
 
-      for (size_t j = 0; j < nutritionsCount; j++)
+      for (size_t j = 0; j < nutritionTypeCount; j++)
         if (_actor.pItem->nutritions[j] < EatingThreshold)
           anyNeededNutrion = true;
 
@@ -603,9 +603,9 @@ void update_lifesupportActors()
           {
             int8_t score = 0;
 
-            for (size_t j = 0; j < nutritionsCount; j++)
+            for (size_t j = 0; j < nutritionTypeCount; j++)
               if (FoodToNutrition[i][j] > 0)
-                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionsCount : -1; // TODO: consider range here?
+                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
 
             if (score > bestScore)
             {
@@ -618,7 +618,7 @@ void update_lifesupportActors()
         // eat best item
         if (bestScore > 0)
         {
-          for (size_t j = 0; j < nutritionsCount; j++)
+          for (size_t j = 0; j < nutritionTypeCount; j++)
             modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
 
           // remove from lunchbox
@@ -629,7 +629,7 @@ void update_lifesupportActors()
           size_t lowest = MaxNutritionValue;
           pathfinding_target_type lowestNutrient = ptT_Count;
 
-          for (size_t j = 0; j < nutritionsCount; j++)
+          for (size_t j = 0; j < nutritionTypeCount; j++)
           {
             if (_actor.pItem->nutritions[j] < lowest)
             {
@@ -971,7 +971,7 @@ void update_cook()
 
       case caS_cook:
       {
-        constexpr uint8_t AddedCookedItemAmount = 4;
+        constexpr uint8_t AddedCookedItemAmount = 8;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
         {
