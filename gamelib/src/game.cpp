@@ -284,6 +284,7 @@ lsResult spawnActors()
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
+    ls_actor.temperature = 40;
 
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
@@ -311,14 +312,15 @@ lsResult spawnActors()
 
     LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
 
-    lifesupport_actor lsF_actor;
-    lsF_actor.entityIndex = f_index;
-    lsF_actor.type = eT_cook;
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_cook;
+    ls_actor.temperature = 40;
 
-    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
-    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
 
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
   }
 
   // Fire Actor
@@ -338,14 +340,15 @@ lsResult spawnActors()
 
     LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, f_index));
 
-    lifesupport_actor lsF_actor;
-    lsF_actor.entityIndex = f_index;
-    lsF_actor.type = eT_fire_actor;
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_fire_actor;
+    ls_actor.temperature = 40;
 
-    lsZeroMemory(lsF_actor.nutritions, LS_ARRAYSIZE(lsF_actor.nutritions));
-    lsZeroMemory(lsF_actor.lunchbox, LS_ARRAYSIZE(lsF_actor.lunchbox));
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
 
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &lsF_actor, f_index));
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
   }
 
   goto epilogue;
@@ -555,7 +558,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 void update_lifesupportActors()
 {
-  // TODO: ADAPT VALUES TO MAKE SENSE!
+  // TODO: ADAPT VALUES TO MAKE SENSE! --> !!!! also food actor food drop rate
   static const uint8_t EatingThreshold = 1;
   static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
@@ -577,8 +580,9 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionTypeCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
-
-    //modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+    // TODO: add night
+    if (!(r % 60)) // really really jus tfor testing!
+      modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
@@ -760,10 +764,11 @@ void update_lumberjack()
 
           pLumberjack->hasItem = true;
           pLumberjack->item = tT_water;
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--;
 
-          if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
-            _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+          //if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+            //_Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
+
+          //_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--; // no check because the water will be set to sand once the count is 0
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
@@ -1056,7 +1061,7 @@ void update_fireActor()
             modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWood);
 
             if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount == 0)
-              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_grass;
+              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_soil;
 
             pFireActor->state = faS_start_fire;
             pActor->target = target_from_state[faS_start_fire];
