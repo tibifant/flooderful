@@ -576,6 +576,7 @@ void update_lifesupportActors()
 
   for (auto _actor : _Game.lifesupportActors)
   {
+    // TODO think about actual system to nutrition and temperature usage
     // just for testing!!!!
     for (size_t j = 0; j < nutritionTypeCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
@@ -691,7 +692,7 @@ void update_lifesupportActors()
             if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
               modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
-            // for testing only: remove from fire & remove fire when empty
+            // for testing: remove from fire & remove fire when empty
             lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
             _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
 
@@ -989,7 +990,6 @@ void update_cook()
           }
           else // if we are at grass as alternative dropoff point
           {
-            // Change tile to food item
             if (change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx))
               _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
           }
