@@ -562,7 +562,7 @@ void update_lifesupportActors()
   static const uint8_t EatingThreshold = 1;
   static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
-  static const int64_t FoodItemGain = 10;
+  static const int64_t FoodItemGain = 8;
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
@@ -676,7 +676,7 @@ void update_lifesupportActors()
               lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
               modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-              _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
+              modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
             }
           }
           else
@@ -977,7 +977,7 @@ void update_cook()
 
       case caS_cook:
       {
-        constexpr uint8_t AddedCookedItemAmount = 8;
+        constexpr uint8_t AddedCookedItemAmount = 64;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
         {
