@@ -232,7 +232,7 @@ void setTerrain()
   {
     const size_t index = i + 5;
     _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
-    _Game.levelInfo.pGameplayMap[index].ressourceCount = 16;
+    _Game.levelInfo.pGameplayMap[index].ressourceCount = 64;
     _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   }
 
@@ -677,6 +677,9 @@ void update_lifesupportActors()
               modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
               modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
+
+              if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
+                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass;
             }
           }
           else
