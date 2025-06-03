@@ -679,7 +679,7 @@ void update_lifesupportActors()
               modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
 
               if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
-                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass;
+                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass; // no `change_tile_to` usage because we check earlier
             }
           }
           else
@@ -943,7 +943,10 @@ void update_cook()
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
             // remove
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, (int16_t)(-1)); // TODO we're taking 1 but getting 4 o.O? maybe adjust numbers
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount, -AddedResourceAmount);
+
+            if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_soil; // no usage of `change_tile_to` due to earlier check of `resource_type`
 
             pCook->state = caS_check_inventory;
           }
@@ -965,7 +968,7 @@ void update_cook()
         {
           lsAssert(pActor->target == ptT_soil);
 
-          constexpr uint8_t AddedAmountToPlant = 3;
+          constexpr uint8_t AddedAmountToPlant = 12;
           _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
           _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedAmountToPlant;
 
