@@ -1113,6 +1113,20 @@ void update_fireActor()
 
 //////////////////////////////////////////////////////////////////////////
 
+// TODO: handle nutrition loss? maybe ok in movement actor, but maybe some more thoughtthrough way
+
+static size_t t = 0;
+static size_t lastDayNightSwitch = 0;
+
+void handle_day_night_cycle()
+{
+  // with frames?
+  // variable for day or night in game -> if night: fire stuff.
+  
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 void game_update()
 {
   updateFloodfill();
