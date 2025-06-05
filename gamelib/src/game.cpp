@@ -581,9 +581,11 @@ void update_lifesupportActors()
     for (size_t j = 0; j < nutritionTypeCount; j++)
       modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
-    // TODO: add night
-    if (!(r % 60)) // really really jus tfor testing!
-      modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+    if (_Game.isNight)
+    {
+      if (!(r % 60)) // really really jus tfor testing!
+        modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+    }
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
 
@@ -1115,14 +1117,19 @@ void update_fireActor()
 
 // TODO: handle nutrition loss? maybe ok in movement actor, but maybe some more thoughtthrough way
 
-static size_t t = 0;
-static size_t lastDayNightSwitch = 0;
+static size_t ticksSincelastDayNightSwitch = 0;
 
 void handle_day_night_cycle()
 {
-  // with frames?
-  // variable for day or night in game -> if night: fire stuff.
-  
+  constexpr size_t DayLength = 5000;
+  constexpr size_t NightLength = 3000;
+
+  if (ticksSincelastDayNightSwitch == DayLength && !_Game.isNight)
+    _Game.isNight = false;
+  else if (ticksSincelastDayNightSwitch == NightLength && _Game.isNight)
+    _Game.isNight = true;
+
+  ticksSincelastDayNightSwitch++;
 }
 
 //////////////////////////////////////////////////////////////////////////

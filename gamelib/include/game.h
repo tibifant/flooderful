@@ -309,6 +309,7 @@ struct game
   level_info levelInfo;
   pool<movement_actor> movementActors;
   pool<lifesupport_actor> lifesupportActors;
+  bool isNight = false;
 
   size_t tickRate = 60;
   size_t lastEventIndex, eventUpdateCutoffIndex;
