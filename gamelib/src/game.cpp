@@ -284,7 +284,7 @@ lsResult spawnActors()
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
-    ls_actor.temperature = 40;
+    ls_actor.temperature = 255;
 
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
@@ -315,7 +315,7 @@ lsResult spawnActors()
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = f_index;
     ls_actor.type = eT_cook;
-    ls_actor.temperature = 40;
+    ls_actor.temperature = 255;
 
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
@@ -343,7 +343,7 @@ lsResult spawnActors()
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = f_index;
     ls_actor.type = eT_fire_actor;
-    ls_actor.temperature = 40;
+    ls_actor.temperature = 255;
 
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
