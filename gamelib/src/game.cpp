@@ -567,8 +567,8 @@ void update_lifesupportActors()
   static const uint8_t MinFoodItemCount = 0;
 
   static const uint8_t ColdThreshold = 10;
-  static const int64_t TemperatureIncrease = 10;
-  static const uint8_t MaxTemperature = 40;
+  static const int64_t TemperatureIncrease = 255;
+  static const uint8_t MaxTemperature = 255;
 
   static const size_t nutritionTypeCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
@@ -583,8 +583,7 @@ void update_lifesupportActors()
 
     if (_Game.isNight)
     {
-      if (!(r % 60)) // really really jus tfor testing!
-        modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+      modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
     }
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
@@ -1119,15 +1118,21 @@ void update_fireActor()
 
 static size_t ticksSincelastDayNightSwitch = 0;
 
-void handle_day_night_cycle()
+void handle_dayNightCycle()
 {
-  constexpr size_t DayLength = 5000;
-  constexpr size_t NightLength = 3000;
+  constexpr size_t DayLength = 500;
+  constexpr size_t NightLength = 300;
 
   if (ticksSincelastDayNightSwitch == DayLength && !_Game.isNight)
-    _Game.isNight = false;
-  else if (ticksSincelastDayNightSwitch == NightLength && _Game.isNight)
+  {
     _Game.isNight = true;
+    ticksSincelastDayNightSwitch = 0;
+  }
+  else if (ticksSincelastDayNightSwitch == NightLength && _Game.isNight)
+  {
+    _Game.isNight = false;
+    ticksSincelastDayNightSwitch = 0;
+  }
 
   ticksSincelastDayNightSwitch++;
 }
@@ -1136,6 +1141,7 @@ void handle_day_night_cycle()
 
 void game_update()
 {
+  handle_dayNightCycle();
   updateFloodfill();
   movementActor_move();
   update_lifesupportActors();
