@@ -578,12 +578,15 @@ void update_lifesupportActors()
   {
     // TODO think about actual system to nutrition and temperature usage
     // just for testing!!!!
-    for (size_t j = 0; j < nutritionTypeCount; j++)
-      modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
 
     if (_Game.isNight)
     {
       modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+    }
+    else
+    {
+      for (size_t j = 0; j < nutritionTypeCount; j++)
+        modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
     }
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
