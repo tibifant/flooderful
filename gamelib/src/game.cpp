@@ -1039,7 +1039,7 @@ void update_cook()
 
 void update_fireActor()
 {
-  constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit };
+  constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_fire };
 
   // TODO: only start fire at night, extinguish fire when the day starts (fire should propably keep it's wood resources)
 
@@ -1090,23 +1090,45 @@ void update_fireActor()
       {
         constexpr int16_t WoodPerFire = 3;
 
-        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit)
+        if (_Game.isNight)
         {
-          // if has wood: add wood to fire
-          if (pFireActor->wood_inventory >= WoodPerFire)
+          if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit)
           {
-            pFireActor->wood_inventory -= WoodPerFire;
-            _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
-            _Game.levelInfo.pGameplayMap[posIdx].ressourceCount = WoodPerFire;
+            if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > WoodPerFire)
+            {
+              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
+            }
+            else
+            {
+              // if has wood: add wood to fire
+              if (pFireActor->wood_inventory >= WoodPerFire)
+              {
+                pFireActor->wood_inventory -= WoodPerFire;
+                _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
+                modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[posIdx].maxRessourceCount);
+              }
+              else
+              {
+                pFireActor->state = faS_get_wood;
+                pActor->target = target_from_state[faS_get_wood];
+              }
+            }
           }
-          else
-          {
-            pFireActor->state = faS_get_wood;
-            pActor->target = target_from_state[faS_get_wood];
-          }
+        }
+        else
+        {
+          pFireActor.state = faS_extinguish_fire;
+          pActor->target = target_from_state[faS_extinguish_fire];
         }
 
         pActor->atDestination = false;
+
+        break;
+      }
+      case faS_extinguish_fire:
+      {
+        // if day: extinguish
+        // else: state to start fire
 
         break;
       }
