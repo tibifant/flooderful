@@ -593,73 +593,75 @@ void update_lifesupportActors()
 
     if (!pActor->survivalActorActive)
     {
-      // TODO: Add range in pathfinding and walk to nearest item with best score.
-
-      bool anyNeededNutrion = false;
-
-      for (size_t j = 0; j < nutritionTypeCount; j++)
-        if (_actor.pItem->nutritions[j] < EatingThreshold)
-          anyNeededNutrion = true;
-
-      if (anyNeededNutrion)
+      if (_Game.isNight)
       {
-        int8_t bestScore = 0;
-        size_t bestIndex = 0;
-
-        for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
-        {
-          if (_actor.pItem->lunchbox[i])
-          {
-            int8_t score = 0;
-
-            for (size_t j = 0; j < nutritionTypeCount; j++)
-              if (FoodToNutrition[i][j] > 0)
-                score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
-
-            if (score > bestScore)
-            {
-              bestScore = score;
-              bestIndex = i;
-            }
-          }
-        }
-
-        // eat best item
-        if (bestScore > 0)
-        {
-          for (size_t j = 0; j < nutritionTypeCount; j++)
-            modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
-
-          // remove from lunchbox
-          modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
-        }
-        else // if no item: set actor target
-        {
-          size_t lowest = MaxNutritionValue;
-          pathfinding_target_type lowestNutrient = ptT_Count;
-
-          for (size_t j = 0; j < nutritionTypeCount; j++)
-          {
-            if (_actor.pItem->nutritions[j] < lowest)
-            {
-              lowest = _actor.pItem->nutritions[j];
-              lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
-            }
-          }
-
-          lsAssert(lowestNutrient <= _ptT_nutrition_last);
-          pActor->survivalActorActive = true;
-          pActor->target = lowestNutrient;
-          pActor->atDestination = false;
-        }
-      }
-      else
-      {
+        // TODO: Add range in pathfinding and walk to nearest item with best score.
         if (_actor.pItem->temperature < ColdThreshold) // TODO maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
           pActor->atDestination = false;
+        }
+      }
+      else
+      {
+        bool anyNeededNutrion = false;
+
+        for (size_t j = 0; j < nutritionTypeCount; j++)
+          if (_actor.pItem->nutritions[j] < EatingThreshold)
+            anyNeededNutrion = true;
+
+        if (anyNeededNutrion)
+        {
+          int8_t bestScore = 0;
+          size_t bestIndex = 0;
+
+          for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+          {
+            if (_actor.pItem->lunchbox[i])
+            {
+              int8_t score = 0;
+
+              for (size_t j = 0; j < nutritionTypeCount; j++)
+                if (FoodToNutrition[i][j] > 0)
+                  score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
+
+              if (score > bestScore)
+              {
+                bestScore = score;
+                bestIndex = i;
+              }
+            }
+          }
+
+          // eat best item
+          if (bestScore > 0)
+          {
+            for (size_t j = 0; j < nutritionTypeCount; j++)
+              modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
+
+            // remove from lunchbox
+            modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+          }
+          else // if no item: set actor target
+          {
+            size_t lowest = MaxNutritionValue;
+            pathfinding_target_type lowestNutrient = ptT_Count;
+
+            for (size_t j = 0; j < nutritionTypeCount; j++)
+            {
+              if (_actor.pItem->nutritions[j] < lowest)
+              {
+                lowest = _actor.pItem->nutritions[j];
+                lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
+              }
+            }
+
+            lsAssert(lowestNutrient <= _ptT_nutrition_last);
+            pActor->survivalActorActive = true;
+            pActor->target = lowestNutrient;
+            pActor->atDestination = false;
+          }
         }
       }
     }
@@ -1038,6 +1040,8 @@ void update_cook()
 void update_fireActor()
 {
   constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit };
+
+  // TODO: only start fire at night, extinguish fire when the day starts (fire should propably keep it's wood resources)
 
   for (const auto _actor : _FireActors)
   {
