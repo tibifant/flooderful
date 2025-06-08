@@ -267,6 +267,7 @@ enum fire_actor_state
 {
   faS_get_wood,
   faS_start_fire,
+  faS_extinguish_fire,
 
   faS_count
 };

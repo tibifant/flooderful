@@ -1117,7 +1117,7 @@ void update_fireActor()
         }
         else
         {
-          pFireActor.state = faS_extinguish_fire;
+          pFireActor->state = faS_extinguish_fire;
           pActor->target = target_from_state[faS_extinguish_fire];
         }
 
@@ -1127,8 +1127,17 @@ void update_fireActor()
       }
       case faS_extinguish_fire:
       {
-        // if day: extinguish
-        // else: state to start fire
+        if (_Game.isNight) // TODO: we should probably check outside from the if atdest/switch case if it is day or night and change the state accordingly.
+        {
+          pFireActor->state = faS_start_fire;
+          pActor->target = target_from_state[faS_extinguish_fire];
+        }
+        else
+        {
+          change_tile_to(tT_fire_pit, tT_fire, posIdx);
+        }
+
+        pActor->atDestination = false;
 
         break;
       }
