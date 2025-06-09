@@ -1048,6 +1048,25 @@ void update_fireActor()
     fire_actor *pFireActor = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pFireActor->index);
 
+    if (_Game.isNight)
+    {
+      if (pFireActor->state == faS_extinguish_fire)
+      {
+        pFireActor->state = faS_start_fire;
+        pActor->target = target_from_state[faS_start_fire];
+        pActor->atDestination = false;
+      }
+    }
+    else
+    {
+      if (pFireActor->state == faS_start_fire)
+      {
+        pFireActor->state = faS_extinguish_fire;
+        pActor->target = target_from_state[faS_extinguish_fire];
+        pActor->atDestination = false;
+      }
+    }
+
     if (pActor->atDestination)
     {
       // Handle Survival
