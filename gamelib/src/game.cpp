@@ -1041,8 +1041,6 @@ void update_fireActor()
 {
   constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_fire };
 
-  // TODO: only start fire at night, extinguish fire when the day starts (fire should propably keep it's wood resources)
-
   for (const auto _actor : _FireActors)
   {
     fire_actor *pFireActor = _actor.pItem;
@@ -1053,8 +1051,12 @@ void update_fireActor()
       if (pFireActor->state == faS_extinguish_fire)
       {
         pFireActor->state = faS_start_fire;
-        pActor->target = target_from_state[faS_start_fire];
-        pActor->atDestination = false;
+
+        if (!pActor->survivalActorActive)
+        {
+          pActor->target = target_from_state[faS_start_fire];
+          pActor->atDestination = false;
+        }
       }
     }
     else
@@ -1062,8 +1064,12 @@ void update_fireActor()
       if (pFireActor->state == faS_start_fire)
       {
         pFireActor->state = faS_extinguish_fire;
-        pActor->target = target_from_state[faS_extinguish_fire];
-        pActor->atDestination = false;
+
+        if (!pActor->survivalActorActive)
+        {
+          pActor->target = target_from_state[faS_extinguish_fire];
+          pActor->atDestination = false;
+        }
       }
     }
 
@@ -1084,7 +1090,7 @@ void update_fireActor()
       {
       case faS_get_wood:
       {
-        constexpr int16_t AddedWood = 3;
+        constexpr int16_t AddedWood = 6;
 
         if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood)
         {
@@ -1115,7 +1121,7 @@ void update_fireActor()
           {
             if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > WoodPerFire)
             {
-              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
+              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire; // no usage of `change_tile_to` because of check above
             }
             else
             {
@@ -1146,7 +1152,7 @@ void update_fireActor()
       }
       case faS_extinguish_fire:
       {
-        if (_Game.isNight) // TODO: we should probably check outside from the if atdest/switch case if it is day or night and change the state accordingly.
+        if (_Game.isNight)
         {
           pFireActor->state = faS_start_fire;
           pActor->target = target_from_state[faS_extinguish_fire];
