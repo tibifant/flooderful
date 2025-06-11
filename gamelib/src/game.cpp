@@ -726,7 +726,6 @@ void update_lifesupportActors()
 // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
 
 // TO FIX: pathfinding towards multitypes like `meals` specififcally e.g. to add more of the resource
-// TO FIX: handling the `gameplay map` and the `pathfinding lookup` not matching because the tile's resourcetype was only changes recently
 
 //////////////////////////////////////////////////////////////////////////
 
