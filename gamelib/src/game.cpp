@@ -743,7 +743,6 @@ void update_lumberjack()
 
     if (pActor->atDestination)
     {
-      // TODO: logging!
       // Handle Survival
       if (pActor->survivalActorActive)
       {
@@ -837,6 +836,8 @@ void update_lumberjack()
       }
       }
     }
+
+    print("Lumberjack State: ", pLumberjack->state, " target: ", pActor->target, '\n');
   }
 }
 
@@ -1035,6 +1036,8 @@ void update_cook()
       }
       }
     }
+
+    print("Cook State: ", pCook->state, " target: ", pActor->target, '\n');
   }
 }
 
@@ -1175,6 +1178,8 @@ void update_fireActor()
       }
       }
     }
+
+    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, '\n');
   }
 }
 
