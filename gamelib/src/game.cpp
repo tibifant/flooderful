@@ -483,6 +483,7 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
 }
 
 static size_t r = 0;
+vec2f oldDir(0);
 
 void movementActor_move()
 {
@@ -524,6 +525,8 @@ void movementActor_move()
 
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
+
+    oldDir = _actor.pItem->direction;
   }
 }
 
@@ -837,7 +840,7 @@ void update_lumberjack()
       }
     }
 
-    print("Lumberjack State: ", pLumberjack->state, " target: ", pActor->target, '\n');
+    print("Lumberjack State: ", pLumberjack->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
   }
 }
 
@@ -1037,7 +1040,7 @@ void update_cook()
       }
     }
 
-    print("Cook State: ", pCook->state, " target: ", pActor->target, '\n');
+    print("Cook State: ", pCook->state, " target: ", pActor->target, pActor->survivalActorActive, '\n');
   }
 }
 
@@ -1179,7 +1182,7 @@ void update_fireActor()
       }
     }
 
-    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, '\n');
+    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, pActor->survivalActorActive, '\n');
   }
 }
 
