@@ -579,141 +579,144 @@ void update_lifesupportActors()
 
   for (auto _actor : _Game.lifesupportActors)
   {
-    // TODO think about actual system to nutrition and temperature usage
-    // just for testing!!!!
-
-    if (_Game.isNight)
+    if (_actor.pItem->type != eT_fire_actor)
     {
-      modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
-    }
-    else
-    {
-      for (size_t j = 0; j < nutritionTypeCount; j++)
-        modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
-    }
+      // TODO think about actual system to nutrition and temperature usage
+      // just for testing!!!!
 
-    movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
-
-    if (!pActor->survivalActorActive)
-    {
       if (_Game.isNight)
       {
-        // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold) // TODO maybe we want to weigh between food and fire instead of always prefering food
+        modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+      }
+      else
+      {
+        for (size_t j = 0; j < nutritionTypeCount; j++)
+          modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
+      }
+
+      movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
+
+      if (!pActor->survivalActorActive)
+      {
+        if (_Game.isNight)
         {
-          pActor->survivalActorActive = true;
-          pActor->target = ptT_fire;
-          pActor->atDestination = false;
+          // TODO: Add range in pathfinding and walk to nearest item with best score.
+          if (_actor.pItem->temperature < ColdThreshold) // TODO maybe we want to weigh between food and fire instead of always prefering food
+          {
+            pActor->survivalActorActive = true;
+            pActor->target = ptT_fire;
+            pActor->atDestination = false;
+          }
+        }
+        else
+        {
+          bool anyNeededNutrion = false;
+
+          for (size_t j = 0; j < nutritionTypeCount; j++)
+            if (_actor.pItem->nutritions[j] < EatingThreshold)
+              anyNeededNutrion = true;
+
+          if (anyNeededNutrion)
+          {
+            int8_t bestScore = 0;
+            size_t bestIndex = 0;
+
+            for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+            {
+              if (_actor.pItem->lunchbox[i])
+              {
+                int8_t score = 0;
+
+                for (size_t j = 0; j < nutritionTypeCount; j++)
+                  if (FoodToNutrition[i][j] > 0)
+                    score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
+
+                if (score > bestScore)
+                {
+                  bestScore = score;
+                  bestIndex = i;
+                }
+              }
+            }
+
+            // eat best item
+            if (bestScore > 0)
+            {
+              for (size_t j = 0; j < nutritionTypeCount; j++)
+                modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
+
+              // remove from lunchbox
+              modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+            }
+            else // if no item: set actor target
+            {
+              size_t lowest = MaxNutritionValue;
+              pathfinding_target_type lowestNutrient = ptT_Count;
+
+              for (size_t j = 0; j < nutritionTypeCount; j++)
+              {
+                if (_actor.pItem->nutritions[j] < lowest)
+                {
+                  lowest = _actor.pItem->nutritions[j];
+                  lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
+                }
+              }
+
+              lsAssert(lowestNutrient <= _ptT_nutrition_last);
+              pActor->survivalActorActive = true;
+              pActor->target = lowestNutrient;
+              pActor->atDestination = false;
+            }
+          }
         }
       }
       else
       {
-        bool anyNeededNutrion = false;
-
-        for (size_t j = 0; j < nutritionTypeCount; j++)
-          if (_actor.pItem->nutritions[j] < EatingThreshold)
-            anyNeededNutrion = true;
-
-        if (anyNeededNutrion)
+        if (pActor->atDestination)
         {
-          int8_t bestScore = 0;
-          size_t bestIndex = 0;
+          const size_t worldIdx = worldPosToTileIndex(pActor->pos);
 
-          for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+          if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
           {
-            if (_actor.pItem->lunchbox[i])
+            // add food to lunchbox
+            if (_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last)
             {
-              int8_t score = 0;
-
-              for (size_t j = 0; j < nutritionTypeCount; j++)
-                if (FoodToNutrition[i][j] > 0)
-                  score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
-
-              if (score > bestScore)
+              if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
               {
-                bestScore = score;
-                bestIndex = i;
+                const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+                lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
+                modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+
+                modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
+
+                if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
+                  _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass; // no `change_tile_to` usage because we check earlier
               }
             }
-          }
-
-          // eat best item
-          if (bestScore > 0)
-          {
-            for (size_t j = 0; j < nutritionTypeCount; j++)
-              modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
-
-            // remove from lunchbox
-            modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
-          }
-          else // if no item: set actor target
-          {
-            size_t lowest = MaxNutritionValue;
-            pathfinding_target_type lowestNutrient = ptT_Count;
-
-            for (size_t j = 0; j < nutritionTypeCount; j++)
+            else
             {
-              if (_actor.pItem->nutritions[j] < lowest)
-              {
-                lowest = _actor.pItem->nutritions[j];
-                lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
-              }
+              pActor->atDestination = false;
             }
-
-            lsAssert(lowestNutrient <= _ptT_nutrition_last);
-            pActor->survivalActorActive = true;
-            pActor->target = lowestNutrient;
-            pActor->atDestination = false;
           }
-        }
-      }
-    }
-    else
-    {
-      if (pActor->atDestination)
-      {
-        const size_t worldIdx = worldPosToTileIndex(pActor->pos);
-
-        if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
-        {
-          // add food to lunchbox
-          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last)
+          else if (pActor->target == ptT_fire)
           {
-            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+            // warm up at fire
+            if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
             {
-              const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
-              lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
-              modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+              if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
+                modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
-              modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
+              // for testing: remove from fire & remove fire when empty
+              lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
+              _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
 
               if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
-                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass; // no `change_tile_to` usage because we check earlier
+                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
             }
-          }
-          else
-          {
-            pActor->atDestination = false;
-          }
-        }
-        else if (pActor->target == ptT_fire)
-        {
-          // warm up at fire
-          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
-          {
-            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
-              modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
-
-            // for testing: remove from fire & remove fire when empty
-            lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
-            _Game.levelInfo.pGameplayMap[worldIdx].ressourceCount--;
-
-            if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount == 0)
-              _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
-          }
-          else
-          {
-            pActor->atDestination = false;
+            else
+            {
+              pActor->atDestination = false;
+            }
           }
         }
       }
@@ -741,17 +744,20 @@ void update_lumberjack()
     lumberjack_actor *pLumberjack = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pLumberjack->index);
 
-    if (pActor->atDestination)
+    // Handle Survival
+    if (pActor->survivalActorActive)
     {
-      // Handle Survival
-      if (pActor->survivalActorActive)
+      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
         pActor->target = target_from_state[pLumberjack->state];
         pActor->atDestination = false;
         continue;
       }
+    }
 
+    if (pActor->atDestination)
+    {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
       switch (pLumberjack->state)
@@ -862,7 +868,7 @@ void update_cook()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination)
+      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
         pCook->state = caS_check_inventory;
