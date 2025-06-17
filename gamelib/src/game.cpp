@@ -526,6 +526,9 @@ void movementActor_move()
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
 
+    if (_actor.pItem->direction != oldDir)
+      print("old dir x: ", oldDir.x, ", y: ", oldDir.y, " - new dir x: ", _actor.pItem->direction.x, ", y: ", _actor.pItem->direction.y, '\n');
+
     oldDir = _actor.pItem->direction;
   }
 }
