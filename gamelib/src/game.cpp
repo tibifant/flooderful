@@ -868,6 +868,8 @@ void update_cook()
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
+    print("Cook State: ", pCook->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
+
     // Handle Survival
     if (pActor->survivalActorActive)
     {
@@ -905,12 +907,16 @@ void update_cook()
               pCook->state = caS_plant;
               pActor->target = ptT_soil;
               pActor->atDestination = false;
+
+              break;
             }
             else
             {
               pCook->state = caS_harvest;
               pActor->target = targetPlant;
               pActor->atDestination = false;
+
+              break;
             }
           }
 
@@ -1045,8 +1051,6 @@ void update_cook()
       }
       }
     }
-
-    print("Cook State: ", pCook->state, " target: ", pActor->target, '\n');
   }
 }
 
@@ -1060,6 +1064,19 @@ void update_fireActor()
   {
     fire_actor *pFireActor = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pFireActor->index);
+
+    // Handle Survival
+    if (pActor->survivalActorActive)
+    {
+      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
+      {
+        pActor->survivalActorActive = false;
+        pActor->target = target_from_state[pFireActor->state];
+        pActor->atDestination = false;
+
+        continue;
+      }
+    }
 
     if (_Game.isNight)
     {
@@ -1090,16 +1107,6 @@ void update_fireActor()
 
     if (pActor->atDestination)
     {
-      // Handle Survival
-      if (pActor->survivalActorActive)
-      {
-        pActor->survivalActorActive = false;
-        pActor->target = target_from_state[pFireActor->state];
-        pActor->atDestination = false;
-
-        continue;
-      }
-
       const size_t posIdx = worldPosToTileIndex(pActor->pos);
       switch (_actor.pItem->state)
       {
@@ -1188,7 +1195,7 @@ void update_fireActor()
       }
     }
 
-    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, '\n');
+    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
   }
 }
 
