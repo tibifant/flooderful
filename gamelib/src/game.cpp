@@ -483,6 +483,7 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
 }
 
 static size_t r = 0;
+vec2f oldDir = vec2f(0, 0);
 
 void movementActor_move()
 {
@@ -524,6 +525,11 @@ void movementActor_move()
 
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
+
+    if (oldDir != _actor.pItem->direction)
+      print("old dir x: ", oldDir.x, ", y: ", oldDir.y, " - new dir x: ", _actor.pItem->direction.x, ", y: ", _actor.pItem->direction.y, '\n');
+
+    oldDir = _actor.pItem->direction;
   }
 }
 
