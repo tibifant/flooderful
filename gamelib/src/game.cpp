@@ -299,7 +299,7 @@ lsResult spawnActors()
   {
     movement_actor foodActor;
     foodActor.target = _ptT_nutrition_first;
-    foodActor.pos = vec2f(10.f, 10.f);
+    foodActor.pos = vec2f(12.f, 10.f);
 
     size_t f_index;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
@@ -500,11 +500,14 @@ void movementActor_move()
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     const direction currentTileDirectionType = _Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
 
+    lsAssert(currentTileIdx != 0);
+
     if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
+        //_actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
+        _actor.pItem->direction = vec2f(-1.0) * _actor.pItem->direction;
       }
       else if (currentTileDirectionType == d_atDestination)
       {
@@ -869,6 +872,12 @@ void update_cook()
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
 
     print("Cook State: ", pCook->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
+
+    if (pActor->pos.x < 0 || pActor->pos.y < 0)
+    {
+      print("!!!!!!!!!!!!!!!");
+      lsAssert(false);
+    }
 
     // Handle Survival
     if (pActor->survivalActorActive)
