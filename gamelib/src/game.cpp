@@ -509,9 +509,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        const vec2f lastPos = tileIndexToWorldPos(_actor.pItem->lastTickTileIdx);
-        const vec2f diff = lastPos - _actor.pItem->pos;
-        _actor.pItem->direction = (diff).Normalize();
+        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
       }
       else if (currentTileDirectionType == d_atDestination)
       {
