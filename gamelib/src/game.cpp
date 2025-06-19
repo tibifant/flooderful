@@ -502,12 +502,16 @@ void movementActor_move()
 
     lsAssert(currentTileIdx != 0);
 
-    if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
+    if (currentTileDirectionType == d_unreachable)
+      continue;
+
+    if (currentTileIdx != _actor.pItem->lastTickTileIdx)
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        //_actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
-        _actor.pItem->direction = vec2f(-1.0) * _actor.pItem->direction;
+        const vec2f lastPos = tileIndexToWorldPos(_actor.pItem->lastTickTileIdx);
+        const vec2f diff = lastPos - _actor.pItem->pos;
+        _actor.pItem->direction = (diff).Normalize();
       }
       else if (currentTileDirectionType == d_atDestination)
       {
@@ -608,7 +612,7 @@ void update_lifesupportActors()
       if (_Game.isNight)
       {
         // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold) // TODO maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
