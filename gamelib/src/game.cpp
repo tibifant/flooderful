@@ -483,7 +483,6 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
 }
 
 static size_t r = 0;
-vec2f oldDir = vec2f(0, 0);
 
 void movementActor_move()
 {
@@ -495,21 +494,25 @@ void movementActor_move()
 
     // Reset lastTile every so often to handle map changes.
     if ((_actor.index & 63) == r)
-      _actor.pItem->lastTickTileIdx = 0;
+      _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     const direction currentTileDirectionType = _Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
 
     lsAssert(currentTileIdx != 0);
 
-    if (currentTileDirectionType == d_unreachable)
-      continue;
+    //if (currentTileDirectionType == d_unreachable)
+      //continue;
 
-    if (currentTileIdx != _actor.pItem->lastTickTileIdx)
+    if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
+        const vec2f lastPos = tileIndexToWorldPos(_actor.pItem->lastTickTileIdx);
+        print("i: ", _actor.index, "-----\npos: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, " last pos: ", lastPos.x, "|", lastPos.y, " i: ", _actor.pItem->lastTickTileIdx, '\n');
+        print("current dir: ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
+        _actor.pItem->direction = (lastPos - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
+        print("new dir    : ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
       }
       else if (currentTileDirectionType == d_atDestination)
       {
@@ -530,11 +533,6 @@ void movementActor_move()
 
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
-
-    if (oldDir != _actor.pItem->direction)
-      print("old dir x: ", oldDir.x, ", y: ", oldDir.y, " - new dir x: ", _actor.pItem->direction.x, ", y: ", _actor.pItem->direction.y, '\n');
-
-    oldDir = _actor.pItem->direction;
   }
 }
 
@@ -610,7 +608,7 @@ void update_lifesupportActors()
       if (_Game.isNight)
       {
         // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold) //&& _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -850,8 +848,6 @@ void update_lumberjack()
       }
       }
     }
-
-    print("Lumberjack State: ", pLumberjack->state, " target: ", pActor->target, '\n');
   }
 }
 
@@ -872,8 +868,6 @@ void update_cook()
   {
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
-
-    print("Cook State: ", pCook->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
 
     if (pActor->pos.x < 0 || pActor->pos.y < 0)
     {
@@ -1205,8 +1199,6 @@ void update_fireActor()
       }
       }
     }
-
-    print("Fire Actor State: ", pFireActor->state, " target: ", pActor->target, " survival actor active: ", pActor->survivalActorActive, '\n');
   }
 }
 
