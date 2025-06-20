@@ -499,20 +499,17 @@ void movementActor_move()
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     const direction currentTileDirectionType = _Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
 
-    lsAssert(currentTileIdx != 0);
+    lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    lsAssert(_actor.pItem->pos.x > 0 && _actor.pItem->pos.x < _Game.levelInfo.map_size.x && _actor.pItem->pos.y > 0 && _actor.pItem->pos.y < _Game.levelInfo.map_size.y);
 
-    //if (currentTileDirectionType == d_unreachable)
-      //continue;
+    if (currentTileDirectionType == d_unreachable)
+      continue;
 
-    if (currentTileIdx != _actor.pItem->lastTickTileIdx && currentTileDirectionType != d_unreachable)
+    if (currentTileIdx != _actor.pItem->lastTickTileIdx)
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        const vec2f lastPos = tileIndexToWorldPos(_actor.pItem->lastTickTileIdx);
-        print("i: ", _actor.index, "-----\npos: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, " last pos: ", lastPos.x, "|", lastPos.y, " i: ", _actor.pItem->lastTickTileIdx, '\n');
-        print("current dir: ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
-        _actor.pItem->direction = (lastPos - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
-        print("new dir    : ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
+        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
       }
       else if (currentTileDirectionType == d_atDestination)
       {
@@ -608,7 +605,7 @@ void update_lifesupportActors()
       if (_Game.isNight)
       {
         // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold) //&& _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
