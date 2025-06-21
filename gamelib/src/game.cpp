@@ -490,8 +490,6 @@ void movementActor_move()
 
   for (auto _actor : _Game.movementActors)
   {
-    //const size_t lastTileIdx = _actor.pItem->lastTickTileIdx;
-
     // Reset lastTile every so often to handle map changes.
     if ((_actor.index & 63) == r)
       _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
@@ -509,7 +507,7 @@ void movementActor_move()
     {
       if (currentTileDirectionType == d_unfillable)
       {
-        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize(); // todo: fix not being able to walk out of the map lol
+        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
       }
       else if (currentTileDirectionType == d_atDestination)
       {
@@ -551,17 +549,13 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType)
   {
-    // what free assert did coc talk about?
+    // TODO what free assert did coc talk about?
     _Game.levelInfo.pGameplayMap[tileIdx].tileType = targetType;
     return true;
   }
 
   return false;
 }
-
-// TODO: add ifs to every action that relies on the tile being a specific tileType
-// TODO: handle setting actor.atDest to false, when if was false, so it won't be falsely true once the pathfindignLookUp updates and he walks somewhere else.
-// TODO use change_tile func and ask coc about the assert - i guess coc is talking about the assert, that the tile is what we axpected, but that would definetifly still get triggered as I can't resolve the underlying issue.
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -595,7 +589,7 @@ void update_lifesupportActors()
     else
     {
       for (size_t j = 0; j < nutritionTypeCount; j++)
-        modify_with_clamp(_actor.pItem->nutritions[j], (int64_t)-1, (uint8_t)0, MaxNutritionValue);
+        modify_with_clamp(_actor.pItem->nutritions[j], (int16_t)-1, (uint8_t)0, MaxNutritionValue);
     }
 
     movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
@@ -605,7 +599,7 @@ void update_lifesupportActors()
       if (_Game.isNight)
       {
         // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor) // TODO maybe we want to weigh between food and fire instead of always prefering food
+        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor)
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -733,8 +727,6 @@ void update_lifesupportActors()
 
 // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
 // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
-
-// TO FIX: pathfinding towards multitypes like `meals` specififcally e.g. to add more of the resource
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -865,12 +857,6 @@ void update_cook()
   {
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
-
-    if (pActor->pos.x < 0 || pActor->pos.y < 0)
-    {
-      print("!!!!!!!!!!!!!!!");
-      lsAssert(false);
-    }
 
     // Handle Survival
     if (pActor->survivalActorActive)
