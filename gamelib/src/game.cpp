@@ -338,6 +338,7 @@ lsResult spawnActors()
     fire_actor fireActor;
     fireActor.state = faS_start_fire;
     fireActor.wood_inventory = 0;
+    fireActor.water_inventory = 0;
 
     fireActor.index = f_index;
 
@@ -627,7 +628,7 @@ void update_lifesupportActors()
 
               for (size_t j = 0; j < nutritionTypeCount; j++)
                 if (FoodToNutrition[i][j] > 0)
-                  score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1; // TODO: consider range here?
+                  score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1;
 
               if (score > bestScore)
               {
@@ -650,10 +651,11 @@ void update_lifesupportActors()
           {
             size_t lowest = MaxNutritionValue;
             pathfinding_target_type lowestNutrient = ptT_Count;
+            // TODO: consider dist here.
 
             for (size_t j = 0; j < nutritionTypeCount; j++)
             {
-              if (_actor.pItem->nutritions[j] < lowest)
+              if (_actor.pItem->nutritions[j] < lowest) // if lowest beyond some threshold go there for sure, else: if dist to another target is way closer: chose the other target. so basically also a score?
               {
                 lowest = _actor.pItem->nutritions[j];
                 lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
@@ -1046,7 +1048,7 @@ void update_cook()
 
 void update_fireActor()
 {
-  constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_fire };
+  constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_water, ptT_fire };
 
   for (const auto _actor : _FireActors)
   {
@@ -1160,8 +1162,30 @@ void update_fireActor()
 
         break;
       }
+      case faS_get_water:
+      {
+        constexpr int16_t AddedWater = 4;
+
+        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_water)
+        {
+          if (_Game.levelInfo.pGameplayMap[posIdx].ressourceCount > 0)
+          {
+            modify_with_clamp(pFireActor->water_inventory, lsMin(AddedWater, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].ressourceCount));
+            //modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].ressourceCount, -AddedWater);
+
+            pFireActor->state = faS_extinguish_fire;
+            pActor->target = target_from_state[faS_extinguish_fire];
+          }
+        }
+
+        pActor->atDestination = false;
+
+        break;
+      }
       case faS_extinguish_fire:
       {
+        constexpr int16_t WaterPerFire = 1;
+
         if (_Game.isNight)
         {
           pFireActor->state = faS_start_fire;
@@ -1169,7 +1193,15 @@ void update_fireActor()
         }
         else
         {
-          change_tile_to(tT_fire_pit, tT_fire, posIdx);
+          if (pFireActor->water_inventory >= WaterPerFire)
+          {
+            change_tile_to(tT_fire_pit, tT_fire, posIdx);
+          }
+          else
+          {
+            pFireActor->state = faS_get_water;
+            pActor->target = target_from_state[faS_get_water];
+          }
         }
 
         pActor->atDestination = false;

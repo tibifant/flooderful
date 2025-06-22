@@ -267,6 +267,7 @@ enum fire_actor_state
 {
   faS_get_wood,
   faS_start_fire,
+  faS_get_water,
   faS_extinguish_fire,
 
   faS_count
@@ -277,6 +278,7 @@ struct fire_actor
   fire_actor_state state;
   size_t index;
   uint8_t wood_inventory;
+  uint8_t water_inventory;
 };
 
 //////////////////////////////////////////////////////////////////////////
