@@ -998,7 +998,7 @@ void update_cook()
 
       case caS_cook:
       {
-        constexpr uint8_t AddedCookedItemAmount = 64;
+        constexpr uint8_t AddedCookedItemAmount = 8;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
         {
