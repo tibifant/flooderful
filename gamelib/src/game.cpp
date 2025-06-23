@@ -208,6 +208,8 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 
 void setTerrain()
 {
+  // TODO: Terrain Generation
+
   rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
@@ -218,7 +220,7 @@ void setTerrain()
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
-  for (size_t i = 0; i < 10; i++)
+  for (size_t i = 0; i < 20; i++)
     _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
 
   for (size_t i = 0; i < 3; i++)
@@ -566,7 +568,7 @@ void update_lifesupportActors()
   static const uint8_t EatingThreshold = 1;
   static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
-  static const int64_t FoodItemGain = 8;
+  static const int64_t FoodItemGain = 16;
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
@@ -823,7 +825,7 @@ void update_lumberjack()
       {
         if (change_tile_to(tT_wood, tT_trunk, tileIdx))
         {
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 8; // todo adapt this, but should be fine, also look after how often they go to fire
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 4; // todo adapt this, but should be fine, also look after how often they go to fire
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
@@ -998,7 +1000,7 @@ void update_cook()
 
       case caS_cook:
       {
-        constexpr uint8_t AddedCookedItemAmount = 8;
+        constexpr uint8_t AddedCookedItemAmount = 24;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
         {
