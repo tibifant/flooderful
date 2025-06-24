@@ -231,13 +231,13 @@ void setTerrain()
     _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
   }
 
-  for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
-  {
-    const size_t index = i + 5;
-    _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
-    _Game.levelInfo.pGameplayMap[index].ressourceCount = 64;
-    _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
-  }
+  //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
+  //{
+  //  const size_t index = i + 5;
+  //  _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
+  //  _Game.levelInfo.pGameplayMap[index].ressourceCount = 64;
+  //  _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
+  //}
 
   //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
   //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
@@ -665,9 +665,15 @@ void update_lifesupportActors()
             }
 
             lsAssert(lowestNutrient <= _ptT_nutrition_last);
-            pActor->survivalActorActive = true;
-            pActor->target = lowestNutrient;
-            pActor->atDestination = false;
+
+            const size_t lookUpIndex = 1 - _Game.levelInfo.resources[lowestNutrient].write_direction_idx;
+
+            if (_actor.pItem->type == eT_cook && _Game.levelInfo.resources[lowestNutrient].pDirectionLookup[lookUpIndex][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+              continue;
+
+              pActor->survivalActorActive = true;
+              pActor->target = lowestNutrient;
+              pActor->atDestination = false;
           }
         }
       }
@@ -892,9 +898,12 @@ void update_cook()
           const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
           pCook->searchingPlant = targetPlant;
 
-          if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir != d_unfillable)
+          const size_t targetPlantLookUpIdx = 1 - _Game.levelInfo.resources[targetPlant].write_direction_idx;
+          const direction targetPlantDir = _Game.levelInfo.resources[targetPlant].pDirectionLookup[targetPlantLookUpIdx][worldPosToTileIndex(pActor->pos)].dir;
+
+          if (targetPlantDir != d_unfillable)
           {
-            if (_Game.levelInfo.resources[targetPlant].pDirectionLookup[1 - _Game.levelInfo.resources[targetPlant].write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            if (targetPlantDir == d_unreachable)
             {
               pCook->state = caS_plant;
               pActor->target = ptT_soil;
@@ -920,11 +929,26 @@ void update_cook()
       if (!anyItemMissing)
       {
         pCook->state = caS_cook;
+        pathfinding_target_type targetNutrient = ptT_Count;
 
         // take any item as target to drop of the food
         for (size_t i = 0; i < LS_ARRAYSIZE(IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first]); i++)
+        {
           if (IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i])
-            pActor->target = (pathfinding_target_type)(i + _ptT_nutrition_first);
+          {
+            targetNutrient = (pathfinding_target_type)(i + _ptT_nutrition_first);
+            break;
+          }
+        }
+
+        lsAssert(targetNutrient != ptT_Count);
+
+        const size_t lookUpIdx = 1 - _Game.levelInfo.resources[targetNutrient].write_direction_idx;
+        
+        if (_Game.levelInfo.resources[targetNutrient].pDirectionLookup[lookUpIdx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+          pActor->target = ptT_grass;
+        else
+          pActor->target = targetNutrient;
 
         pActor->atDestination = false;
       }
@@ -1060,7 +1084,7 @@ void update_fireActor()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
+      if (pActor->atDestination || _Game.isNight)
       {
         pActor->survivalActorActive = false;
         pActor->target = target_from_state[pFireActor->state];
