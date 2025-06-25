@@ -498,7 +498,8 @@ void movementActor_move()
       _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
-    const direction currentTileDirectionType = _Game.levelInfo.resources[_actor.pItem->target].pDirectionLookup[1 - _Game.levelInfo.resources[_actor.pItem->target].write_direction_idx][currentTileIdx].dir;
+    const level_info::resource_info &info = _Game.levelInfo.resources[_actor.pItem->target];
+    const direction currentTileDirectionType = info.pDirectionLookup[1 - info.write_direction_idx][currentTileIdx].dir;
 
     lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
     lsAssert(_actor.pItem->pos.x > 0 && _actor.pItem->pos.x < _Game.levelInfo.map_size.x && _actor.pItem->pos.y > 0 && _actor.pItem->pos.y < _Game.levelInfo.map_size.y);
@@ -666,9 +667,8 @@ void update_lifesupportActors()
 
             lsAssert(lowestNutrient <= _ptT_nutrition_last);
 
-            const size_t lookUpIndex = 1 - _Game.levelInfo.resources[lowestNutrient].write_direction_idx;
-
-            if (_actor.pItem->type == eT_cook && _Game.levelInfo.resources[lowestNutrient].pDirectionLookup[lookUpIndex][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
+            if (_actor.pItem->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
               continue;
 
               pActor->survivalActorActive = true;
@@ -898,8 +898,8 @@ void update_cook()
           const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
           pCook->searchingPlant = targetPlant;
 
-          const size_t targetPlantLookUpIdx = 1 - _Game.levelInfo.resources[targetPlant].write_direction_idx;
-          const direction targetPlantDir = _Game.levelInfo.resources[targetPlant].pDirectionLookup[targetPlantLookUpIdx][worldPosToTileIndex(pActor->pos)].dir;
+          const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
+          const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
 
           if (targetPlantDir != d_unfillable)
           {
@@ -943,9 +943,8 @@ void update_cook()
 
         lsAssert(targetNutrient != ptT_Count);
 
-        const size_t lookUpIdx = 1 - _Game.levelInfo.resources[targetNutrient].write_direction_idx;
-        
-        if (_Game.levelInfo.resources[targetNutrient].pDirectionLookup[lookUpIdx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+        const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];        
+        if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
           pActor->target = ptT_grass;
         else
           pActor->target = targetNutrient;
@@ -960,7 +959,8 @@ void update_cook()
     if (pActor->atDestination)
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-      lsAssert(_Game.levelInfo.resources[pActor->target].pDirectionLookup[1 - _Game.levelInfo.resources[pActor->target].write_direction_idx][tileIdx].dir == d_atDestination);
+      const level_info::resource_info &info = _Game.levelInfo.resources[pActor->target];
+      lsAssert(info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_atDestination);
 
       switch (pCook->state)
       {
