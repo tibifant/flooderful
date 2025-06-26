@@ -49,20 +49,6 @@ lsResult gameView_init(_Out_ lsAppView **ppView, lsAppState *pAppState)
   *ppView = pView;
 
   LS_ERROR_CHECK(game_init());
-  // added players here
-
-  //while (pView->game.entities.count == 0)
-  //{
-  //  LS_ERROR_CHECK(game_observe(&pView->game));
-  //  Sleep(1);
-  //}
-
-  //size_t playerEntityIndex; // is identical to the game object index.
-  //gameObject *pGameObject = pool_get(&pView->game.gameObjects, playerEntityIndex);
-
-  //pView->lookAtPos = pGameObject->position;
-  //pView->lookAtRotation = pGameObject->rotation;
-  //pView->lookAtDistance = 35.f;
 
   pView->pGame = game_getGame();
 
@@ -85,14 +71,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   render_startFrame(pAppState);
 
-
   LS_ERROR_CHECK(game_tick());
-
-  // Handle Camera.
-
-  // Handle Particles.
-
-  // Update events.
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_LEFT))
     game_setPlayerMapIndex(true);
@@ -131,8 +110,6 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   }
 
   render_endFrame(pAppState);
-
-  // Draw UI
 
 epilogue:
   return result;
