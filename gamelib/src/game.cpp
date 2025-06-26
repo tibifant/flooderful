@@ -565,7 +565,6 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 void update_lifesupportActors()
 {
-  // TODO: ADAPT VALUES TO MAKE SENSE! --> !!!! also food actor food drop rate
   static const uint8_t EatingThreshold = 1;
   static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
@@ -583,27 +582,27 @@ void update_lifesupportActors()
 
   for (auto _actor : _Game.lifesupportActors)
   {
+    lifesupport_actor *pLifeSupport = _actor.pItem;
+
     // TODO think about actual system to nutrition and temperature usage
     // just for testing!!!!
-
     if (_Game.isNight)
     {
-      modify_with_clamp(_actor.pItem->temperature, (int16_t)(-1));
+      modify_with_clamp(pLifeSupport->temperature, (int16_t)(-1));
     }
     else
     {
       for (size_t j = 0; j < nutritionTypeCount; j++)
-        modify_with_clamp(_actor.pItem->nutritions[j], (int16_t)-1, (uint8_t)0, MaxNutritionValue);
+        modify_with_clamp(pLifeSupport->nutritions[j], (int16_t)-1, (uint8_t)0, MaxNutritionValue);
     }
 
-    movement_actor *pActor = pool_get(_Game.movementActors, _actor.pItem->entityIndex);
+    movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
 
     if (!pActor->survivalActorActive)
     {
       if (_Game.isNight)
       {
-        // TODO: Add range in pathfinding and walk to nearest item with best score.
-        if (_actor.pItem->temperature < ColdThreshold && _actor.pItem->type != eT_fire_actor)
+        if (pLifeSupport->type != eT_fire_actor && pLifeSupport->temperature < ColdThreshold)
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -615,7 +614,7 @@ void update_lifesupportActors()
         bool anyNeededNutrion = false;
 
         for (size_t j = 0; j < nutritionTypeCount; j++)
-          if (_actor.pItem->nutritions[j] < EatingThreshold)
+          if (pLifeSupport->nutritions[j] < EatingThreshold)
             anyNeededNutrion = true;
 
         if (anyNeededNutrion)
@@ -623,15 +622,15 @@ void update_lifesupportActors()
           int8_t bestScore = 0;
           size_t bestIndex = 0;
 
-          for (size_t i = 0; i < LS_ARRAYSIZE(_actor.pItem->lunchbox); i++)
+          for (size_t i = 0; i < LS_ARRAYSIZE(pLifeSupport->lunchbox); i++)
           {
-            if (_actor.pItem->lunchbox[i])
+            if (pLifeSupport->lunchbox[i])
             {
               int8_t score = 0;
 
               for (size_t j = 0; j < nutritionTypeCount; j++)
                 if (FoodToNutrition[i][j] > 0)
-                  score += _actor.pItem->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1;
+                  score += pLifeSupport->nutritions[j] < AppetiteThreshold ? nutritionTypeCount : -1;
 
               if (score > bestScore)
               {
@@ -645,10 +644,10 @@ void update_lifesupportActors()
           if (bestScore > 0)
           {
             for (size_t j = 0; j < nutritionTypeCount; j++)
-              modify_with_clamp(_actor.pItem->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
+              modify_with_clamp(pLifeSupport->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
 
             // remove from lunchbox
-            modify_with_clamp(_actor.pItem->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+            modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
           }
           else // if no item: set actor target
           {
@@ -658,9 +657,9 @@ void update_lifesupportActors()
 
             for (size_t j = 0; j < nutritionTypeCount; j++)
             {
-              if (_actor.pItem->nutritions[j] < lowest) // if lowest beyond some threshold go there for sure, else: if dist to another target is way closer: chose the other target. so basically also a score?
+              if (pLifeSupport->nutritions[j] < lowest) // if lowest beyond some threshold go there for sure, else: if dist to another target is way closer: chose the other target. so basically also a score?
               {
-                lowest = _actor.pItem->nutritions[j];
+                lowest = pLifeSupport->nutritions[j];
                 lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
               }
             }
@@ -668,7 +667,7 @@ void update_lifesupportActors()
             lsAssert(lowestNutrient <= _ptT_nutrition_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
-            if (_actor.pItem->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
               continue;
 
               pActor->survivalActorActive = true;
@@ -693,7 +692,7 @@ void update_lifesupportActors()
             {
               const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
               lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
-              modify_with_clamp(_actor.pItem->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
+              modify_with_clamp(pLifeSupport->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
               modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount, -FoodItemGain);
 
@@ -712,7 +711,7 @@ void update_lifesupportActors()
           if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
           {
             if (_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0)
-              modify_with_clamp(_actor.pItem->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
+              modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
             // for testing: remove from fire & remove fire when empty
             lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].ressourceCount > 0);
@@ -732,8 +731,6 @@ void update_lifesupportActors()
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-// Can we achieve actors going to a target further away, as long as the nearest target is, full/empty/whatever? I don't know how, besides from adding loads of tile types, or maybe flags for full types, and then more direction lookups (one for all the empty once, one for the full once). As there will also be actors who would want to go to full ones.
 
 // currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
 // how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
@@ -787,11 +784,6 @@ void update_lumberjack()
 
           pLumberjack->hasItem = true;
           pLumberjack->item = tT_water;
-
-          //if (_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount == 0)
-            //_Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_sand;
-
-          //_Game.levelInfo.pGameplayMap[tileIdx].ressourceCount--; // no check because the water will be set to sand once the count is 0
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];
