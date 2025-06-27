@@ -563,6 +563,8 @@ void update_lifesupportActors()
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
+  static const uint8_t MinimumNutritionThreshold = 10;
+
   static const uint8_t ColdThreshold = 10;
   static const int64_t TemperatureIncrease = 255;
   static const uint8_t MaxTemperature = 255;
@@ -642,16 +644,24 @@ void update_lifesupportActors()
           }
           else // if no item: set actor target
           {
-            size_t lowest = MaxNutritionValue;
             pathfinding_target_type lowestNutrient = ptT_Count;
             // TODO: consider dist here.
 
+            int16_t bestScore = 0;
+
             for (size_t j = 0; j < nutritionTypeCount; j++)
             {
-              if (pLifeSupport->nutritions[j] < lowest) // if lowest beyond some threshold go there for sure, else: if dist to another target is way closer: chose the other target. so basically also a score?
+              const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
+
+              const uint8_t value = pLifeSupport->nutritions[j];
+              const int16_t maxDist = _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y;
+              const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
+              const int16_t dist = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dist;
+              int8_t score = value < MinimumNutritionThreshold ? lsMaxValue<int16_t>() : (MaxNutritionValue - value) + maxDist - dist;
+              if (score > bestScore) // if lowest beyond some threshold go there for sure, else: if dist to another target is way closer: chose the other target. so basically also a score?
               {
-                lowest = pLifeSupport->nutritions[j];
-                lowestNutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
+                bestScore = score;
+                lowestNutrient = nutrient;
               }
             }
 
