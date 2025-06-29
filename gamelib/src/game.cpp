@@ -201,11 +201,15 @@ void setTerrain()
 {
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
+    _Game.levelInfo.pGameplayMap[i].tileType = tT_grass;
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = 1;
   }
 
-  const size_t middle = _Game.levelInfo.map_size.y * 0.5 * _Game.levelInfo.map_size.x + _Game.levelInfo.map_size.x * 0.5;
-
+  const size_t middleIdx = 136;
+  _Game.levelInfo.pGameplayMap[middleIdx + 3].tileType = tT_bean;
+  _Game.levelInfo.pGameplayMap[middleIdx + 3].ressourceCount = 64;
+  _Game.levelInfo.pGameplayMap[middleIdx - 5].tileType = tT_tomato;
+  _Game.levelInfo.pGameplayMap[middleIdx - 5].ressourceCount = 64;
 
   // TODO: Terrain Generation
 
@@ -286,7 +290,7 @@ lsResult spawnActors()
     ls_actor.temperature = 255;
 
     for (size_t i = 0; i < LS_ARRAYSIZE(ls_actor.nutritions); i++)
-      ls_actor.nutritions[i] = 100;
+      ls_actor.nutritions[i] = 9;
 
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
 
@@ -593,14 +597,14 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 void update_lifesupportActors()
 {
-  static const uint8_t EatingThreshold = 1;
-  static const uint8_t AppetiteThreshold = 10;
+  static const uint8_t EatingThreshold = 10;//1;
+  static const uint8_t AppetiteThreshold = 40;//10;
   static const uint8_t MaxNutritionValue = 255;
   static const int64_t FoodItemGain = 16;
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
 
-  static const uint8_t MinimumNutritionThreshold = 10;
+  static const uint8_t MinimumNutritionThreshold = 5; //
 
   static const uint8_t ColdThreshold = 10;
   static const int64_t TemperatureIncrease = 255;
@@ -682,7 +686,6 @@ void update_lifesupportActors()
           else // if no item: set actor target
           {
             pathfinding_target_type lowestNutrient = ptT_Count;
-            // TODO: consider dist here.
 
             int64_t bestTargetScore = 0;
 

@@ -99,9 +99,9 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
     // rendered objects
     if (pView->pGame->isNight)
-      render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 2)->target, vec4f(0.6f, 0.6f, 0.8f, 0));
+      render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 0)->target, vec4f(0.6f, 0.6f, 0.8f, 0));
     else
-      render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 2)->target, vec4f(1.f, 1.f, 1.f, 0));
+      render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 0)->target, vec4f(1.f, 1.f, 1.f, 0));
 
     for (const auto &&_actor : pView->pGame->movementActors)
       render_drawActor(*_actor.pItem, _actor.index);
