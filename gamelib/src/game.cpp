@@ -597,14 +597,12 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 void update_lifesupportActors()
 {
-  static const uint8_t EatingThreshold = 10;//1;
-  static const uint8_t AppetiteThreshold = 40;//10;
+  static const uint8_t EatingThreshold = 1;
+  static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
   static const int64_t FoodItemGain = 16;
   static const uint8_t MaxFoodItemCount = 255;
   static const uint8_t MinFoodItemCount = 0;
-
-  static const uint8_t MinimumNutritionThreshold = 5; //
 
   static const uint8_t ColdThreshold = 10;
   static const int64_t TemperatureIncrease = 255;
@@ -632,7 +630,7 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
 
-    if (!pActor->survivalActorActive)
+    if (!pActor->survivalActorActive) // TODO: maybe look into the actor being stuck with an unreachable target when there's other nutrients around?
     {
       if (_Game.isNight)
       {
@@ -687,34 +685,41 @@ void update_lifesupportActors()
           {
             pathfinding_target_type lowestNutrient = ptT_Count;
 
-            int64_t bestTargetScore = 0;
+            int64_t bestTargetScore = -1;
+            const int64_t maxDist = (int64_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
             for (size_t j = 0; j < nutritionTypeCount; j++)
             {
               const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
 
               const uint8_t value = pLifeSupport->nutritions[j];
-              const int64_t maxDist = (int64_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-              const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
-              const int64_t dist = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dist;
-              int64_t score = value < MinimumNutritionThreshold ? lsMaxValue<int16_t>() : (MaxNutritionValue - value) + maxDist - dist;
+              int64_t score = 0; // TODO! what's happening? why is this 0 when don't skip everything below when unreachable???
 
-              if (score > bestTargetScore) // TODO: test this!
+              const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
+              const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)];
+
+              if (pathInfo.dir != d_unreachable)
+                score = value < EatingThreshold ? lsMaxValue<int16_t>() : (MaxNutritionValue - value) + maxDist - pathInfo.dist;
+
+              if (score > bestTargetScore)
               {
                 bestTargetScore = score;
                 lowestNutrient = nutrient;
               }
             }
 
-            lsAssert(lowestNutrient <= _ptT_nutrition_last);
+            if (bestTargetScore > 0)
+            {
+              lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
 
-            const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
-            if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
-              continue;
+              const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
+              if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+                continue;
 
               pActor->survivalActorActive = true;
               pActor->target = lowestNutrient;
               pActor->atDestination = false;
+            }
           }
         }
       }
@@ -977,7 +982,7 @@ void update_cook()
 
         lsAssert(targetNutrient != ptT_Count);
 
-        const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];        
+        const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];
         if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
           pActor->target = ptT_grass;
         else
