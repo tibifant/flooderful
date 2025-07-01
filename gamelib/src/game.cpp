@@ -199,54 +199,42 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 
 void setTerrain()
 {
-  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-  {
-    _Game.levelInfo.pGameplayMap[i].tileType = tT_grass;
-    _Game.levelInfo.pPathfindingMap[i].elevationLevel = 1;
-  }
-
-  const size_t middleIdx = 136;
-  _Game.levelInfo.pGameplayMap[middleIdx + 3].tileType = tT_bean;
-  _Game.levelInfo.pGameplayMap[middleIdx + 3].ressourceCount = 64;
-  _Game.levelInfo.pGameplayMap[middleIdx - 5].tileType = tT_tomato;
-  _Game.levelInfo.pGameplayMap[middleIdx - 5].ressourceCount = 64;
-
   // TODO: Terrain Generation
 
-  //rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
-  //
-  //for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
+  
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  {
+    _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    //_Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 1 ? tT_soil : _Game.levelInfo.pGameplayMap[i].tileType;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = 1;
+    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+  }
+  
+  for (size_t i = 0; i < 20; i++)
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
+  
+  for (size_t i = 0; i < 3; i++)
+  {
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
+    const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+    _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
+    _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
+  }
+  
+  //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
   //{
-  //  _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
-  //  //_Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 1 ? tT_soil : _Game.levelInfo.pGameplayMap[i].tileType;
-  //  _Game.levelInfo.pGameplayMap[i].ressourceCount = 1;
-  //  _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+  //  const size_t index = i + 5;
+  //  _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
+  //  _Game.levelInfo.pGameplayMap[index].ressourceCount = 64;
+  //  _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
   //}
-  //
-  //for (size_t i = 0; i < 20; i++)
-  //  _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
-  //
-  //for (size_t i = 0; i < 3; i++)
-  //{
-  //  _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
-  //  const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  //  _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
-  //  _Game.levelInfo.pGameplayMap[waterIdx].ressourceCount = 1;
-  //}
-  //
-  ////for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
-  ////{
-  ////  const size_t index = i + 5;
-  ////  _Game.levelInfo.pGameplayMap[index].tileType = resource_type(i);
-  ////  _Game.levelInfo.pGameplayMap[index].ressourceCount = 64;
-  ////  _Game.levelInfo.pPathfindingMap[index].elevationLevel = 1;
-  ////}
-  //
-  ////_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
-  ////_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
-  //_Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
-  //_Game.levelInfo.pGameplayMap[132].tileType = tT_fire_pit;
-  //_Game.levelInfo.pGameplayMap[145].tileType = tT_fire_pit;
+  
+  //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
+  //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
+  _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
+  _Game.levelInfo.pGameplayMap[132].tileType = tT_fire_pit;
+  _Game.levelInfo.pGameplayMap[145].tileType = tT_fire_pit;
 
   // Setting borders to ptT_collidable
   {
@@ -267,127 +255,98 @@ void setTerrain()
 lsResult spawnActors()
 {
   lsResult result = lsR_Success;
+
   // Lumberjacks
   //for (size_t i = 0; i < 5; i++)
   {
     movement_actor actor;
-    actor.target = ptT_sapling;
-    actor.pos = vec2f(_Game.levelInfo.map_size.x * 0.5f, _Game.levelInfo.map_size.y * 0.5f);
-
+    actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
+    //actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
+    actor.pos = vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y));
+  
+    //while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
+    //  actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
+  
     size_t index;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
-
+  
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
     lj_actor.index = index;
     lj_actor.hasItem = false;
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
-
+  
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
     ls_actor.temperature = 255;
-
-    for (size_t i = 0; i < LS_ARRAYSIZE(ls_actor.nutritions); i++)
-      ls_actor.nutritions[i] = 9;
-
+  
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
   }
-
-  //// Lumberjacks
-  ////for (size_t i = 0; i < 5; i++)
-  //{
-  //  movement_actor actor;
-  //  actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-  //  //actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
-  //  actor.pos = vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y));
-  //
-  //  //while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
-  //  //  actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
-  //
-  //  size_t index;
-  //  LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
-  //
-  //  lumberjack_actor lj_actor;
-  //  lj_actor.state = laS_plant;
-  //  lj_actor.index = index;
-  //  lj_actor.hasItem = false;
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
-  //
-  //  lifesupport_actor ls_actor;
-  //  ls_actor.entityIndex = index;
-  //  ls_actor.type = eT_lumberjack;
-  //  ls_actor.temperature = 255;
-  //
-  //  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-  //  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
-  //}
-  //
-  //// Cook
-  //{
-  //  movement_actor foodActor;
-  //  foodActor.target = _ptT_nutrition_first;
-  //  foodActor.pos = vec2f(12.f, 10.f);
-  //
-  //  size_t f_index;
-  //  LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
-  //
-  //  cook_actor cook;
-  //  cook.state = caS_check_inventory;
-  //  cook.currentCookingItem = tT_tomato;
-  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  //
-  //  cook.index = f_index;
-  //
-  //  lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
-  //
-  //  lifesupport_actor ls_actor;
-  //  ls_actor.entityIndex = f_index;
-  //  ls_actor.type = eT_cook;
-  //  ls_actor.temperature = 255;
-  //
-  //  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-  //  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
-  //}
-  //
-  //// Fire Actor
-  //{
-  //  movement_actor actor;
-  //  actor.target = _ptT_nutrition_first;
-  //  actor.pos = vec2f(13.f, 13.f);
-  //
-  //  size_t f_index;
-  //  LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
-  //
-  //  fire_actor fireActor;
-  //  fireActor.state = faS_start_fire;
-  //  fireActor.wood_inventory = 0;
-  //  fireActor.water_inventory = 0;
-  //
-  //  fireActor.index = f_index;
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, f_index));
-  //
-  //  lifesupport_actor ls_actor;
-  //  ls_actor.entityIndex = f_index;
-  //  ls_actor.type = eT_fire_actor;
-  //  ls_actor.temperature = 255;
-  //
-  //  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-  //  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  //
-  //  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
-  //}
+  
+  // Cook
+  {
+    movement_actor foodActor;
+    foodActor.target = _ptT_nutrition_first;
+    foodActor.pos = vec2f(12.f, 10.f);
+  
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
+  
+    cook_actor cook;
+    cook.state = caS_check_inventory;
+    cook.currentCookingItem = tT_tomato;
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  
+    cook.index = f_index;
+  
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+  
+    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
+  
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_cook;
+    ls_actor.temperature = 255;
+  
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+  
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+  }
+  
+  // Fire Actor
+  {
+    movement_actor actor;
+    actor.target = _ptT_nutrition_first;
+    actor.pos = vec2f(13.f, 13.f);
+  
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
+  
+    fire_actor fireActor;
+    fireActor.state = faS_start_fire;
+    fireActor.wood_inventory = 0;
+    fireActor.water_inventory = 0;
+  
+    fireActor.index = f_index;
+  
+    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, f_index));
+  
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_fire_actor;
+    ls_actor.temperature = 255;
+  
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+  
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+  }
 
   goto epilogue;
 
@@ -597,7 +556,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 void update_lifesupportActors()
 {
-  static const uint8_t EatingThreshold = 1;
+  static const uint8_t EatingThreshold = 3;
   static const uint8_t AppetiteThreshold = 10;
   static const uint8_t MaxNutritionValue = 255;
   static const int64_t FoodItemGain = 16;
@@ -693,7 +652,7 @@ void update_lifesupportActors()
               const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
 
               const uint8_t value = pLifeSupport->nutritions[j];
-              int64_t score = 0; // TODO! what's happening? why is this 0 when don't skip everything below when unreachable???
+              int64_t score = 0;
 
               const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
               const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)];
