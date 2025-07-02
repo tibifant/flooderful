@@ -607,8 +607,13 @@ void update_lifesupportActors()
         bool anyNeededNutrion = false;
 
         for (size_t j = 0; j < nutritionTypeCount; j++)
+        {
           if (pLifeSupport->nutritions[j] < EatingThreshold)
+          {
             anyNeededNutrion = true;
+            break;
+          }
+        }
 
         if (anyNeededNutrion)
         {
@@ -634,7 +639,7 @@ void update_lifesupportActors()
           }
 
           // eat best item
-          if (bestScore > 0)
+          if (bestScore > 0) // why seemed there nothing to be in the actor's inventory after?
           {
             for (size_t j = 0; j < nutritionTypeCount; j++)
               modify_with_clamp(pLifeSupport->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
@@ -669,11 +674,15 @@ void update_lifesupportActors()
               }
             }
 
+            // i think the problem is that when something else is missing but not on the map we will set the "worse" item as target
+            
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
             if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
               continue;
+            else
+              __debugbreak();
 
             pActor->survivalActorActive = true;
             pActor->target = lowestNutrient;
