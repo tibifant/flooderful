@@ -639,7 +639,7 @@ void update_lifesupportActors()
           }
 
           // eat best item
-          if (bestScore > 0) // why seemed there nothing to be in the actor's inventory after?
+          if (bestScore > 0)
           {
             for (size_t j = 0; j < nutritionTypeCount; j++)
               modify_with_clamp(pLifeSupport->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
@@ -673,8 +673,6 @@ void update_lifesupportActors()
                 lowestNutrient = nutrient;
               }
             }
-
-            // i think the problem is that when something else is missing but not on the map we will set the "worse" item as target
             
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
 
