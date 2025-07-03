@@ -659,13 +659,13 @@ void update_lifesupportActors()
               const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
 
               const uint8_t value = pLifeSupport->nutritions[j];
-              int64_t score = 0;
+              int64_t score = value < EatingThreshold ? lsMaxValue<int16_t>() : MaxNutritionValue - value;
 
               const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
               const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)];
 
-              if (pathInfo.dir != d_unreachable)
-                score = value < EatingThreshold ? lsMaxValue<int16_t>() : (MaxNutritionValue - value) + maxDist - pathInfo.dist;
+              if (pathInfo.dir != d_unreachable && value > EatingThreshold)
+                score += maxDist - pathInfo.dist;
 
               if (score > bestTargetScore)
               {
@@ -681,8 +681,6 @@ void update_lifesupportActors()
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
             if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
               continue;
-            else
-              __debugbreak();
 
             pActor->survivalActorActive = true;
             pActor->target = lowestNutrient;
