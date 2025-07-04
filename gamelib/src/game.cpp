@@ -591,7 +591,7 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
 
-    if (!pActor->survivalActorActive) // TODO: maybe look into the actor being stuck with an unreachable target when there's other nutrients around?
+    if (!pActor->survivalActorActive)
     {
       if (_Game.isNight)
       {
@@ -834,7 +834,7 @@ void update_lumberjack()
       {
         if (change_tile_to(tT_wood, tT_trunk, tileIdx))
         {
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 4; // todo adapt this, but should be fine, also look after how often they go to fire
+          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 4;
 
           pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
           pActor->target = target_from_state[pLumberjack->state];

@@ -119,7 +119,7 @@ struct gameplay_element
   resource_type tileType;
   uint8_t ressourceCount;
   static constexpr uint8_t maxRessourceCount = 16;
-  bool hasHouse;
+  //bool hasHouse;
 };
 
 // TODO: render element: texture, height, etc
