@@ -189,8 +189,18 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 //////////////////////////////////////////////////////////////////////////
 
 // terrain generation:
-// similar to darwinwin: set base, sprinkle, grow, etc.
+// split in ereas: list of terraintypes: splits the map up and gives each type an erea?
+// sprinkle x amount: terraintype, count
+// sprinkle x amount on y: terraintype, count, terraintype to replace
 // for height: srpinkle elevation: makes single ones one higher, (sprinkle) grow plateau: grows already higher tiles, sprinkle grow hillside: elevate the one you start on by one, then grow around that by the former height, make path: go for length x in a random direction and elevate or lower the tile by one, for cliffsides: strip of elevated terrain, then grow in all but one direction
+
+// or maybe it's more fitting to just place stuff by hand and parse a level from string
+// or both: place general areas and also set specific things
+
+void terrainSplit(const local_list<resource_type, 16> terrainTypes)
+{
+  const size_t tileAmount = (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y) / terrainTypes.count;
+}
 
 //////////////////////////////////////////////////////////////////////////
 
