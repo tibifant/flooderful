@@ -188,6 +188,12 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
+// terrain generation:
+// similar to darwinwin: set base, sprinkle, grow, etc.
+// for height: srpinkle elevation: makes single ones one higher, (sprinkle) grow plateau: grows already higher tiles, sprinkle grow hillside: elevate the one you start on by one, then grow around that by the former height, make path: go for length x in a random direction and elevate or lower the tile by one, for cliffsides: strip of elevated terrain, then grow in all but one direction
+
+//////////////////////////////////////////////////////////////////////////
+
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
