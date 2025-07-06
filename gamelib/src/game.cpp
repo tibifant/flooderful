@@ -188,22 +188,6 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
-// terrain generation:
-// split in ereas: list of terraintypes: splits the map up and gives each type an erea?
-// sprinkle x amount: terraintype, count
-// sprinkle x amount on y: terraintype, count, terraintype to replace
-// for height: srpinkle elevation: makes single ones one higher, (sprinkle) grow plateau: grows already higher tiles, sprinkle grow hillside: elevate the one you start on by one, then grow around that by the former height, make path: go for length x in a random direction and elevate or lower the tile by one, for cliffsides: strip of elevated terrain, then grow in all but one direction
-
-// or maybe it's more fitting to just place stuff by hand and parse a level from string
-// or both: place general areas and also set specific things
-
-void terrainSplit(const local_list<resource_type, 16> terrainTypes)
-{
-  const size_t tileAmount = (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y) / terrainTypes.count;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
@@ -385,6 +369,7 @@ void initializeLevel()
   }
 
   lsAssert(spawnActors() == lsR_Success);
+  _Game.levelInfo.playerMapIndex = _Game.levelInfo.map_size.x + 1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -595,7 +580,7 @@ void update_lifesupportActors()
 
     // TODO think about actual system to nutrition and temperature usage
     // just for testing!!!!
-    if (_Game.isNight)
+    if (_Game.levelInfo.isNight)
     {
       modify_with_clamp(pLifeSupport->temperature, (int16_t)(-1));
     }
@@ -609,7 +594,7 @@ void update_lifesupportActors()
 
     if (!pActor->survivalActorActive)
     {
-      if (_Game.isNight)
+      if (_Game.levelInfo.isNight)
       {
         if (pLifeSupport->type != eT_fire_actor && pLifeSupport->temperature < ColdThreshold)
         {
@@ -776,7 +761,7 @@ void update_lumberjack()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
+      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
         pActor->target = target_from_state[pLumberjack->state];
@@ -890,7 +875,7 @@ void update_cook()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.isNight && pActor->target == ptT_fire))
+      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
         pCook->state = caS_check_inventory;
@@ -1103,7 +1088,7 @@ void update_fireActor()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || _Game.isNight)
+      if (pActor->atDestination || _Game.levelInfo.isNight)
       {
         pActor->survivalActorActive = false;
         pActor->target = target_from_state[pFireActor->state];
@@ -1113,7 +1098,7 @@ void update_fireActor()
       }
     }
 
-    if (_Game.isNight)
+    if (_Game.levelInfo.isNight)
     {
       if (pFireActor->state == faS_extinguish_fire)
       {
@@ -1172,7 +1157,7 @@ void update_fireActor()
       {
         constexpr int16_t WoodPerFire = 3;
 
-        if (_Game.isNight)
+        if (_Game.levelInfo.isNight)
         {
           if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit)
           {
@@ -1229,7 +1214,7 @@ void update_fireActor()
       {
         constexpr int16_t WaterPerFire = 1;
 
-        if (_Game.isNight)
+        if (_Game.levelInfo.isNight)
         {
           pFireActor->state = faS_start_fire;
           pActor->target = target_from_state[faS_extinguish_fire];
@@ -1271,14 +1256,14 @@ void handle_dayNightCycle()
   constexpr size_t DayLength = 500;
   constexpr size_t NightLength = 300;
 
-  if (ticksSincelastDayNightSwitch == DayLength && !_Game.isNight)
+  if (ticksSincelastDayNightSwitch == DayLength && !_Game.levelInfo.isNight)
   {
-    _Game.isNight = true;
+    _Game.levelInfo.isNight = true;
     ticksSincelastDayNightSwitch = 0;
   }
-  else if (ticksSincelastDayNightSwitch == NightLength && _Game.isNight)
+  else if (ticksSincelastDayNightSwitch == NightLength && _Game.levelInfo.isNight)
   {
-    _Game.isNight = false;
+    _Game.levelInfo.isNight = false;
     ticksSincelastDayNightSwitch = 0;
   }
 
@@ -1300,30 +1285,21 @@ void game_update()
 
 //////////////////////////////////////////////////////////////////////////
 
-// Changing tiles for debugging
-
-size_t playerMapIndex = 0;
-
 void game_playerSwitchTiles(const resource_type terrainType)
 {
-  lsAssert(playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(_Game.levelInfo.playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[playerMapIndex].tileType = terrainType;
+  _Game.levelInfo.pGameplayMap[_Game.levelInfo.playerMapIndex].tileType = terrainType;
 }
 
-void game_setPlayerMapIndex(const bool left)
+void game_setPlayerMapIndex(const direction dir)
 {
-  if (left)
-  {
-    if (playerMapIndex > 0)
-      playerMapIndex--;
-  }
-  else
-  {
-    if (playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)
-      playerMapIndex++;
-  }
+  lsAssert(dir > d_unreachable && dir < d_atDestination);
+
+  const bool isOdd = (_Game.levelInfo.playerMapIndex / _Game.levelInfo.map_size.x) & 1;
+
+  static const int8_t EvenDir[] = { -_Game.levelInfo.map_size.x, 1, _Game.levelInfo.map_size.x, _Game.levelInfo.map_size.x - 1, -1, -(_Game.levelInfo.map_size.x + 1)};
 }
 
 //////////////////////////////////////////////////////////////////////////

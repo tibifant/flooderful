@@ -73,11 +73,22 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
 
   LS_ERROR_CHECK(game_tick());
 
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_LEFT))
-    game_setPlayerMapIndex(true);
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_W))
+    game_setPlayerMapIndex(d_topLeft);
+  else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_E))
+    game_setPlayerMapIndex(d_topRight);
+  else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_A))
+    game_setPlayerMapIndex(d_left);
+  else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_D))
+    game_setPlayerMapIndex(d_right);
+  else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_Z))
+    game_setPlayerMapIndex(d_bottomLeft);
+  else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
+    game_setPlayerMapIndex(d_bottomRight);
 
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_RIGHT))
-    game_setPlayerMapIndex(false);
+  
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_E))
+    game_setPlayerMapIndex(d_topRight);
 
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
     game_playerSwitchTiles(tT_grass);

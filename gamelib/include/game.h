@@ -235,6 +235,9 @@ struct level_info
     size_t write_direction_idx = 0;
   } resources[ptT_Count - 1]; // Skipping ptT_collidable - ptT_collidable always has to be last!
 
+  bool isNight = false;
+  size_t playerMapIndex;
+
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
   render_element *pRenderMap = nullptr;
@@ -252,7 +255,6 @@ struct game
   level_info levelInfo;
   pool<movement_actor> movementActors;
   pool<lifesupport_actor> lifesupportActors;
-  bool isNight = false;
 
   size_t tickRate = 60;
 };
@@ -260,7 +262,7 @@ struct game
 lsResult game_init();
 lsResult game_tick();
 
-void game_setPlayerMapIndex(const bool left);
+void game_setPlayerMapIndex(const direction dir);
 void game_playerSwitchTiles(const resource_type terrainType);
 
 game *game_getGame();
