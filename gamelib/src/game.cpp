@@ -1300,10 +1300,13 @@ void game_setPlayerMapIndex(const direction dir)
   lsAssert(dir > d_unreachable && dir < d_atDestination);
   lsAssert(_Game.levelInfo.playerPos.x >= 1 && _Game.levelInfo.playerPos.x <= _Game.levelInfo.map_size.x - 2 && _Game.levelInfo.playerPos.y >= 0 && _Game.levelInfo.playerPos.y <= _Game.levelInfo.map_size.y - 2);
 
-  static const vec2i8 EvenDir[] = { vec2i8(0, -1), vec2i8(1, 0), vec2i8(0, 1), vec2i8(-1, 1), vec2i8(0, -1), vec2i8(-1, -1) };
-  static const vec2i8 OddDir[] = { vec2i8(1, -1), vec2i8(1, 0), vec2i8(1, 1), vec2i8(0, 1), vec2i8(0, -1), vec2i8(0, -1) };
+  static const vec2i16 EvenDir[] = { vec2i16(0, -1), vec2i16(1, 0), vec2i16(0, 1), vec2i16(-1, 1), vec2i16(0, -1), vec2i16(-1, -1) };
+  static const vec2i16 OddDir[] = { vec2i16(1, -1), vec2i16(1, 0), vec2i16(1, 1), vec2i16(0, 1), vec2i16(0, -1), vec2i16(0, -1) };
   
-  const vec2i16 newPos = _Game.levelInfo.playerPos.y % _Game.levelInfo.map_size.x ? _Game.levelInfo.playerPos.y + OddDir[dir - 1] : _Game.levelInfo.playerPos.y + EvenDir[dir - 1];
+  const vec2i16 newPos = _Game.levelInfo.playerPos.y % _Game.levelInfo.map_size.x ? _Game.levelInfo.playerPos + OddDir[dir - 1] : _Game.levelInfo.playerPos + EvenDir[dir - 1];
+
+  if (newPos.x >= 1 && newPos.x <= _Game.levelInfo.map_size.x - 2 && newPos.y >= 0 && newPos.y <= newPos.y - 2)
+    _Game.levelInfo.playerPos = newPos;
 }
 
 //////////////////////////////////////////////////////////////////////////

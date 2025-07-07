@@ -320,6 +320,12 @@ void render_drawActor(const movement_actor actor, size_t index) // In Future: fl
   render_drawColored2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), color, rTI_pupu);
 }
 
+void render_drawPlayer(const vec2i16 pos)
+{
+  const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
+  render_draw2DQuad(mat * matrix::Translation(75.f + pos.x * 66.f, 70.f + pos.y * 65.f, 0), rTI_pupu);
+}
+
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
 //{
 //  render_setDepthTestEnabled(false);
