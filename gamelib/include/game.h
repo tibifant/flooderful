@@ -236,7 +236,7 @@ struct level_info
   } resources[ptT_Count - 1]; // Skipping ptT_collidable - ptT_collidable always has to be last!
 
   bool isNight = false;
-  size_t playerMapIndex;
+  vec2i16 playerPos;
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;

@@ -86,10 +86,6 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
     game_setPlayerMapIndex(d_bottomRight);
 
-  
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_E))
-    game_setPlayerMapIndex(d_topRight);
-
   if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
     game_playerSwitchTiles(tT_grass);
 
@@ -109,7 +105,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
     render_setTicksSinceOrigin(ticksSinceOrigin);
 
     // rendered objects
-    if (pView->pGame->isNight)
+    if (pView->pGame->levelInfo.isNight)
       render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 0)->target, vec4f(0.6f, 0.6f, 0.8f, 0));
     else
       render_drawMap(pView->pGame->levelInfo, pAppState, pool_get(pView->pGame->movementActors, 0)->target, vec4f(1.f, 1.f, 1.f, 0));

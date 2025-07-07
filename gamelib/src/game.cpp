@@ -1287,22 +1287,23 @@ void game_update()
 
 void game_playerSwitchTiles(const resource_type terrainType)
 {
-  lsAssert(_Game.levelInfo.playerMapIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  const size_t idx = worldPosToTileIndex((vec2f)(_Game.levelInfo.playerPos));
+
+  lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[_Game.levelInfo.playerMapIndex].tileType = terrainType;
+  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType;
 }
 
 void game_setPlayerMapIndex(const direction dir)
 {
   lsAssert(dir > d_unreachable && dir < d_atDestination);
-  const vec2f pos = tileIndexToWorldPos(_Game.levelInfo.playerMapIndex);
-  lsAssert(pos.x >= 1 && pos.x <= _Game.levelInfo.map_size.x - 2 && pos.y >= 0 && pos.y <= _Game.levelInfo.map_size.y - 2);
+  lsAssert(_Game.levelInfo.playerPos.x >= 1 && _Game.levelInfo.playerPos.x <= _Game.levelInfo.map_size.x - 2 && _Game.levelInfo.playerPos.y >= 0 && _Game.levelInfo.playerPos.y <= _Game.levelInfo.map_size.y - 2);
 
-  const bool isOdd = (_Game.levelInfo.playerMapIndex / _Game.levelInfo.map_size.x) & 1;
-  static const int8_t EvenDir[] = { -_Game.levelInfo.map_size.x, 1, _Game.levelInfo.map_size.x, _Game.levelInfo.map_size.x - 1, -1, -(_Game.levelInfo.map_size.x + 1)};
-
-  const size_t newIndex = 
+  static const vec2i8 EvenDir[] = { vec2i8(0, -1), vec2i8(1, 0), vec2i8(0, 1), vec2i8(-1, 1), vec2i8(0, -1), vec2i8(-1, -1) };
+  static const vec2i8 OddDir[] = { vec2i8(1, -1), vec2i8(1, 0), vec2i8(1, 1), vec2i8(0, 1), vec2i8(0, -1), vec2i8(0, -1) };
+  
+  const vec2i16 newPos = _Game.levelInfo.playerPos.y % _Game.levelInfo.map_size.x ? _Game.levelInfo.playerPos.y + OddDir[dir - 1] : _Game.levelInfo.playerPos.y + EvenDir[dir - 1];
 }
 
 //////////////////////////////////////////////////////////////////////////
