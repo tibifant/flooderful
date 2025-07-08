@@ -302,12 +302,17 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     }
   }
 
+
+  // clean this up, blend mode
   if (levelInfo.playerPos.y % 2)
-    render_drawHex2D(matrix::Translation(1.55f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), (colors[levelInfo.pGameplayMap[levelInfo.playerPos.y * levelInfo.map_size.x + levelInfo.playerPos.x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[levelInfo.playerPos.y * levelInfo.map_size.x + levelInfo.playerPos.x].elevationLevel * vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx)))));
+    render_drawHex2D(matrix::Translation(1.55f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx))));
   else
-    render_drawHex2D(matrix::Translation(1.f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), (colors[levelInfo.pGameplayMap[levelInfo.playerPos.y * levelInfo.map_size.x + levelInfo.playerPos.x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[levelInfo.playerPos.y * levelInfo.map_size.x + levelInfo.playerPos.x].elevationLevel) * vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx))));
+    render_drawHex2D(matrix::Translation(1.f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx))));
 
   sinx++;
+
+  if (sinx == lsMaxValue<size_t>())
+    sinx = 0;
 
   // Draw Debug Arrows.
   {
