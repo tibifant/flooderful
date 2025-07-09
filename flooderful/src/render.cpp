@@ -148,7 +148,8 @@ void render_startFrame(lsAppState *pAppState)
   render_clearDepth();
 
   render_setDepthMode(rCR_Less);
-  render_setBlendEnabled(false);
+  render_setBlendEnabled(true);
+  render_setBlendMode(rBF_AlphaBlend);
   render_setDepthTestEnabled(false);
 
   render_setLookAt(_Render.lookAt, _Render.up);
@@ -301,7 +302,6 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
         render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
-
 
   // clean this up, blend mode
   if (levelInfo.playerPos.y % 2)
