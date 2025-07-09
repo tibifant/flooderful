@@ -148,8 +148,7 @@ void render_startFrame(lsAppState *pAppState)
   render_clearDepth();
 
   render_setDepthMode(rCR_Less);
-  render_setBlendEnabled(true);
-  render_setBlendMode(rBF_AlphaBlend);
+  render_setBlendEnabled(false);
   render_setDepthTestEnabled(false);
 
   render_setLookAt(_Render.lookAt, _Render.up);
@@ -262,14 +261,14 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-size_t sinx = 0;
+size_t sin_a = 0;
 
 void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pathfinding_target_type debugArrow, const vec4f lightColor)
 {
   (void)pAppState;
 
   // TODO!!
-  const vec4f colors[tT_count] = { 
+  const vec4f colors[tT_count] = {
     vec4f(0.1f, 0.4f, 0, 0), // tT_grass
     vec4f(0.3f, 0.22f, 0.17f, 0), // tT_soil
     vec4f(0, 0.2f, 0.4f, 0), // tT_water 
@@ -296,23 +295,31 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
   {
     for (size_t x = 0; x < levelInfo.map_size.x; x++)
     {
+      float_t v = 1.f;
+
       if (y % 2)
-        render_drawHex2D(matrix::Translation(1.55f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
-      else
-        render_drawHex2D(matrix::Translation(1.f + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
+        v = 1.55f;
+
+      render_drawHex2D(matrix::Translation(v + x * 1.1f, 2.f + y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), colors[levelInfo.pGameplayMap[y * levelInfo.map_size.x + x].tileType] * lightColor + vec4f(0.1f, 0.1f, 0.1f, 0) * levelInfo.pPathfindingMap[y * levelInfo.map_size.x + x].elevationLevel);
     }
   }
 
-  // clean this up, blend mode
-  if (levelInfo.playerPos.y % 2)
-    render_drawHex2D(matrix::Translation(1.55f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx))));
-  else
-    render_drawHex2D(matrix::Translation(1.f + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sinx))));
+  // Cursor
+  {
+    render_setBlendEnabled(true);
+    render_setBlendMode(rBF_Additive);
 
-  sinx++;
+    float_t v = 1.f;
 
-  if (sinx == lsMaxValue<size_t>())
-    sinx = 0;
+    if (levelInfo.playerPos.y % 2)
+      v = 1.55f;
+
+    render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sin_a))));
+
+    sin_a = (sin_a + 1) & 63;
+  }
+
+  render_setBlendEnabled(false);
 
   // Draw Debug Arrows.
   {
@@ -329,15 +336,9 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
 void render_drawActor(const movement_actor actor, size_t index) // In Future: flush all actors being drawed.
 {
   vec4f color = vec4f(0.1f + index * 0.2f, 1.f - index * 0.2f, 1.f, 1.f);
-  
+
   const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
   render_drawColored2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), color, rTI_pupu);
-}
-
-void render_drawPlayer(const vec2i16 pos)
-{
-  const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
-  render_draw2DQuad(mat * matrix::Translation(75.f + pos.x * 66.f, 70.f + pos.y * 65.f, 0), rTI_pupu);
 }
 
 //void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
