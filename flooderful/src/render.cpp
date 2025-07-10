@@ -261,7 +261,8 @@ void render_drawArrow(size_t x, size_t y, direction dir)
     render_draw2DQuad(mat * matrix::Translation(110.f + x * 66.f, 80.f + y * 65.f, 0), rTI_arrow);
 }
 
-size_t sin_a = 0;
+size_t r = 0;
+float_t z = 0;
 
 void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pathfinding_target_type debugArrow, const vec4f lightColor)
 {
@@ -314,10 +315,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     if (levelInfo.playerPos.y % 2)
       v = 1.55f;
 
-    render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sin_a))));
-
-    sin_a = (sin_a + 1) & 63; //
-    print(sin_a, ", ");
+    render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, 0.25f + 0.25f * (lsSin(lsGetCurrentTimeMs() * (lsTWOPIf / 500.0f)))));
   }
 
   render_setBlendEnabled(false);
