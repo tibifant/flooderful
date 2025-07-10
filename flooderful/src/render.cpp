@@ -316,7 +316,8 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
 
     render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, (float_t)(lsSin(sin_a))));
 
-    sin_a = (sin_a + 1) & 63;
+    sin_a = (sin_a + 1) & 63; //
+    print(sin_a, ", ");
   }
 
   render_setBlendEnabled(false);
