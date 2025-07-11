@@ -86,17 +86,20 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
     game_setPlayerMapIndex(d_bottomRight);
 
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_1))
-    game_playerSwitchTiles(tT_grass);
-
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_2))
-    game_playerSwitchTiles(tT_water);
-
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_3))
-    game_playerSwitchTiles(tT_sand);
-
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_4))
-    game_playerSwitchTiles(tT_mountain);
+  // resource type 0 - 9
+  for (int32_t i = 0; i < 11; i++)
+  {
+    if (lsKeyboardState_KeyPress(&pAppState->keyboardState, i + SDL_SCANCODE_1))
+    {
+      game_playerSwitchTiles((resource_type)i);
+      break;
+    }
+    else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, i + SDL_SCANCODE_KP_1))
+    {
+      game_playerSwitchTiles((resource_type)(i + 10));
+      break;
+    }
+  }
 
   // Draw Scene
   {
