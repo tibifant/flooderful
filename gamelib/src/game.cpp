@@ -188,6 +188,8 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
+// TODO: setting maxresource for each resource type
+
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
@@ -195,6 +197,40 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
   lsAlloc(&_Game.levelInfo.pGameplayMap, height * width);
   //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
+}
+
+void setMapBorder()
+{
+  // Setting borders to ptT_collidable
+  {
+    for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
+    {
+      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
+    }
+
+    for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
+    {
+      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+    }
+  }
+}
+
+void setTerrainTo(const resource_type type)
+{
+  lsAssert(type < tT_count);
+
+  rand_seed seed = rand_seed(2, 2);
+
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  {
+    _Game.levelInfo.pGameplayMap[i].tileType = type;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = 1;
+    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+  }
+
+  setMapBorder();
 }
 
 void setTerrain()
@@ -236,20 +272,7 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[132].tileType = tT_fire_pit;
   _Game.levelInfo.pGameplayMap[145].tileType = tT_fire_pit;
 
-  // Setting borders to ptT_collidable
-  {
-    for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
-    {
-      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
-    }
-
-    for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
-    {
-      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-    }
-  }
+  setMapBorder();
 }
 
 lsResult spawnActors()
@@ -357,7 +380,8 @@ epilogue:
 void initializeLevel()
 {
   mapInit(16, 16);
-  setTerrain();
+  //setTerrain();
+  setTerrainTo(tT_grass);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -1294,7 +1318,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType;
+  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType; // TODO set mex rsource count
 }
 
 void game_setPlayerMapIndex(const direction dir)
