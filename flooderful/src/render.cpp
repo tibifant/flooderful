@@ -315,7 +315,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     if (levelInfo.playerPos.y % 2)
       v = 1.55f;
 
-    render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, 0.25f + 0.25f * (lsSin(lsGetCurrentTimeMs() * (lsTWOPIf / 500.0f)))));
+    render_drawHex2D(matrix::Translation(v + levelInfo.playerPos.x * 1.1f, 2.f + levelInfo.playerPos.y * 1.6f, 0) * matrix::Scale(60.f, 40.f, 0), vec4f(1.f, 1.f, 1.f, 0.25f + 0.25f * (lsSin(lsGetCurrentTimeMs() * (lsTWOPIf / 1000.0f)))));
   }
 
   render_setBlendEnabled(false);
@@ -339,45 +339,6 @@ void render_drawActor(const movement_actor actor, size_t index) // In Future: fl
   const matrix mat = matrix::Translation(-0.5f, -0.5f, 0) * matrix::Scale(-1.f, -1.f, 0) * matrix::Translation(0.5f, 0.5f, 0) * matrix::Scale(30.f, 50.f, 0);
   render_drawColored2DQuad(mat * matrix::Translation(75.f + actor.pos.x * 66.f, 70.f + actor.pos.y * 65.f, 0), color, rTI_pupu);
 }
-
-//void render_drawIntegerAt(const size_t integer, const vec2f positionFirstNumber)
-//{
-//  render_setDepthTestEnabled(false);
-//  render_setBlendEnabled(true);
-//  render_setBlendMode(rBF_AlphaBlend);
-//
-//  texture *pTex = pool_get(&_Render.textures, rTI_numbers);
-//  const vec2f scale = ((vec2f)pTex->resolution / (vec2f)_Render.windowSize) * vec2f(0.1f, 1.f);
-//
-//  texture_bind(pTex, 0);
-//  shader_bind(&_Render.numbers.shader);
-//  shader_setUniform(&_Render.numbers.shader, "texture", pTex);
-//  shader_setUniform(&_Render.numbers.shader, "scale", scale);
-//
-//  uint8_t scores[20];
-//  size_t index = LS_ARRAYSIZE(scores);
-//  size_t value = integer;
-//
-//  do
-//  {
-//    index--;
-//    scores[index] = (uint8_t)(value % 10);
-//    value /= 10;
-//    
-//  } while (value > 0);
-//
-//  vec2f position = positionFirstNumber / (vec2f)_Render.windowSize;
-//
-//  for (; index < LS_ARRAYSIZE(scores); index++)
-//  {
-//    shader_setUniform(&_Render.numbers.shader, "index", (float_t)scores[index]);
-//    shader_setUniform(&_Render.numbers.shader, "offset", position);
-//    vertexBuffer_render(&_Render.numbers.buffer);
-//    position.x += scale.x;
-//  }
-//
-//  render_setBlendEnabled(false);
-//}
 
 void render_flushRenderQueue()
 {

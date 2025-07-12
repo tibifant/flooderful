@@ -86,14 +86,15 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
     game_setPlayerMapIndex(d_bottomRight);
 
-  // resource type 0 - 9
   for (int32_t i = 0; i < 11; i++)
   {
+    // resource type 0 - 9
     if (lsKeyboardState_KeyPress(&pAppState->keyboardState, i + SDL_SCANCODE_1))
     {
       game_playerSwitchTiles((resource_type)i);
       break;
     }
+    // resource type 10 - 19
     else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, i + SDL_SCANCODE_KP_1))
     {
       game_playerSwitchTiles((resource_type)(i + 10));

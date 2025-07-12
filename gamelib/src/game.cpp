@@ -1287,6 +1287,8 @@ void game_update()
 
 void game_playerSwitchTiles(const resource_type terrainType)
 {
+  lsAssert(_Game.levelInfo.playerPos.x >= 1 && _Game.levelInfo.playerPos.x <= _Game.levelInfo.map_size.x - 2 && _Game.levelInfo.playerPos.y >= 0 && _Game.levelInfo.playerPos.y <= _Game.levelInfo.map_size.y - 2);
+
   const size_t idx = worldPosToTileIndex((vec2f)(_Game.levelInfo.playerPos));
 
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
