@@ -188,7 +188,9 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: setting maxresource for each resource type
+// TODO: setting resourceCount for each resource type: either via constructor, or just setting it to maxResourceCount first, but I think there are some types that should have 0 first? or are there? hmmm maybe not?
+
+// yeah i think a constructor is nice, so we can just give it the type and amount and don't have to set both manually everywhere?
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
@@ -197,11 +199,6 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   lsAllocZero(&_Game.levelInfo.pPathfindingMap, height * width);
   lsAlloc(&_Game.levelInfo.pGameplayMap, height * width);
   //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
-}
-
-void setMaxResourceCount(const size_t tileIdx, const resource_type type)
-{
-  constexpr uint8_t 
 }
 
 void setMapBorder()
