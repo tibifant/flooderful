@@ -114,11 +114,13 @@ struct pathfinding_element
   uint8_t elevationLevel;
 };
 
+static constexpr uint8_t MaxResourceCounts[tT_count] = {0, 1, 1, 0, 1, 1, 4 }
+
 struct gameplay_element
 {
   resource_type tileType;
   uint8_t ressourceCount;
-  static constexpr uint8_t maxRessourceCount = 16;
+  const uint8_t maxRessourceCount = MaxResourceCounts[tileType];
   //bool hasHouse;
 };
 

@@ -199,6 +199,11 @@ void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
   //lsAllocZero(&_Game.levelInfo.pRenderMap, height * width);
 }
 
+void setMaxResourceCount(const size_t tileIdx, const resource_type type)
+{
+  constexpr uint8_t 
+}
+
 void setMapBorder()
 {
   // Setting borders to ptT_collidable
@@ -1319,6 +1324,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(terrainType < tT_count);
 
   _Game.levelInfo.pGameplayMap[idx].tileType = terrainType; // TODO set mex rsource count
+  _Game.levelInfo.pGameplayMap[idx].ressourceCount = _Game.levelInfo.pGameplayMap[idx].maxRessourceCount; // TODO set mex rsource count
 }
 
 void game_setPlayerMapIndex(const direction dir)
