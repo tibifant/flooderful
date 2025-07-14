@@ -228,7 +228,7 @@ void setTerrainTo(const resource_type type)
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     _Game.levelInfo.pGameplayMap[i].tileType = type;
-    _Game.levelInfo.pGameplayMap[i].ressourceCount = 1;
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = _Game.levelInfo.pGameplayMap[i].maxRessourceCount;
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
@@ -275,6 +275,9 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[145].tileType = tT_fire_pit;
 
   setMapBorder();
+
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+    _Game.levelInfo.pGameplayMap[i].ressourceCount = _Game.levelInfo.pGameplayMap[i].maxRessourceCount;
 }
 
 lsResult spawnActors()
