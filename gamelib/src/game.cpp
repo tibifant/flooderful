@@ -570,7 +570,7 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   return value - prevVal;
 }
 
-bool change_tile_to(const resource_type targetType, const resource_type expectedPreviousType, const size_t tileIdx)
+bool change_tile_to(const resource_type targetType, const resource_type expectedPreviousType, const size_t tileIdx, const uint8_t count)
 {
   // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
 
@@ -578,6 +578,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   {
     // TODO what free assert did coc talk about?
     _Game.levelInfo.pGameplayMap[tileIdx].tileType = targetType;
+    _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = count;
     return true;
   }
 
@@ -703,7 +704,7 @@ void update_lifesupportActors()
                 lowestNutrient = nutrient;
               }
             }
-            
+
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
@@ -778,10 +779,19 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
+static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
+
+void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
+{
+  lsAssert(state < laS_count);
+  lsAssert(target < ptT_Count);
+
+  state = (lumberjack_actor_state)((state + 1) % laS_count);
+  target = Lumberjack_targetFromState[state];
+}
+
 void update_lumberjack()
 {
-  static const pathfinding_target_type target_from_state[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
-
   for (const auto _actor : _LumberjackActors)
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
@@ -793,13 +803,13 @@ void update_lumberjack()
       if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
-        pActor->target = target_from_state[pLumberjack->state];
+        pActor->target = Lumberjack_targetFromState[pLumberjack->state];
         pActor->atDestination = false;
         continue;
       }
     }
 
-    if (pActor->atDestination)
+    if (pActor->atDestination) // TODO this could be cleaned up with a function as nearly all the cases do the same
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
@@ -807,11 +817,8 @@ void update_lumberjack()
       {
       case laS_plant:
       {
-        if (change_tile_to(tT_sapling, tT_soil, tileIdx))
-        {
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-        }
+        if (change_tile_to(tT_sapling, tT_soil, tileIdx, MaxResourceCounts[tT_sapling]))
+          incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
 
@@ -826,8 +833,7 @@ void update_lumberjack()
           pLumberjack->hasItem = true;
           pLumberjack->item = tT_water;
 
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
+          incrementLumberjackState(pLumberjack->state, pActor->target);
         }
 
         pActor->atDestination = false;
@@ -836,12 +842,11 @@ void update_lumberjack()
       }
       case laS_water:
       {
-        if (change_tile_to(tT_tree, tT_sapling, tileIdx))
+        if (change_tile_to(tT_tree, tT_sapling, tileIdx, MaxResourceCounts[tT_tree]))
         {
           pLumberjack->hasItem = false;
 
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
+          incrementLumberjackState(pLumberjack->state, pActor->target);
         }
 
         pActor->atDestination = false;
@@ -850,11 +855,8 @@ void update_lumberjack()
       }
       case laS_chop:
       {
-        if (change_tile_to(tT_trunk, tT_tree, tileIdx))
-        {
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-        }
+        if (change_tile_to(tT_trunk, tT_tree, tileIdx, MaxResourceCounts[tT_trunk]))
+          incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
 
@@ -862,13 +864,8 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        if (change_tile_to(tT_wood, tT_trunk, tileIdx))
-        {
-          _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = 4;
-
-          pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-          pActor->target = target_from_state[pLumberjack->state];
-        }
+        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
+          incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
 
@@ -1070,8 +1067,7 @@ void update_cook()
           }
           else // if we are at grass as alternative dropoff point
           {
-            if (change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx))
-              _Game.levelInfo.pGameplayMap[tileIdx].ressourceCount = AddedCookedItemAmount;
+            change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx, AddedCookedItemAmount);
           }
         }
         else // if we are at the correct foodtype.
@@ -1105,7 +1101,7 @@ void update_cook()
 
 //////////////////////////////////////////////////////////////////////////
 
-void update_fireActor()
+void update_fireActor() // TODO: how to fix the actor getting stuck between two tiles? (see screenshot)
 {
   constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_water, ptT_fire };
 
@@ -1252,7 +1248,8 @@ void update_fireActor()
         {
           if (pFireActor->water_inventory >= WaterPerFire)
           {
-            change_tile_to(tT_fire_pit, tT_fire, posIdx);
+            change_tile_to(tT_fire_pit, tT_fire, posIdx, _Game.levelInfo.pGameplayMap[posIdx].ressourceCount);
+            pFireActor->water_inventory -= WaterPerFire;
           }
           else
           {
@@ -1334,7 +1331,7 @@ void game_setPlayerMapIndex(const direction dir)
 
   static const vec2i16 EvenDir[] = { vec2i16(0, -1), vec2i16(1, 0), vec2i16(0, 1), vec2i16(-1, 1), vec2i16(-1, 0), vec2i16(-1, -1) };
   static const vec2i16 OddDir[] = { vec2i16(1, -1), vec2i16(1, 0), vec2i16(1, 1), vec2i16(0, 1), vec2i16(-1, 0), vec2i16(0, -1) };
-  
+
   const vec2i16 newPos = _Game.levelInfo.playerPos.y % 2 ? _Game.levelInfo.playerPos + OddDir[dir - 1] : _Game.levelInfo.playerPos + EvenDir[dir - 1];
 
   if (newPos.x >= 1 && newPos.x <= _Game.levelInfo.map_size.x - 2 && newPos.y >= 1 && newPos.y <= _Game.levelInfo.map_size.y - 2)
