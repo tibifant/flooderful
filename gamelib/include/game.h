@@ -119,8 +119,8 @@ static const uint8_t MaxResourceCounts[tT_count] = { 0, 1, 1, 0, 1, 1, 4, 9, 9, 
 struct gameplay_element
 {
   resource_type tileType;
-  uint8_t ressourceCount;
-  const uint8_t maxRessourceCount = MaxResourceCounts[tileType];
+  uint8_t resourceCount;
+  const uint8_t maxResourceCount = MaxResourceCounts[tileType];
   //bool hasHouse;
 };
 
