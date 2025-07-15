@@ -188,10 +188,6 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: setting resourceCount for each resource type: either via constructor, or just setting it to maxResourceCount first, but I think there are some types that should have 0 first? or are there? hmmm maybe not?
-
-// yeah i think a constructor is nice, so we can just give it the type and amount and don't have to set both manually everywhere?
-
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
@@ -1320,8 +1316,8 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType; // TODO set mex rsource count
-  _Game.levelInfo.pGameplayMap[idx].ressourceCount = _Game.levelInfo.pGameplayMap[idx].maxRessourceCount; // TODO set mex rsource count
+  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType;
+  _Game.levelInfo.pGameplayMap[idx].ressourceCount = _Game.levelInfo.pGameplayMap[idx].maxRessourceCount;
 }
 
 void game_setPlayerMapIndex(const direction dir)
