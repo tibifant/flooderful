@@ -114,14 +114,18 @@ struct pathfinding_element
   uint8_t elevationLevel;
 };
 
-static const uint8_t MaxResourceCounts[tT_count] = { 0, 1, 1, 0, 1, 1, 4, 9, 9, 12, 12, 12, 12, 192, 192, 192, 192, 192, 1 };
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, 9, MaxResourceCounts[tT_fire_pit], 12, 12, 12, 12, 192, 192, 192, 192, 192, 1};
+static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct gameplay_element
 {
   resource_type tileType;
   uint8_t resourceCount;
-  const uint8_t maxResourceCount = MaxResourceCounts[tileType];
+  uint8_t maxResourceCount;
   //bool hasHouse;
+
+  gameplay_element() = default;
+  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count), maxResourceCount(MaxResourceCounts[type]) {}
 };
 
 // TODO: render element: texture, height, etc

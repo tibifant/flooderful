@@ -205,14 +205,14 @@ void setMapBorder()
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);;
+      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1] = gameplay_element(tT_mountain, 0);;
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
-      _Game.levelInfo.pGameplayMap[x].tileType = tT_mountain;
-      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x].tileType = tT_mountain;
+      _Game.levelInfo.pGameplayMap[x] = gameplay_element(tT_mountain, 0);
+      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);;
     }
   }
 }
@@ -225,8 +225,7 @@ void setTerrainTo(const resource_type type)
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    _Game.levelInfo.pGameplayMap[i].tileType = type;
-    _Game.levelInfo.pGameplayMap[i].resourceCount = _Game.levelInfo.pGameplayMap[i].maxResourceCount;
+    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
@@ -241,21 +240,20 @@ void setTerrain()
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    _Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
+    const resource_type type = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
     //_Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 1 ? tT_soil : _Game.levelInfo.pGameplayMap[i].tileType;
-    _Game.levelInfo.pGameplayMap[i].resourceCount = 1;
+    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, 1);
     _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
   for (size_t i = 0; i < 20; i++)
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_soil;
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 1);
 
   for (size_t i = 0; i < 3; i++)
   {
     _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
     const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-    _Game.levelInfo.pGameplayMap[waterIdx].tileType = tT_water;
-    _Game.levelInfo.pGameplayMap[waterIdx].resourceCount = 1;
+    _Game.levelInfo.pGameplayMap[waterIdx] = gameplay_element(tT_water, 1);
   }
 
   //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
@@ -268,14 +266,11 @@ void setTerrain()
 
   //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
   //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
-  _Game.levelInfo.pGameplayMap[121].tileType = tT_fire_pit;
-  _Game.levelInfo.pGameplayMap[132].tileType = tT_fire_pit;
-  _Game.levelInfo.pGameplayMap[145].tileType = tT_fire_pit;
+  _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4);
+  _Game.levelInfo.pGameplayMap[132] = gameplay_element(tT_fire_pit, 4);
+  _Game.levelInfo.pGameplayMap[145] = gameplay_element(tT_fire_pit, 4);
 
   setMapBorder();
-
-  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    _Game.levelInfo.pGameplayMap[i].resourceCount = _Game.levelInfo.pGameplayMap[i].maxResourceCount;
 }
 
 lsResult spawnActors()
@@ -575,8 +570,8 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType)
   {
     // TODO what free assert did coc talk about?
-    _Game.levelInfo.pGameplayMap[tileIdx].tileType = targetType;
-    _Game.levelInfo.pGameplayMap[tileIdx].resourceCount = count;
+    _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(targetType, count);
+    lsAssert(count <= _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
     return true;
   }
 
@@ -721,23 +716,23 @@ void update_lifesupportActors()
     {
       if (pActor->atDestination)
       {
-        const size_t worldIdx = worldPosToTileIndex(pActor->pos);
+        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
         if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
         {
           // add food to lunchbox
-          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[worldIdx].tileType <= _tile_type_food_last)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_last)
           {
-            if (_Game.levelInfo.pGameplayMap[worldIdx].resourceCount > 0)
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
             {
-              const resource_type tileType = _Game.levelInfo.pGameplayMap[worldIdx].tileType;
+              const resource_type tileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
               lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
               modify_with_clamp(pLifeSupport->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-              modify_with_clamp(_Game.levelInfo.pGameplayMap[worldIdx].resourceCount, -FoodItemGain);
+              modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain);
 
-              if (_Game.levelInfo.pGameplayMap[worldIdx].resourceCount == 0)
-                _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_grass; // no `change_tile_to` usage because we check earlier
+              if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+                _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_grass, 1); // no `change_tile_to` usage because we check earlier
             }
           }
           else
@@ -748,17 +743,17 @@ void update_lifesupportActors()
         else if (pActor->target == ptT_fire)
         {
           // warm up at fire
-          if (_Game.levelInfo.pGameplayMap[worldIdx].tileType == tT_fire)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire)
           {
-            if (_Game.levelInfo.pGameplayMap[worldIdx].resourceCount > 0)
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
               modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
             // for testing: remove from fire & remove fire when empty
-            lsAssert(_Game.levelInfo.pGameplayMap[worldIdx].resourceCount > 0);
-            _Game.levelInfo.pGameplayMap[worldIdx].resourceCount--;
+            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0);
+            _Game.levelInfo.pGameplayMap[tileIdx].resourceCount--;
 
-            if (_Game.levelInfo.pGameplayMap[worldIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[worldIdx].tileType = tT_fire_pit;
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire_pit; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
           }
           else
           {
@@ -1015,7 +1010,7 @@ void update_cook()
             modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedResourceAmount);
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_soil; // no usage of `change_tile_to` due to earlier check of `resource_type`
+              _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
 
             pCook->state = caS_check_inventory;
           }
@@ -1033,14 +1028,11 @@ void update_cook()
 
       case caS_plant:
       {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+        constexpr uint8_t AddedAmountToPlant = 12;
+
+        if (change_tile_to((resource_type)(pCook->searchingPlant), tT_soil, tileIdx, AddedAmountToPlant))
         {
           lsAssert(pActor->target == ptT_soil);
-
-          constexpr uint8_t AddedAmountToPlant = 12;
-          _Game.levelInfo.pGameplayMap[tileIdx].tileType = (resource_type)(pCook->searchingPlant);
-          _Game.levelInfo.pGameplayMap[tileIdx].resourceCount = AddedAmountToPlant;
-
           pCook->state = caS_harvest;
           pActor->target = pCook->searchingPlant;
         }
@@ -1070,7 +1062,7 @@ void update_cook()
         }
         else // if we are at the correct foodtype.
         {
-          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount);
+          modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
         }
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
@@ -1150,22 +1142,22 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
 
     if (pActor->atDestination)
     {
-      const size_t posIdx = worldPosToTileIndex(pActor->pos);
+      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
       switch (pFireActor->state)
       {
       case faS_get_wood:
       {
         constexpr int16_t AddedWood = 6;
 
-        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_wood)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_wood)
         {
-          if (_Game.levelInfo.pGameplayMap[posIdx].resourceCount > 0)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
-            modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].resourceCount));
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].resourceCount, -AddedWood);
+            modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedWood);
 
-            if (_Game.levelInfo.pGameplayMap[posIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_soil;
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1);
 
             pFireActor->state = faS_start_fire;
             pActor->target = target_from_state[faS_start_fire];
@@ -1182,11 +1174,11 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
 
         if (_Game.levelInfo.isNight)
         {
-          if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_fire_pit)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire_pit)
           {
-            if (_Game.levelInfo.pGameplayMap[posIdx].resourceCount > WoodPerFire)
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > WoodPerFire)
             {
-              _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire; // no usage of `change_tile_to` because of check above
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
             }
             else
             {
@@ -1194,8 +1186,8 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
               if (pFireActor->wood_inventory >= WoodPerFire)
               {
                 pFireActor->wood_inventory -= WoodPerFire;
-                _Game.levelInfo.pGameplayMap[posIdx].tileType = tT_fire;
-                modify_with_clamp(_Game.levelInfo.pGameplayMap[posIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[posIdx].maxResourceCount);
+                _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
+                modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
               }
               else
               {
@@ -1219,11 +1211,11 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
       {
         constexpr int16_t AddedWater = 4;
 
-        if (_Game.levelInfo.pGameplayMap[posIdx].tileType == tT_water)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water)
         {
-          if (_Game.levelInfo.pGameplayMap[posIdx].resourceCount > 0)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
-            modify_with_clamp(pFireActor->water_inventory, lsMin(AddedWater, (int16_t)_Game.levelInfo.pGameplayMap[posIdx].resourceCount));
+            modify_with_clamp(pFireActor->water_inventory, lsMin(AddedWater, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
             pFireActor->state = faS_extinguish_fire;
             pActor->target = target_from_state[faS_extinguish_fire];
           }
@@ -1246,8 +1238,8 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
         {
           if (pFireActor->water_inventory >= WaterPerFire)
           {
-            change_tile_to(tT_fire_pit, tT_fire, posIdx, _Game.levelInfo.pGameplayMap[posIdx].resourceCount);
-            pFireActor->water_inventory -= WaterPerFire;
+            if (change_tile_to(tT_fire_pit, tT_fire, tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].resourceCount))
+              pFireActor->water_inventory -= WaterPerFire;
           }
           else
           {
@@ -1318,8 +1310,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[idx].tileType = terrainType;
-  _Game.levelInfo.pGameplayMap[idx].resourceCount = _Game.levelInfo.pGameplayMap[idx].maxResourceCount;
+  _Game.levelInfo.pGameplayMap[idx] = gameplay_element(terrainType, _Game.levelInfo.pGameplayMap[idx].maxResourceCount);
 }
 
 void game_setPlayerMapIndex(const direction dir)
