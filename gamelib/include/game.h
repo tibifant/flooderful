@@ -114,7 +114,8 @@ struct pathfinding_element
   uint8_t elevationLevel;
 };
 
-static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, 9, MaxResourceCounts[tT_fire_pit], 12, 12, 12, 12, 192, 192, 192, 192, 192, 1};
+static constexpr uint8_t FireMax = 9;
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, FireMax, FireMax, 12, 12, 12, 12, 192, 192, 192, 192, 192, 1};
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct gameplay_element
