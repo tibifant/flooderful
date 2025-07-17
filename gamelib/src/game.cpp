@@ -493,7 +493,7 @@ vec2f tileIndexToWorldPos(const size_t tileIndex)
 
   vec2f tilePos = vec2f(vec2s(x_center, y_center));
 
-  if ((size_t)y_center & 1)
+  if (y_center & 1) // every second row is shifted by + 0.5
     tilePos.x += 0.5f;
 
   return tilePos;
