@@ -537,24 +537,28 @@ void movementActor_move()
       }
       else
       {
-        const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
-        const vec2f direction = directionLut[currentTileDirectionType - 1];
         const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
-        const vec2f destinationPos = tilePos + direction;
+        const vec2f nonNormalizedDir = (tilePos - _actor.pItem->pos);
+        if (nonNormalizedDir != vec2f(0))
+          _actor.pItem->direction = nonNormalizedDir.Normalize();
 
-        _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
+        _actor.pItem->enteredNewTileLastTick = true;
       }
     }
+    else if (_actor.pItem->enteredNewTileLastTick)
+    {
+      const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
+      const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
+      const vec2f direction = directionLut[currentTileDirectionType - 1];
+      const vec2f destinationPos = tilePos + direction;
 
-
-    if (_actor.index == 2 && (currentTileIdx == 56 && _actor.pItem->lastTickTileIdx == 73) || (currentTileIdx == 73 && _actor.pItem->lastTickTileIdx == 56))
-      print("tileidx: ", currentTileIdx, ": pos before: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, ", dir: ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
+      lsAssert(destinationPos - _actor.pItem->pos != vec2f(0));
+      _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
+      _actor.pItem->enteredNewTileLastTick = false;
+    }
 
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
-
-    if (_actor.index == 2 && (currentTileIdx == 56 && _actor.pItem->lastTickTileIdx == 73) || (currentTileIdx == 73 && _actor.pItem->lastTickTileIdx == 56))
-      print("           pos after: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, '\n');
   }
 }
 
