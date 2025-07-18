@@ -546,8 +546,15 @@ void movementActor_move()
       }
     }
 
+
+    if (_actor.index == 2 && (currentTileIdx == 56 && _actor.pItem->lastTickTileIdx == 73) || (currentTileIdx == 73 && _actor.pItem->lastTickTileIdx == 56))
+      print("tileidx: ", currentTileIdx, ": pos before: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, ", dir: ", _actor.pItem->direction.x, "|", _actor.pItem->direction.y, '\n');
+
     _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
+
+    if (_actor.index == 2 && (currentTileIdx == 56 && _actor.pItem->lastTickTileIdx == 73) || (currentTileIdx == 73 && _actor.pItem->lastTickTileIdx == 56))
+      print("           pos after: ", _actor.pItem->pos.x, "|", _actor.pItem->pos.y, '\n');
   }
 }
 
