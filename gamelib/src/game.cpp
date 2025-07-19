@@ -1068,7 +1068,11 @@ void update_cook()
           }
           else // if we are at grass as alternative dropoff point
           {
-            change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx, AddedCookedItemAmount);
+            if (!change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx, AddedCookedItemAmount))
+            {
+              pActor->atDestination = false;
+              break;
+            }
           }
         }
         else // if we are at the correct foodtype.
@@ -1083,7 +1087,8 @@ void update_cook()
         }
 
         // change to next food item
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO: maybe we should only try to make tT_meal when we actually have all the ingridients on the map, to not stop ourselves.
+        // but i think it should maybe be like: if we currently make a food item consisting of several ingridients: if caS_plant & there's not soil, but we already have one item: change the cooking item to the food item with singular ingridient.
         pCook->state = caS_check_inventory;
 
         pActor->atDestination = false;
@@ -1168,7 +1173,7 @@ void update_fireActor() // TODO: how to fix the actor getting stuck between two 
             modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedWood);
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1);
+              _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
 
             pFireActor->state = faS_start_fire;
             pActor->target = target_from_state[faS_start_fire];
