@@ -18,6 +18,7 @@ constexpr size_t _FloodFillSteps = 100;
 //////////////////////////////////////////////////////////////////////////
 
 static pool<lumberjack_actor> _LumberjackActors; // Do we need this in the header?
+static pool<farmer_actor> _FarmerActors; // Do we need this in the header?
 static pool<cook_actor> _CookActors; // Do we need this in the header?
 static pool<fire_actor> _FireActors; // Do we need this in the header?
 
@@ -886,6 +887,34 @@ void update_lumberjack()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+void update_farmer()
+{
+  for (const auto _actor : _FarmerActors)
+  {
+    farmer_actor *pFarmer = _actor.pItem;
+    movement_actor *pActor = pool_get(_Game.movementActors, pFarmer->index);
+
+    // Handle Survival
+    if (pActor->survivalActorActive)
+    {
+      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
+      {
+        pActor->survivalActorActive = false;
+        pFarmer->state = faaS_plant;
+        pActor->atDestination = false;
+      }
+
+      continue;
+    }
+
+
+    // check if all plants are planted?
+    // plant the missing plant
+    // else: plant random plant
+
+  }
+}
+
 void update_cook()
 {
   constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrition_last + 1) - _ptT_nutrition_first] =
@@ -1107,7 +1136,7 @@ void update_cook()
 
 //////////////////////////////////////////////////////////////////////////
 
-void update_fireActor() // TODO: how to fix the actor getting stuck between two tiles? (see screenshot)
+void update_fireActor()
 {
   constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_water, ptT_fire };
 

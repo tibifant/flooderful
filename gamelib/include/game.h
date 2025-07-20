@@ -192,6 +192,21 @@ struct lumberjack_actor
 
 //////////////////////////////////////////////////////////////////////////
 
+enum farmer_actor_state
+{
+  faaS_plant,
+  // maybe add watering in the future
+  faaS_count
+};
+
+struct farmer_actor
+{
+  farmer_actor_state state; // TODO: Starting State in the actor?
+  size_t index;
+};
+
+//////////////////////////////////////////////////////////////////////////
+
 // only temporary
 enum cook_actor_state
 {
