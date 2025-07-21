@@ -909,28 +909,34 @@ void update_farmer()
 
     if (pActor->atDestination)
     {
-      const size_t tielIdx = 
+      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-      if (_Game.levelInfo.pGameplayMap[])
-      // check if all plants are planted?
-      pathfinding_target_type plant = ptT_Count;
-
-      for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
+      if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
       {
-        const level_info::resource_info &info = _Game.levelInfo.resources[i];
+        pathfinding_target_type plant = ptT_Count;
 
-        if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+        for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
         {
-          plant = (pathfinding_target_type)i;
-          break;
-        }
-      }
+          const level_info::resource_info &info = _Game.levelInfo.resources[i];
 
-      // else: plant random plant
-      if (plant == ptT_Count)
-        plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
-    
-      
+          if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
+          {
+            plant = (pathfinding_target_type)i;
+            break;
+          }
+        }
+
+        if (plant == ptT_Count)
+          plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
+
+        constexpr uint8_t AddedAmountToPlant = 12;
+
+        resource_type resource = (resource_type)plant;
+        lsAssert(resource >= _tile_type_food_resources_first && resource <= _tile_type_food_resources_last);
+        change_tile_to(resource, tT_soil, tileIdx, AddedAmountToPlant); // no if as we check above.
+
+        pActor->atDestination = false;
+      }
     }
   }
 }

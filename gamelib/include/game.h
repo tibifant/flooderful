@@ -192,16 +192,8 @@ struct lumberjack_actor
 
 //////////////////////////////////////////////////////////////////////////
 
-enum farmer_actor_state // actually not necessary to have a state if there's only one...
+struct farmer_actor // TODO: make genereric actor struct
 {
-  faaS_plant,
-  // maybe add watering in the future
-  faaS_count
-};
-
-struct farmer_actor
-{
-  farmer_actor_state state; // TODO: Starting State in the actor?
   size_t index;
 };
 
