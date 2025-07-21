@@ -192,7 +192,7 @@ struct lumberjack_actor
 
 //////////////////////////////////////////////////////////////////////////
 
-enum farmer_actor_state
+enum farmer_actor_state // actually not necessary to have a state if there's only one...
 {
   faaS_plant,
   // maybe add watering in the future

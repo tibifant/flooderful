@@ -900,18 +900,38 @@ void update_farmer()
       if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
-        pFarmer->state = faaS_plant;
+        pActor->target = ptT_soil;
         pActor->atDestination = false;
       }
 
       continue;
     }
 
+    if (pActor->atDestination)
+    {
+      const size_t tielIdx = 
 
-    // check if all plants are planted?
-    // plant the missing plant
-    // else: plant random plant
+      if (_Game.levelInfo.pGameplayMap[])
+      // check if all plants are planted?
+      pathfinding_target_type plant = ptT_Count;
 
+      for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
+      {
+        const level_info::resource_info &info = _Game.levelInfo.resources[i];
+
+        if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+        {
+          plant = (pathfinding_target_type)i;
+          break;
+        }
+      }
+
+      // else: plant random plant
+      if (plant == ptT_Count)
+        plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
+    
+      
+    }
   }
 }
 
