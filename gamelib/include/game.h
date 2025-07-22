@@ -143,6 +143,7 @@ enum entity_type
 {
   eT_lumberjack,
   eT_stonemason,
+  eT_farmer,
   eT_cook,
   eT_fire_actor,
 
@@ -192,6 +193,8 @@ struct lumberjack_actor
 
 //////////////////////////////////////////////////////////////////////////
 
+// maybe he should get a harvest task to add all the harvested stuff at some drop off
+
 struct farmer_actor // TODO: make genereric actor struct
 {
   size_t index;
@@ -203,7 +206,6 @@ struct farmer_actor // TODO: make genereric actor struct
 enum cook_actor_state
 {
   caS_check_inventory,
-  caS_plant,
   caS_harvest,
   caS_cook,
 

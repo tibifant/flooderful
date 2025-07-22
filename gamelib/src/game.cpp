@@ -310,6 +310,31 @@ lsResult spawnActors()
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
   }
 
+  // Farmer
+  {
+    movement_actor actor;
+    actor.target = _ptT_nutrition_first;
+    actor.pos = vec2f(12.f, 10.f);
+
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
+
+    farmer_actor f;
+    f.index = f_index;
+
+    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, f, f_index));
+
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_cook;
+    ls_actor.temperature = 255;
+
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+  }
+
   // Cook
   {
     movement_actor foodActor;
@@ -941,6 +966,8 @@ void update_farmer()
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 void update_cook()
 {
   constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrition_last + 1) - _ptT_nutrition_first] =
@@ -977,6 +1004,7 @@ void update_cook()
     if (pCook->state == caS_check_inventory) // Handling `caS_check_inventory` here because it does not need to be checked for `atDestination`
     {
       bool anyItemMissing = false;
+      pathfinding_target_type targetPlant = ptT_Count;
 
       for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
       {
@@ -984,38 +1012,31 @@ void update_cook()
         {
           anyItemMissing = true;
 
-          const pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
+          targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
           pCook->searchingPlant = targetPlant;
 
           const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
           const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
 
-          if (targetPlantDir != d_unfillable)
+          if (targetPlantDir != d_unfillable && targetPlantDir != d_unreachable)
           {
-            if (targetPlantDir == d_unreachable)
-            {
-              pCook->state = caS_plant;
-              pActor->target = ptT_soil;
-              pActor->atDestination = false;
+            pCook->state = caS_harvest;
+            pActor->target = targetPlant;
+            pActor->atDestination = false;
 
-              break;
-            }
-            else
-            {
-              pCook->state = caS_harvest;
-              pActor->target = targetPlant;
-              pActor->atDestination = false;
-
-              break;
-            }
+            break;
           }
 
           continue;
         }
       }
-
-      // if all items in inventory
-      if (!anyItemMissing)
+            
+      if (anyItemMissing && targetPlant == ptT_Count) // if none of the required plants is available, set new target meal
+      {
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
+        continue;
+      }
+      else if (!anyItemMissing) // if all items in inventory
       {
         pCook->state = caS_cook;
         pathfinding_target_type targetNutrient = ptT_Count;
@@ -1080,27 +1101,6 @@ void update_cook()
 
             pCook->state = caS_check_inventory;
           }
-          else
-          {
-            pCook->state = caS_plant;
-            pActor->target = ptT_soil;
-          }
-        }
-
-        pActor->atDestination = false;
-
-        break;
-      }
-
-      case caS_plant:
-      {
-        constexpr uint8_t AddedAmountToPlant = 12;
-
-        if (change_tile_to((resource_type)(pCook->searchingPlant), tT_soil, tileIdx, AddedAmountToPlant))
-        {
-          lsAssert(pActor->target == ptT_soil);
-          pCook->state = caS_harvest;
-          pActor->target = pCook->searchingPlant;
         }
 
         pActor->atDestination = false;
@@ -1142,8 +1142,7 @@ void update_cook()
         }
 
         // change to next food item
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO: maybe we should only try to make tT_meal when we actually have all the ingridients on the map, to not stop ourselves.
-        // but i think it should maybe be like: if we currently make a food item consisting of several ingridients: if caS_plant & there's not soil, but we already have one item: change the cooking item to the food item with singular ingridient.
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
         pCook->state = caS_check_inventory;
 
         pActor->atDestination = false;
