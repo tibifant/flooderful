@@ -114,8 +114,9 @@ struct pathfinding_element
   uint8_t elevationLevel;
 };
 
-static constexpr uint8_t FireMax = 9;
-static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, FireMax, FireMax, 12, 12, 12, 12, 192, 192, 192, 192, 192, 1};
+static constexpr uint8_t MaxFireResourceCount = 9;
+static constexpr uint8_t MaxFoodItemResourceCount = 255;
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 1};
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct gameplay_element
@@ -170,6 +171,11 @@ struct lifesupport_actor
   uint8_t temperature;
 };
 
+struct actor // TODO: add entity type here as well and let the ls actor inheret from it?
+{
+  size_t index;
+};
+
 //////////////////////////////////////////////////////////////////////////
 
 enum lumberjack_actor_state
@@ -183,22 +189,18 @@ enum lumberjack_actor_state
   laS_count
 };
 
-struct lumberjack_actor
+struct lumberjack_actor : actor
 {
   lumberjack_actor_state state;
-  size_t index;
   bool hasItem; // Maybe change this to several inevntory spots if needed.
   resource_type item;
 };
 
 //////////////////////////////////////////////////////////////////////////
 
-// maybe he should get a harvest task to add all the harvested stuff at some drop off
+// TODO: maybe he should get a harvest task to add all the harvested stuff at some drop off
 
-struct farmer_actor // TODO: make genereric actor struct
-{
-  size_t index;
-};
+struct farmer_actor : actor { };
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -207,15 +209,14 @@ enum cook_actor_state
 {
   caS_check_inventory,
   caS_harvest,
-  caS_cook,
+  caS_cook, // TODO: drop items of at dedicated spots
 
   caS_count
 };
 
-struct cook_actor
+struct cook_actor : actor
 {
   cook_actor_state state; // TODO: Starting State in the actor?
-  size_t index;
   resource_type currentCookingItem;
   pathfinding_target_type searchingPlant; // actor's don't always search for items so this won't always represent what the actor is currently up to.
   uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
@@ -233,10 +234,9 @@ enum fire_actor_state
   faS_count
 };
 
-struct fire_actor
+struct fire_actor : actor
 {
   fire_actor_state state;
-  size_t index;
   uint8_t wood_inventory;
   uint8_t water_inventory;
 };

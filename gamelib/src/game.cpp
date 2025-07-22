@@ -326,7 +326,7 @@ lsResult spawnActors()
 
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = f_index;
-    ls_actor.type = eT_cook;
+    ls_actor.type = eT_farmer;
     ls_actor.temperature = 255;
 
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
@@ -738,7 +738,7 @@ void update_lifesupportActors()
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
-            if (pLifeSupport->type == eT_cook && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            if ((pLifeSupport->type == eT_farmer || pLifeSupport->type == eT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
               continue;
 
             pActor->survivalActorActive = true;
@@ -1365,6 +1365,7 @@ void game_update()
   movementActor_move();
   update_lifesupportActors();
   update_lumberjack();
+  update_farmer();
   update_cook();
   update_fireActor();
 }
@@ -1380,7 +1381,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[idx] = gameplay_element(terrainType, _Game.levelInfo.pGameplayMap[idx].maxResourceCount);
+  _Game.levelInfo.pGameplayMap[idx] = gameplay_element(terrainType, MaxResourceCounts[terrainType]);
 }
 
 void game_setPlayerMapIndex(const direction dir)
