@@ -189,8 +189,6 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO!!! we can't just change the resource count and tiltype but also have to change the maxResourceCount -> new gameplay element + constructor, as currently tileType may not be set but still tries to read the array................ ahh i'm so smart...
-
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
   _Game.levelInfo.map_size = { width, height };
@@ -313,7 +311,7 @@ lsResult spawnActors()
   // Farmer
   {
     movement_actor actor;
-    actor.target = _ptT_nutrition_first;
+    actor.target = ptT_soil;
     actor.pos = vec2f(12.f, 10.f);
 
     size_t f_index;
@@ -813,7 +811,7 @@ static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] =
 
 void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
 {
-  lsAssert(state < laS_count);
+  lsAssert(state > 0 && state < laS_count);
   lsAssert(target < ptT_Count);
 
   state = (lumberjack_actor_state)((state + 1) % laS_count);
@@ -946,7 +944,7 @@ void update_farmer()
 
           if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
           {
-            plant = (pathfinding_target_type)i;
+            plant = (pathfinding_target_type)i; // Maybe we want to just increment the last plant and if its already there we choose another one that isn't
             break;
           }
         }
@@ -1004,7 +1002,6 @@ void update_cook()
     if (pCook->state == caS_check_inventory) // Handling `caS_check_inventory` here because it does not need to be checked for `atDestination`
     {
       bool anyItemMissing = false;
-      pathfinding_target_type targetPlant = ptT_Count;
 
       for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
       {
@@ -1012,8 +1009,7 @@ void update_cook()
         {
           anyItemMissing = true;
 
-          targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
-          pCook->searchingPlant = targetPlant;
+          pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
 
           const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
           const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
@@ -1031,9 +1027,9 @@ void update_cook()
         }
       }
             
-      if (anyItemMissing && targetPlant == ptT_Count) // if none of the required plants is available, set new target meal
+      if (anyItemMissing && pCook->state == caS_check_inventory) // if none of the required plants is available, set new target meal
       {
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO don't know if we actually want this, as this will lead to spamming the world with items but should be fixed by limiting which foods we make by a max of dropped food items
         continue;
       }
       else if (!anyItemMissing) // if all items in inventory
