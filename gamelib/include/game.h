@@ -28,12 +28,12 @@ enum pathfinding_target_type : uint8_t
   _ptT_nutrient_sources_last = ptT_sunflower_plant, // up until here (including) the types match the corresponding `resource_types`!
   // do not insert anything here! We depend on the plants matching up with their nutrients!
   _ptt_multi_types, // from here on no longer necessarily matching up with `resource_type`s!
-  _ptT_nutrition_first = _ptt_multi_types,
-  ptT_vitamin = _ptT_nutrition_first,
+  _ptT_nutrient_first = _ptt_multi_types,
+  ptT_vitamin = _ptT_nutrient_first,
   ptT_protein,
   ptT_carbohydrates,
   ptT_fat,
-  _ptT_nutrition_last = ptT_fat,
+  _ptT_nutrient_last = ptT_fat,
 
   ptT_collidable, // ptT_collidable always has to be last!
 
@@ -166,7 +166,7 @@ struct lifesupport_actor
 {
   entity_type type;
   size_t entityIndex;
-  uint8_t nutritions[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
+  uint8_t nutritions[(_ptT_nutrient_last + 1) - _ptT_nutrient_first];
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_first];
   uint8_t temperature;
 };
@@ -218,7 +218,7 @@ struct cook_actor : actor
 {
   cook_actor_state state; // TODO: Starting State in the actor?
   resource_type currentCookingItem;
-  uint8_t inventory[(_ptT_nutrition_last + 1) - _ptT_nutrition_first];
+  uint8_t inventory[(_ptT_nutrient_last + 1) - _ptT_nutrient_first];
 };
 
 //////////////////////////////////////////////////////////////////////////

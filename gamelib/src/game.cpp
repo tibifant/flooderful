@@ -336,7 +336,7 @@ lsResult spawnActors()
   // Cook
   {
     movement_actor foodActor;
-    foodActor.target = _ptT_nutrition_first;
+    foodActor.target = _ptT_nutrient_first;
     foodActor.pos = vec2f(12.f, 10.f);
 
     size_t f_index;
@@ -367,7 +367,7 @@ lsResult spawnActors()
   // Fire Actor
   {
     movement_actor actor;
-    actor.target = _ptT_nutrition_first;
+    actor.target = _ptT_nutrient_first;
     actor.pos = vec2f(13.f, 13.f);
 
     size_t f_index;
@@ -628,7 +628,7 @@ void update_lifesupportActors()
   static const int64_t TemperatureIncrease = 255;
   static const uint8_t MaxTemperature = 255;
 
-  static const size_t nutritionTypeCount = (_ptT_nutrition_last + 1) - _ptT_nutrition_first;
+  static const size_t nutritionTypeCount = (_ptT_nutrient_last + 1) - _ptT_nutrient_first;
   static const size_t foodTypeCount = (_tile_type_food_last + 1) - _tile_type_food_first;
   static const int64_t FoodToNutrition[foodTypeCount][nutritionTypeCount] = { { 50, 0, 0, 0 } /*tomato*/, {0, 50, 0, 0} /*bean*/, { 0, 0, 50, 0 } /*wheat*/,  { 0, 0, 0, 50 } /*sunflower*/, {25, 25, 25, 25} /*meal*/ }; // foodtypes and nutrition value need to be in the same order as the corresponding enums!
 
@@ -715,7 +715,7 @@ void update_lifesupportActors()
 
             for (size_t j = 0; j < nutritionTypeCount; j++)
             {
-              const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrition_first);
+              const pathfinding_target_type nutrient = (pathfinding_target_type)(j + _ptT_nutrient_first);
 
               const uint8_t value = pLifeSupport->nutritions[j];
               int64_t score = value < EatingThreshold ? lsMaxValue<int16_t>() : MaxNutritionValue - value;
@@ -733,7 +733,7 @@ void update_lifesupportActors()
               }
             }
 
-            lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrition_last);
+            lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrient_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
             if ((pLifeSupport->type == eT_farmer || pLifeSupport->type == eT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
@@ -753,7 +753,7 @@ void update_lifesupportActors()
       {
         const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-        if (pActor->target >= _ptT_nutrition_first && pActor->target <= _ptT_nutrition_last)
+        if (pActor->target >= _ptT_nutrient_first && pActor->target <= _ptT_nutrient_last)
         {
           // add food to lunchbox
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType >= _tile_type_food_first && _Game.levelInfo.pGameplayMap[tileIdx].tileType <= _tile_type_food_last)
@@ -968,7 +968,7 @@ void update_farmer()
 
 void update_cook()
 {
-  constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrition_last + 1) - _ptT_nutrition_first] =
+  constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrient_last + 1) - _ptT_nutrient_first] =
   { // nutrients: ptT_vitamin, ptT_protein, ptT_carbohydrates, ptT_fat
     { 1, 0, 0, 0 }, // tT_tomato
     { 0, 1, 0, 0 }, // tT_bean
@@ -1042,7 +1042,7 @@ void update_cook()
         {
           if (IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i])
           {
-            targetNutrient = (pathfinding_target_type)(i + _ptT_nutrition_first);
+            targetNutrient = (pathfinding_target_type)(i + _ptT_nutrient_first);
             break;
           }
         }
