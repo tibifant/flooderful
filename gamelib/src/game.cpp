@@ -136,6 +136,12 @@ struct match_resource<pathfinding_target_type::ptT_fat>
 };
 
 template<>
+struct match_resource<pathfinding_target_type::ptT_meal_drop_off>
+{
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_meal; };
+};
+
+template<>
 struct match_resource<pathfinding_target_type::ptT_collidable>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType) { return resourceType == tT_mountain; };
@@ -182,6 +188,7 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_protein: fill_resource_info<ptT_protein>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_carbohydrates: fill_resource_info<ptT_carbohydrates>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_fat: fill_resource_info<ptT_fat>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_meal_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_collidable: fill_resource_info<ptT_collidable>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   default: lsFail(); // not implemented.
   }
@@ -1037,17 +1044,9 @@ void update_cook()
         pCook->state = caS_cook;
         pathfinding_target_type targetNutrient = ptT_Count;
 
-        // take any item as target to drop of the food
-        for (size_t i = 0; i < LS_ARRAYSIZE(IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first]); i++)
-        {
-          if (IngridientAmountPerFood[pCook->currentCookingItem - _tile_type_food_first][i])
-          {
-            targetNutrient = (pathfinding_target_type)(i + _ptT_nutrient_first);
-            break;
-          }
-        }
+        targetNutrient = (pathfinding_target_type)(pCook->currentCookingItem); // should be right, right?
 
-        lsAssert(targetNutrient != ptT_Count);
+        lsAssert(targetNutrient != ptT_Count); // todo
 
         const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];
         if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
@@ -1108,28 +1107,10 @@ void update_cook()
       {
         constexpr uint8_t AddedCookedItemAmount = 24;
 
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem)
-        {
-          if (pActor->target != ptT_grass) // if we are not at the correct foodtype.
-          {
-            pActor->target = ptT_grass;
-            pActor->atDestination = false;
-
-            break;
-          }
-          else // if we are at grass as alternative dropoff point
-          {
-            if (!change_tile_to(pCook->currentCookingItem, tT_grass, tileIdx, AddedCookedItemAmount))
-            {
-              pActor->atDestination = false;
-              break;
-            }
-          }
-        }
-        else // if we are at the correct foodtype.
-        {
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pCook->currentCookingItem)
           modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
-        }
+        else
+          break;
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {

@@ -34,6 +34,7 @@ enum pathfinding_target_type : uint8_t
   ptT_carbohydrates,
   ptT_fat,
   _ptT_nutrient_last = ptT_fat,
+  ptT_meal_drop_off, // needs to match with tT_meal but only relevant for cook
 
   ptT_collidable, // ptT_collidable always has to be last!
 
