@@ -194,6 +194,8 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   }
 }
 
+// TODO: empty food drop off should not stay nutrient but drop off
+
 //////////////////////////////////////////////////////////////////////////
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
@@ -1033,7 +1035,7 @@ void update_cook()
           continue;
         }
       }
-            
+
       if (anyItemMissing && pCook->state == caS_check_inventory) // if none of the required plants is available, set new target meal
       {
         pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO don't know if we actually want this, as this will lead to spamming the world with items but should be fixed by limiting which foods we make by a max of dropped food items
@@ -1044,16 +1046,15 @@ void update_cook()
         pCook->state = caS_cook;
         pathfinding_target_type targetNutrient = ptT_Count;
 
-        targetNutrient = (pathfinding_target_type)(pCook->currentCookingItem); // should be right, right?
+        targetNutrient = (pathfinding_target_type)(pCook->currentCookingItem);
 
-        lsAssert(targetNutrient != ptT_Count); // todo
+        lsAssert(targetNutrient >= _ptT_nutrient_first && targetNutrient <= ptT_meal_drop_off);
 
-        const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];
-        if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
-          pActor->target = ptT_grass;
-        else
-          pActor->target = targetNutrient;
-
+        //const level_info::resource_info &info = _Game.levelInfo.resources[targetNutrient];
+        //if (info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+        //  pActor->target = ptT_grass;
+        //else
+        pActor->target = targetNutrient;
         pActor->atDestination = false;
       }
 
@@ -1108,9 +1109,16 @@ void update_cook()
         constexpr uint8_t AddedCookedItemAmount = 24;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pCook->currentCookingItem)
+        {
+          if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
+            break;
+
           modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
+        }
         else
+        {
           break;
+        }
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
