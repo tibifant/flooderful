@@ -34,7 +34,14 @@ enum pathfinding_target_type : uint8_t
   ptT_carbohydrates,
   ptT_fat,
   _ptT_nutrient_last = ptT_fat,
-  ptT_meal_drop_off, // needs to match with tT_meal but only relevant for cook
+
+  _ptT_drop_off_first,
+  ptT_tomato_drop_off = _ptT_drop_off_first, // order matches resource_type food types
+  ptT_bean_drop_off, // order matches resource_type food types
+  ptT_wheat_drop_off, // order matches resource_type food types
+  ptT_sunflower_drop_off, // order matches resource_type food types
+  ptT_meal_drop_off, // order matches resource_type food types
+  _ptT_drop_off_last = ptT_meal_drop_off,
 
   ptT_collidable, // ptT_collidable always has to be last!
 
