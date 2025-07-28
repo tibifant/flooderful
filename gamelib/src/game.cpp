@@ -839,10 +839,7 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
-// currently tiles have amounts, do we want to use these for pontential different watering states or should they have a different variable?
-// how should we handle a sapling neeeding water anyways? it would need to be different sapling type or we can't find to unwatered ones
-
-//////////////////////////////////////////////////////////////////////////
+// TODO: we could add ranges to operate in for the actor's so they won't cross eachother's paths so much
 
 static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
@@ -1204,7 +1201,7 @@ void update_fireActor()
 
         if (!pActor->survivalActorActive)
         {
-          pActor->target = target_from_state[faS_extinguish_fire];
+          pActor->target = target_from_state[faS_extinguish_fire]; // TODO: do we want the actor to be able to extinguish the fire if he is stuck searching for food?
           pActor->atDestination = false;
         }
       }
