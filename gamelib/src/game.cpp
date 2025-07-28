@@ -687,6 +687,9 @@ void update_lifesupportActors()
 
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
 
+    if (pActor->target == ptT_fire_pit && pLifeSupport->type != eT_fire_actor) // acording to the debugger the cook had fire pit as target at some point?! not able to replicate it...
+      __debugbreak();
+
     if (!pActor->survivalActorActive)
     {
       if (_Game.levelInfo.isNight)
@@ -784,7 +787,7 @@ void update_lifesupportActors()
         }
       }
     }
-    else
+    else // TODO: do we want actors to go to fire if stuck with no food
     {
       if (pActor->atDestination)
       {
@@ -1201,7 +1204,7 @@ void update_fireActor()
 
         if (!pActor->survivalActorActive)
         {
-          pActor->target = target_from_state[faS_extinguish_fire]; // TODO: do we want the actor to be able to extinguish the fire if he is stuck searching for food?
+          pActor->target = target_from_state[faS_extinguish_fire]; // TODO: do we want the actor to be able to extinguish the fire if he is stuck searching for food/wood if a new fire emerged?
           pActor->atDestination = false;
         }
       }
