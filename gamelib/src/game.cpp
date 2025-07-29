@@ -842,7 +842,7 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: we could add ranges to operate in for the actor's so they won't cross eachother's paths so much
+// TODO: we could add ranges to operate in for the actors so they won't cross eachother's paths so much
 
 static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
@@ -1046,15 +1046,15 @@ void update_cook()
         {
           anyItemMissing = true;
 
-          pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
+          pathfinding_target_type target = (pathfinding_target_type)(i + _ptT_drop_off_first);
 
-          const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
-          const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
+          const level_info::resource_info &info = _Game.levelInfo.resources[target];
+          const direction targetDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
 
-          if (targetPlantDir != d_unfillable && targetPlantDir != d_unreachable)
+          if (targetDir != d_unfillable && targetDir != d_unreachable)
           {
             pCook->state = caS_harvest;
-            pActor->target = targetPlant;
+            pActor->target = target;
             pActor->atDestination = false;
 
             break;
@@ -1129,6 +1129,7 @@ void update_cook()
       case caS_cook:
       {
         constexpr uint8_t AddedCookedItemAmount = 24;
+        pActor->atDestination = false;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem || _Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
           break;
@@ -1144,8 +1145,6 @@ void update_cook()
         // change to next food item
         pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
         pCook->state = caS_check_inventory;
-
-        pActor->atDestination = false;
 
         break;
       }
