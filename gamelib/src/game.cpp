@@ -212,11 +212,11 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_protein: fill_resource_info<ptT_protein>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_carbohydrates: fill_resource_info<ptT_carbohydrates>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_fat: fill_resource_info<ptT_fat>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_tomato_drop_off: fill_resource_info<ptT_tomato_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_bean_drop_off: fill_resource_info<ptT_bean_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_wheat_drop_off: fill_resource_info<ptT_wheat_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_sunflower_drop_off: fill_resource_info<ptT_sunflower_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_meal_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
-  case ptT_tomato_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
-  case ptT_bean_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
-  case ptT_wheat_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
-  case ptT_sunflower_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_collidable: fill_resource_info<ptT_collidable>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   default: lsFail(); // not implemented.
   }
@@ -1046,15 +1046,15 @@ void update_cook()
         {
           anyItemMissing = true;
 
-          pathfinding_target_type target = (pathfinding_target_type)(i + _ptT_drop_off_first);
+          pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
 
-          const level_info::resource_info &info = _Game.levelInfo.resources[target];
-          const direction targetDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
+          const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
+          const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
 
-          if (targetDir != d_unfillable && targetDir != d_unreachable)
+          if (targetPlantDir != d_unfillable && targetPlantDir != d_unreachable)
           {
             pCook->state = caS_harvest;
-            pActor->target = target;
+            pActor->target = targetPlant;
             pActor->atDestination = false;
 
             break;
