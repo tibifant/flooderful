@@ -180,6 +180,9 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount))
     {
+      if constexpr (p == ptT_tomato_drop_off)
+        __debugbreak();
+
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
     }
@@ -1074,7 +1077,7 @@ void update_cook()
         pCook->state = caS_cook;
         const pathfinding_target_type targetNutrient = (pathfinding_target_type)(_ptT_drop_off_first + (pCook->currentCookingItem - _tile_type_food_first));
 
-        lsAssert(targetNutrient >= _ptT_nutrient_first && targetNutrient <= ptT_meal_drop_off);
+        lsAssert(targetNutrient >= _ptT_drop_off_first && targetNutrient <= _ptT_drop_off_last);
 
         pActor->target = targetNutrient;
         pActor->atDestination = false;
