@@ -180,9 +180,6 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount))
     {
-      if constexpr (p == ptT_tomato_drop_off)
-        __debugbreak();
-
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
     }
@@ -1146,7 +1143,7 @@ void update_cook()
         }
 
         // change to next food item
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
+        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO: only change when there is a drop off for the item.
         pCook->state = caS_check_inventory;
 
         break;
