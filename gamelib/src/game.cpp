@@ -222,8 +222,6 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   }
 }
 
-// TODO: empty food drop off should not stay nutrient but drop off
-
 //////////////////////////////////////////////////////////////////////////
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
@@ -1003,6 +1001,25 @@ void update_farmer()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+resource_type getNextCookItem(const resource_type currentItem, const size_t tileIdx)
+{
+  resource_type ret = currentItem;
+
+  for (size_t i = _tile_type_food_first; i <= _tile_type_food_last; i++)
+  {
+    lsAssert(ret >= _tile_type_food_first && ret <= _tile_type_food_last);
+    ret = (resource_type)((((ret - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
+
+    const level_info::resource_info &info = _Game.levelInfo.resources[(pathfinding_target_type)((ret - _tile_type_food_first) + _ptT_drop_off_first)];
+    const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
+
+    if (d != d_unreachable && d != d_unfillable)
+      break;
+  }
+
+  return ret;
+}
+
 void update_cook()
 {
   constexpr uint8_t IngridientAmountPerFood[(_tile_type_food_last + 1) - _tile_type_food_first][(_ptT_nutrient_last + 1) - _ptT_nutrient_first] =
@@ -1035,9 +1052,12 @@ void update_cook()
     lsAssert(pCook->currentCookingItem >= _tile_type_food_first && pCook->currentCookingItem <= _tile_type_food_last);
 
     // Handle Cook States
+    const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
     if (pCook->state == caS_check_inventory) // Handling `caS_check_inventory` here because it does not need to be checked for `atDestination`
     {
+      // TODO: maybe check first if the current item is available else: change
+
       bool anyItemMissing = false;
 
       for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
@@ -1049,7 +1069,7 @@ void update_cook()
           pathfinding_target_type targetPlant = (pathfinding_target_type)(i + _ptT_nutrient_sources_first);
 
           const level_info::resource_info &info = _Game.levelInfo.resources[targetPlant];
-          const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir;
+          const direction targetPlantDir = info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir;
 
           if (targetPlantDir != d_unfillable && targetPlantDir != d_unreachable)
           {
@@ -1066,7 +1086,7 @@ void update_cook()
 
       if (anyItemMissing && pCook->state == caS_check_inventory) // if none of the required plants is available, set new target meal
       {
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO don't know if we actually want this, as this will lead to spamming the world with items but should be fixed by limiting which foods we make by a max of dropped food items
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
         continue;
       }
       else if (!anyItemMissing) // if all items in inventory
@@ -1086,7 +1106,6 @@ void update_cook()
     // Handling remaining Cook States
     if (pActor->atDestination)
     {
-      const size_t tileIdx = worldPosToTileIndex(pActor->pos);
       const level_info::resource_info &info = _Game.levelInfo.resources[pActor->target];
       lsAssert(info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_atDestination);
 
@@ -1143,7 +1162,7 @@ void update_cook()
         }
 
         // change to next food item
-        pCook->currentCookingItem = (resource_type)((((pCook->currentCookingItem - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first); // TODO: only change when there is a drop off for the item.
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
         pCook->state = caS_check_inventory;
 
         break;
