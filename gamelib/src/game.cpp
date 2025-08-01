@@ -1173,13 +1173,13 @@ void update_cook()
       }
     }
     else
-    {
+    { // (Maybe remove in the future, if we *want* actors to be stuck, when the right tiles weren't provided)
       const level_info::resource_info &info = _Game.levelInfo.resources[(resource_type)((pCook->currentCookingItem - _tile_type_food_first) + _ptT_drop_off_first)];
       const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
 
       if (d == d_unreachable || d == d_unfillable)
       {
-        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx); // TODO: someting wong! when adding wheat drop off tile (numpad 8) all items were unreachable alltough we added one in pahtfinding for sure.
         pCook->state = caS_check_inventory;
       }
     }
