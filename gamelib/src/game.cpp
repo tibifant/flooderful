@@ -1012,7 +1012,7 @@ resource_type getNextCookItem(const resource_type currentItem, const size_t tile
 
     const level_info::resource_info &info = _Game.levelInfo.resources[(pathfinding_target_type)((ret - _tile_type_food_first) + _ptT_drop_off_first)];
     const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
-
+    // check if there is a drop off for the item so we don't get stuck. (Maybe remove in the future, if we *want* actors to be stuck, when the right tiles weren't provided)
     if (d != d_unreachable && d != d_unfillable)
       break;
   }
@@ -1056,8 +1056,6 @@ void update_cook()
 
     if (pCook->state == caS_check_inventory) // Handling `caS_check_inventory` here because it does not need to be checked for `atDestination`
     {
-      // TODO: maybe check first if the current item is available else: change
-
       bool anyItemMissing = false;
 
       for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
@@ -1084,7 +1082,7 @@ void update_cook()
         }
       }
 
-      if (anyItemMissing && pCook->state == caS_check_inventory) // if none of the required plants is available, set new target meal
+      if (anyItemMissing && pCook->state == caS_check_inventory) // if none of the required plants is available, set new target meal. (Maybe remove in the future, if we *want* actors to be stuck, when the right tiles weren't provided)
       {
         pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
         continue;
@@ -1172,6 +1170,17 @@ void update_cook()
       {
         lsFail(); // not implemented.
       }
+      }
+    }
+    else
+    {
+      const level_info::resource_info &info = _Game.levelInfo.resources[(resource_type)((pCook->currentCookingItem - _tile_type_food_first) + _ptT_drop_off_first)];
+      const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
+
+      if (d == d_unreachable || d == d_unfillable)
+      {
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
+        pCook->state = caS_check_inventory;
       }
     }
   }
