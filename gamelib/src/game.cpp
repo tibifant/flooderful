@@ -1179,7 +1179,7 @@ void update_cook()
 
       if (d == d_unreachable || d == d_unfillable)
       {
-        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx); // TODO: someting wong! when adding wheat drop off tile (numpad 8) all items were unreachable alltough we added one in pahtfinding for sure.
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx); // TODO: i think its not actually a problem
         pCook->state = caS_check_inventory;
       }
     }
