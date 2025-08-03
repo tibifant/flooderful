@@ -1031,6 +1031,8 @@ void update_cook()
     { 1, 1, 1, 1 } // tT_meal
   };
 
+  // TODO: debug: setup with all food types and all food resources, fire and water and wood: food actor only gets stuck with multitypes as target instead of adding more food...
+
   for (const auto _actor : _CookActors)
   {
     cook_actor *pCook = _actor.pItem;

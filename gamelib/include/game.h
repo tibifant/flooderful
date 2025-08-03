@@ -217,7 +217,7 @@ enum cook_actor_state
 {
   caS_check_inventory,
   caS_harvest,
-  caS_cook, // TODO: drop items of at dedicated spots
+  caS_cook,
 
   caS_count
 };
