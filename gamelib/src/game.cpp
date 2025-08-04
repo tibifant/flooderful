@@ -1011,7 +1011,7 @@ resource_type getNextCookItem(const resource_type currentItem, const size_t tile
     ret = (resource_type)((((ret - _tile_type_food_first) + 1) % (_tile_type_food_last + 1 - _tile_type_food_first)) + _tile_type_food_first);
 
     const level_info::resource_info &info = _Game.levelInfo.resources[(pathfinding_target_type)((ret - _tile_type_food_first) + _ptT_drop_off_first)];
-    const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
+    const direction d = info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir;
     // check if there is a drop off for the item so we don't get stuck. (Maybe remove in the future, if we *want* actors to be stuck, when the right tiles weren't provided)
     if (d != d_unreachable && d != d_unfillable)
       break;
@@ -1177,11 +1177,11 @@ void update_cook()
     else
     { // (Maybe remove in the future, if we *want* actors to be stuck, when the right tiles weren't provided)
       const level_info::resource_info &info = _Game.levelInfo.resources[(resource_type)((pCook->currentCookingItem - _tile_type_food_first) + _ptT_drop_off_first)];
-      const direction d = info.pDirectionLookup[info.write_direction_idx][tileIdx].dir;
+      const direction d = info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir;
 
       if (d == d_unreachable || d == d_unfillable)
       {
-        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx); // TODO: i think its not actually a problem
+        pCook->currentCookingItem = getNextCookItem(pCook->currentCookingItem, tileIdx);
         pCook->state = caS_check_inventory;
       }
     }
