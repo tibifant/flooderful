@@ -83,6 +83,8 @@ enum resource_type : uint8_t
   tT_count
 };
 
+// TODO: markets: (so cute) a place where all food items are dropped off so the food actor can collect them? - hmm seems not that straight forward - as we would maybe want a range of tiles for the market where we can drop off items, tiles that do not yet have items but can be used for drop off if the others are full and the tiles would need to hold several item counts for various items
+
 //////////////////////////////////////////////////////////////////////////
 
 enum direction : uint8_t
