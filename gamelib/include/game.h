@@ -78,12 +78,16 @@ enum resource_type : uint8_t
   tT_meal, // insert meal types here
   _tile_type_food_last = tT_meal,
 
+  tT_market,
+
   tT_mountain,
 
   tT_count
 };
 
 // TODO: markets: (so cute) a place where all food items are dropped off so the food actor can collect them? - hmm seems not that straight forward - as we would maybe want a range of tiles for the market where we can drop off items, tiles that do not yet have items but can be used for drop off if the others are full and the tiles would need to hold several item counts for various items
+
+// tT_market: has to conclude to what ever ptT_resources sits there... so we need something like with drop offs -> where we check the resource amount...
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +131,7 @@ struct pathfinding_element
 static constexpr uint8_t MaxFireResourceCount = 9;
 static constexpr uint8_t MaxFoodItemResourceCount = 255;
 static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 1};
-static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
+static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count - 1); // -1 for markets that do not have a single maxCount
 
 struct gameplay_element
 {
@@ -137,8 +141,14 @@ struct gameplay_element
   //bool hasHouse;
 
   gameplay_element() = default;
-  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count), maxResourceCount(MaxResourceCounts[type]) {}
+  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count) 
+  {
+    lsAssert(type < tT_count);
+    maxResourceCount = type > tT_market ? MaxResourceCounts[type - 1] : MaxResourceCounts[type]; // markets don't have a single macCount
+  }
 };
+
+// TODO: resourceCount and maxResourceCOunt with all other tileTypes as option?
 
 // TODO: render element: texture, height, etc
 struct render_element
