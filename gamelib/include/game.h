@@ -3,6 +3,8 @@
 #include "core.h"
 #include "pool.h"
 #include "queue.h"
+#include "list.h"
+#include "local_list.h"
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -133,11 +135,18 @@ static constexpr uint8_t MaxFoodItemResourceCount = 255;
 static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 1};
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count - 1); // -1 for markets that do not have a single maxCount
 
+// count: index of list where the amounts are saved -> if `resourceCount` == -1: look in list (if 0 all are 0) else just take normal resource count
+// list of arrays of count tT_count?
+
+list<local_list<uint8_t, tT_count>> MultiResourceCounts; // small_list better?
+
 struct gameplay_element
 {
   resource_type tileType;
   uint8_t resourceCount;
   uint8_t maxResourceCount;
+  size_t resourceCountIndex;
+  // Several maxResourceCounts can be concluded from array when tileTypes are known
   //bool hasHouse;
 
   gameplay_element() = default;
