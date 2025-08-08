@@ -145,7 +145,7 @@ struct gameplay_element
   resource_type tileType;
   uint8_t resourceCount;
   uint8_t maxResourceCount;
-  size_t resourceCountIndex;
+  int8_t resourceCountIndex = -1;
   // Several maxResourceCounts can be concluded from array when tileTypes are known
   //bool hasHouse;
 
@@ -156,8 +156,6 @@ struct gameplay_element
     maxResourceCount = type > tT_market ? MaxResourceCounts[type - 1] : MaxResourceCounts[type]; // markets don't have a single macCount
   }
 };
-
-// TODO: resourceCount and maxResourceCOunt with all other tileTypes as option?
 
 // TODO: render element: texture, height, etc
 struct render_element

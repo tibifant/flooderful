@@ -847,6 +847,10 @@ void update_lifesupportActors()
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
 
+// add to market tile
+// check count of item
+// if low/empty: add
+
 static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
 void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
