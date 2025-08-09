@@ -171,6 +171,8 @@ struct match_resource<pathfinding_target_type::ptT_collidable>
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_mountain; };
 };
 
+// TODO: handle market tiles
+
 template<pathfinding_target_type p>
 void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
 {
@@ -178,7 +180,14 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount))
+    // if listindex > 0: iterate list at index and match the one's with index > 0.
+    if (pMap[i].resourceCountIndex > 0)
+    {
+      // get list
+      // if listpMap[i].resourceCountIndex
+      // atDest...
+    }
+    else if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
@@ -850,6 +859,8 @@ void update_lifesupportActors()
 // add to market tile
 // check count of item
 // if low/empty: add
+
+
 
 static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
