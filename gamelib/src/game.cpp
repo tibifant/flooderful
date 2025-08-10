@@ -183,7 +183,7 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
     // if listindex > 0: iterate list at index and match the one's with index > 0.
     if (pMap[i].resourceCountIndex > 0)
     {
-      // get list
+      for (... MultiResourceCounts[pMap[i].resourceCountIndex])
       // if listpMap[i].resourceCountIndex
       // atDest...
     }
