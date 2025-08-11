@@ -31,6 +31,7 @@ template<>
 struct match_resource<pathfinding_target_type::ptT_grass>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_grass; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> &mulitTypeCounts) { return mulitTypeCounts[ptT_grass]; };
 };
 
 template<>
@@ -171,7 +172,7 @@ struct match_resource<pathfinding_target_type::ptT_collidable>
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_mountain; };
 };
 
-// TODO: handle market tiles
+// TODO: add second match resource implementation
 
 template<pathfinding_target_type p>
 void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
@@ -180,21 +181,16 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    // if listindex > 0: iterate list at index and match the one's with index > 0.
-    if (pMap[i].resourceCountIndex > 0)
-    {
-      for (... MultiResourceCounts[pMap[i].resourceCountIndex])
-      // if listpMap[i].resourceCountIndex
-      // atDest...
-    }
-    else if (match_resource<p>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount))
+    const gameplay_element e = pMap[i];
+
+    if (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount) || (e.resourceCountIndex > 0 && match_resource<p>::resourceAttribute_matches_resource(get_list(&MultiResourceCounts, e.resourceCountIndex)))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
     }
     else
     {
-      pDirectionLookup[i].dir = (direction)(d_unfillable * (direction)(match_resource<ptT_collidable>::resourceAttribute_matches_resource(pMap[i].tileType, pMap[i].resourceCount)));
+      pDirectionLookup[i].dir = (direction)(d_unfillable * (direction)(match_resource<ptT_collidable>::resourceAttribute_matches_resource(e.tileType, e.resourceCount)));
     }
   }
 }
