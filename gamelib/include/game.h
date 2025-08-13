@@ -132,13 +132,11 @@ struct pathfinding_element
 
 static constexpr uint8_t MaxFireResourceCount = 9;
 static constexpr uint8_t MaxFoodItemResourceCount = 255;
-static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 1};
-static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count - 1); // -1 for markets that do not have a single maxCount
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*markets don't actually have a normal maxResourceCount*/, 1};
+static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 // count: index of list where the amounts are saved -> if `resourceCount` == -1: look in list (if 0 all are 0) else just take normal resource count
 // list of arrays of count tT_count?
-
-list<local_list<uint8_t, tT_count>> MultiResourceCounts; // small_list better?
 
 struct gameplay_element
 {
@@ -153,7 +151,7 @@ struct gameplay_element
   gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count) 
   {
     lsAssert(type < tT_count);
-    maxResourceCount = type > tT_market ? MaxResourceCounts[type - 1] : MaxResourceCounts[type]; // markets don't have a single macCount
+    maxResourceCount = MaxResourceCounts[type];
   }
 };
 
@@ -280,6 +278,8 @@ struct level_info
 
   bool isNight = false;
   vec2i16 playerPos;
+
+  list<local_list<uint8_t, ptT_Count>> multiResourceCounts;
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
