@@ -195,8 +195,6 @@ struct match_resource<pathfinding_target_type::ptT_collidable>
   FORCEINLINE static bool resourceAttribute_matches_resourceList(const local_list<uint8_t, ptT_Count> *pMultiTypeCounts) { return local_list_get(pMultiTypeCounts, ptT_collidable); };
 };
 
-// TODO: add second match resource implementation
-
 template<pathfinding_target_type p>
 void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
 {
@@ -205,6 +203,10 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
     const gameplay_element e = pMap[i];
+
+    // TODO: this got more complicated:
+    // if mulitype (resourceCount > 0):
+    // for each value in list > 0: resourceAttribute_matches_resource mit index als tT
 
     if (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount) || (e.resourceCountIndex > 0 && match_resource<p>::resourceAttribute_matches_resourceList(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))))
     {
@@ -251,6 +253,8 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 }
 
 //////////////////////////////////////////////////////////////////////////
+
+// todo: when intializing the multiCount lists: set to zero as we will read from it to check wether or not there's something
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {

@@ -269,7 +269,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
   (void)pAppState;
 
   // TODO!!
-  const vec4f colors[tT_count] = {
+  const vec4f colors[] = {
     vec4f(0.1f, 0.4f, 0, 0), // tT_grass
     vec4f(0.3f, 0.22f, 0.17f, 0), // tT_soil
     vec4f(0, 0.2f, 0.4f, 0), // tT_water 
@@ -292,6 +292,8 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     vec4f(1.f, 1.f, 0, 0), // tT_market
     vec4f(0.25f, 0.25f, 0.25f, 0), // tT_mountain
   };
+
+  static_assert(LS_ARRAYSIZE(colors) == tT_count);
 
   for (size_t y = 0; y < levelInfo.map_size.y; y++)
   {

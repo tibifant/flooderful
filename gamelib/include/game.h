@@ -132,11 +132,8 @@ struct pathfinding_element
 
 static constexpr uint8_t MaxFireResourceCount = 9;
 static constexpr uint8_t MaxFoodItemResourceCount = 255;
-static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*markets don't actually have a normal maxResourceCount*/, 1};
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*placeholder for markets not actually ahving a single count*/, 1};
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
-
-// count: index of list where the amounts are saved -> if `resourceCount` == -1: look in list (if 0 all are 0) else just take normal resource count
-// list of arrays of count tT_count?
 
 struct gameplay_element
 {
@@ -144,7 +141,7 @@ struct gameplay_element
   uint8_t resourceCount;
   uint8_t maxResourceCount;
   int8_t resourceCountIndex = -1;
-  // Several maxResourceCounts can be concluded from array when tileTypes are known
+  // Several maxResourceCounts can be concluded from array when tileTypes are known - ahh but we don't know the tiletypes...
   //bool hasHouse;
 
   gameplay_element() = default;
@@ -279,7 +276,7 @@ struct level_info
   bool isNight = false;
   vec2i16 playerPos;
 
-  list<local_list<uint8_t, ptT_Count>> multiResourceCounts;
+  list<local_list<uint8_t, tT_count>> multiResourceCounts;
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
