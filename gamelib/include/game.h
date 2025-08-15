@@ -45,6 +45,7 @@ enum pathfinding_target_type : uint8_t
   ptT_meal_drop_off, // order matches resource_type food types
   _ptT_drop_off_last = ptT_meal_drop_off,
 
+  ptT_market,
   ptT_collidable, // ptT_collidable always has to be last!
 
   ptT_Count
@@ -276,7 +277,7 @@ struct level_info
   bool isNight = false;
   vec2i16 playerPos;
 
-  list<local_list<uint8_t, tT_count>> multiResourceCounts;
+  list<local_list<uint8_t, tT_count>> multiResourceCounts; // We must *never* delete anything from this list, as the indizes would change otherwise!
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;

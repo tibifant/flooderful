@@ -204,11 +204,35 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     const gameplay_element e = pMap[i];
 
-    // TODO: this got more complicated:
-    // if mulitype (resourceCount > 0):
-    // for each value in list > 0: resourceAttribute_matches_resource mit index als tT
+    // srew that again...:
+    // TODO: ahh how does this work out? if the tile is a multi tile like market (index > -1) but there is nothing on it (index == 0): it is an empty market tile? or if there is stuff on there but still some space left (count of (entries > 0) > maxCountPerMuliTile)
+    // TODO ?:
+    // struct multiResourceTile
+    // {
+    //   local_list counts
+    //    count
+    //  }
 
-    if (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount) || (e.resourceCountIndex > 0 && match_resource<p>::resourceAttribute_matches_resourceList(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))))
+    if (e.resourceCountIndex > 0) // TODO: remeber to check here in case we change the plan to use zero as index for empty tiles!
+    {
+      bool matchedAny = false;
+      size_t j = (size_t)-1;
+
+      for (const uint8_t c : list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))
+      {
+        i++;
+
+        if (c > 0 && match_resource<p>::resourceAttribute_matches_resource(((resource_type)i), c))
+        {
+          matchedAny = true;
+          queue_pushBack(&pathfindQueue, fill_step(i, 0));
+          pDirectionLookup[i].dir = d_atDestination;
+        }
+      }
+
+      lsAssert(matchedAny); // otherwise must be set to something... (but should not occur, when tiles 
+    }
+    else if (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount) || (e.resourceCountIndex > 0 && match_resource<p>::resourceAttribute_matches_resourceList(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
