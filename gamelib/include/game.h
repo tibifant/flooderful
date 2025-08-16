@@ -147,7 +147,7 @@ struct gameplay_element
   resource_type tileType;
   uint8_t resourceCount;
   uint8_t maxResourceCount;
-  int8_t resourceCountIndex = -1; // index for multiResourceCounts list.
+  int16_t resourceCountIndex = -1; // index for multiResourceCounts list.
   // Several maxResourceCounts can be concluded from array when tileTypes are known - ahh but we don't know the tiletypes...
   //bool hasHouse;
 

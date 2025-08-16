@@ -31,12 +31,14 @@ template<>
 struct match_resource<pathfinding_target_type::ptT_grass>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_grass; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const multiResourceTile &tile) { return tile.resourceCounts[tT_grass] > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_soil>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_soil; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const multiResourceTile &tile) { return tile.resourceCounts[tT_soil] > 0; };
 };
 
 template<>
