@@ -138,16 +138,16 @@ static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct multiResourceTile
 {
-  local_list<uint8_t, tT_count> counts;
+  local_list<uint8_t, tT_count> resourceCounts;
   uint8_t count;
-}
+};
 
 struct gameplay_element
 {
   resource_type tileType;
   uint8_t resourceCount;
   uint8_t maxResourceCount;
-  int8_t resourceCountIndex = -1;
+  int8_t resourceCountIndex = -1; // index for multiResourceCounts list.
   // Several maxResourceCounts can be concluded from array when tileTypes are known - ahh but we don't know the tiletypes...
   //bool hasHouse;
 
@@ -283,7 +283,7 @@ struct level_info
   bool isNight = false;
   vec2i16 playerPos;
 
-  list<local_list<uint8_t, tT_count>> multiResourceCounts; // We must *never* delete anything from this list, as the indizes would change otherwise!
+  list<multiResourceTile> multiResourceCounts; // We must *never* delete anything from this list, as the indizes would change otherwise!
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
