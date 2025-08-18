@@ -192,7 +192,7 @@ template<>
 struct match_resource<pathfinding_target_type::ptT_empty_market>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_market; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const multi_resource_tile *pTile) { return pTile->count < MaxTypesPerMarket; }; // Only correct as long as markets are the onlty multi resource tiles!
+  FORCEINLINE static bool resourceAttribute_matches_resource(const multi_resource_tile *pTile) { return pTile->count < MaxResourcesPerMarket; }; // Only correct as long as markets are the onlty multi resource tiles!
 };
 
 template<>
@@ -211,12 +211,7 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     const gameplay_element e = pMap[i];
 
-    if (e.resourceCountIndex > -1 && match_resource<p>::resourceAttribute_matches_resource(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex)))
-    {
-      queue_pushBack(&pathfindQueue, fill_step(i, 0));
-      pDirectionLookup[i].dir = d_atDestination;
-    }
-    else if (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount))
+    if ((e.resourceCountIndex > -1 && match_resource<p>::resourceAttribute_matches_resource(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))) || (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount)))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
@@ -261,8 +256,6 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-// todo: when intializing the multiCount lists: set to zero as we will read from it to check wether or not there's something
 
 void mapInit(const size_t width, const size_t height/*, bool *pCollidableMask*/)
 {
@@ -673,11 +666,13 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   return value - prevVal;
 }
 
-bool change_tile_to(const resource_type targetType, const resource_type expectedPreviousType, const size_t tileIdx, const uint8_t count)
+bool change_tile_to(const resource_type targetType, const resource_type expectedCurrentType, const size_t tileIdx, const uint8_t count)
 {
   // TODO: if we can conclude from the resource_type to the ptt we could add an assert, that the ptt is `at_dest` in the pathfindingMap to assert, that the `expectedType` isn't nonsense
 
-  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedPreviousType)
+  lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
   {
     // TODO what free assert did coc talk about?
     _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(targetType, count);
@@ -686,6 +681,37 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   }
 
   return false;
+}
+
+bool add_to_market_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+{
+  lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+  gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
+
+  lsAssert(pTile->tileType == tT_market);
+  lsAssert(pTile->resourceCountIndex > -1);
+
+  multi_resource_tile *pMultiTile = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+
+  // tile already has resource? add if free space.
+  if (pMultiTile->resourceCounts[resource] < MaxResourceCounts[resource]) // TODO: Maybe use seperate max count for this.
+  {
+    // add
+    return true;
+  }
+  else
+  {
+    if (pMultiTile->count < MaxResourcesPerMarket)
+    {
+      // add
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
