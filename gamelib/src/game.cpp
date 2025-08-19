@@ -694,17 +694,23 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
 
   multi_resource_tile *pMultiTile = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
 
-  // tile already has resource? add if free space.
-  if (pMultiTile->resourceCounts[resource] < MaxResourceCounts[resource]) // TODO: Maybe use seperate max count for this.
+  if (pMultiTile->resourceCounts[resource] > 0)
   {
-    // add
-    return true;
+    if (pMultiTile->resourceCounts[resource] < MaxResourceCounts[resource])
+    {
+      pMultiTile->resourceCounts[resource] = modify_with_clamp(pMultiTile->resourceCounts[resource], amount, uint8_t(0), MaxResourceCounts[resource]);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
   else
   {
     if (pMultiTile->count < MaxResourcesPerMarket)
     {
-      // add
+      pMultiTile->resourceCounts[resource] = modify_with_clamp(pMultiTile->resourceCounts[resource], amount, uint8_t(0), MaxResourceCounts[resource]);
       return true;
     }
     else
