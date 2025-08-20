@@ -250,6 +250,7 @@ void rebuild_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> 
   case ptT_wheat_drop_off: fill_resource_info<ptT_wheat_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_sunflower_drop_off: fill_resource_info<ptT_sunflower_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_meal_drop_off: fill_resource_info<ptT_meal_drop_off>(pDirectionLookup, pathfindQueue, pResourceMap); break;
+  case ptT_empty_market: fill_resource_info<ptT_empty_market>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   case ptT_collidable: fill_resource_info<ptT_collidable>(pDirectionLookup, pathfindQueue, pResourceMap); break;
   default: lsFail(); // not implemented.
   }
@@ -719,6 +720,11 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
     }
   }
 }
+
+// markets:
+// for dropping off: target = resource type if not there: empty_market.
+// we could have ptts for each resource for drop offs, but like... that's a lot
+// otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh 
 
 //////////////////////////////////////////////////////////////////////////
 
