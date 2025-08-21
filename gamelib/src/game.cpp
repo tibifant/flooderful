@@ -724,7 +724,13 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
 // markets:
 // for dropping off: target = resource type if not there: empty_market.
 // we could have ptts for each resource for drop offs, but like... that's a lot
-// otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh 
+// otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh
+
+bool check_market(const resource_type resource, const pathfinding_target_type target, const uint8_t amount, const size_t tileIdx)
+{
+  // if add... top
+  // else ......
+}
 
 //////////////////////////////////////////////////////////////////////////
 
