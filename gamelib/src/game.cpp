@@ -729,7 +729,20 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
 bool check_market(const resource_type resource, const pathfinding_target_type target, const uint8_t amount, const size_t tileIdx)
 {
   // if add... top
-  // else ......
+  if (add_to_market_tile(resource, amount, tileIdx))
+    return true;
+  
+  // go to random tile or empty market?
+}
+
+pathfinding_target_type choose_market_target(const resource_type, const pathfinding_target_type target, const size_t tileIdx)
+{
+  const level_info::resource_info &info = _Game.levelInfo.resources[target];
+
+  if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir != d_unreachable) // this cannot asure that the target tile has still empty space for the resource
+    return target;
+    
+  return ptT_empty_market;
 }
 
 //////////////////////////////////////////////////////////////////////////
