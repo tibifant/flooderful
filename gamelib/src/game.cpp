@@ -655,6 +655,16 @@ void movementActor_move()
   }
 }
 
+void moveToPos(movement_actor &actor, const vec2i8 target)
+{
+  // move in dir of target pos until at target
+}
+
+vec2i8 getRandPos(vec2i8 currentPos)
+{
+  // check for non collidable
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -726,14 +736,7 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
 // we could have ptts for each resource for drop offs, but like... that's a lot
 // otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh
 
-bool check_market(const resource_type resource, const pathfinding_target_type target, const uint8_t amount, const size_t tileIdx)
-{
-  // if add... top
-  if (add_to_market_tile(resource, amount, tileIdx))
-    return true;
-  
-  // go to random tile or empty market?
-}
+// check_market: if at market: add to market if success: top, else move somewhere else?
 
 pathfinding_target_type choose_market_target(const resource_type, const pathfinding_target_type target, const size_t tileIdx)
 {
