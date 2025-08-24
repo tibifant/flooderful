@@ -655,16 +655,6 @@ void movementActor_move()
   }
 }
 
-void moveToPos(movement_actor &actor, const vec2i8 target)
-{
-  // move in dir of target pos until at target
-}
-
-vec2i8 getRandPos(vec2i8 currentPos)
-{
-  // check for non collidable
-}
-
 //////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -693,6 +683,8 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
   return false;
 }
+
+// i don't know... i have to think about markets more. maybe we just can always drop something off? maybe there's a drop off and the items get stored otherwise? so just a tile where you can drop off and access all at the market storable items...
 
 bool add_to_market_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
 {
