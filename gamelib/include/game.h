@@ -45,7 +45,7 @@ enum pathfinding_target_type : uint8_t
   ptT_meal_drop_off, // order matches resource_type food types
   _ptT_drop_off_last = ptT_meal_drop_off,
 
-  ptT_empty_market,
+  ptT_market,
   ptT_collidable, // ptT_collidable always has to be last!
 
   ptT_Count
