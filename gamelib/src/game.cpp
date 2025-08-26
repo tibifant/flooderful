@@ -686,7 +686,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 // i don't know... i have to think about markets more. maybe we just can always drop something off? maybe there's a drop off and the items get stored otherwise? so just a tile where you can drop off and access all at the market storable items...
 
-bool add_to_market_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+void add_to_market_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
@@ -695,32 +695,9 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
   lsAssert(pTile->tileType == tT_market);
   lsAssert(pTile->resourceCountIndex > -1);
 
-  multi_resource_tile *pMultiTile = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+  local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
 
-  if (pMultiTile->resourceCounts[resource] > 0)
-  {
-    if (pMultiTile->resourceCounts[resource] < MaxResourceCounts[resource])
-    {
-      pMultiTile->resourceCounts[resource] = modify_with_clamp(pMultiTile->resourceCounts[resource], amount, uint8_t(0), MaxResourceCounts[resource]);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
-    if (pMultiTile->count < MaxResourcesPerMarket)
-    {
-      pMultiTile->resourceCounts[resource] = modify_with_clamp(pMultiTile->resourceCounts[resource], amount, uint8_t(0), MaxResourceCounts[resource]);
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
+ (*pList)[resource] = modify_with_clamp((*pList)[resource], amount);
 }
 
 // markets:
@@ -729,16 +706,6 @@ bool add_to_market_tile(const resource_type resource, const uint8_t amount, cons
 // otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh
 
 // check_market: if at market: add to market if success: top, else move somewhere else?
-
-pathfinding_target_type choose_market_target(const resource_type, const pathfinding_target_type target, const size_t tileIdx)
-{
-  const level_info::resource_info &info = _Game.levelInfo.resources[target];
-
-  if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir != d_unreachable) // this cannot asure that the target tile has still empty space for the resource
-    return target;
-    
-  return ptT_market;
-}
 
 //////////////////////////////////////////////////////////////////////////
 
