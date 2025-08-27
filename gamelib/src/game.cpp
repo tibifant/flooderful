@@ -686,9 +686,10 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
 
 // i don't know... i have to think about markets more. maybe we just can always drop something off? maybe there's a drop off and the items get stored otherwise? so just a tile where you can drop off and access all at the market storable items...
 
-void add_to_market_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+void add_to_market(const resource_type resource, const uint8_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(resource < tT_count);
 
   gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
 
@@ -700,12 +701,33 @@ void add_to_market_tile(const resource_type resource, const uint8_t amount, cons
  (*pList)[resource] = modify_with_clamp((*pList)[resource], amount);
 }
 
+// TODO: change to generall func for taking items 1) because as the one taking items we don't know its a market 2) it's not handled correctly everywhere else...
+uint8_t get_from_market(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+{
+  lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(resource < tT_count);
+
+  gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
+
+  lsAssert(pTile->tileType == tT_market);
+  lsAssert(pTile->resourceCountIndex > -1);
+
+  local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+  uint8_t *pValue = local_list_get(pList, resource);
+  const uint8_t before = *pValue;
+
+  if (before == 0)
+    return 0;
+  
+  *pValue = modify_with_clamp(*pValue, -amount);
+
+  return before - *pValue;
+}
+
 // markets:
 // for dropping off: target = resource type if not there: empty_market.
 // we could have ptts for each resource for drop offs, but like... that's a lot
 // otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh
-
-// check_market: if at market: add to market if success: top, else move somewhere else?
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -905,12 +927,6 @@ void update_lifesupportActors()
 // TODO: we could add ranges to operate in for the actors so they won't cross eachother's paths so much - well this does not quite work 1) because we can only ever have a range from where we currently are. 2) because actors need to go to fire/food further away. - only if the actors alwyas return to the one same place after everu step (but then every actor would need his own resource type...
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
-
-// add to market tile
-// check count of item
-// if low/empty: add
-
-
 
 static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
