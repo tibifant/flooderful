@@ -684,9 +684,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   return false;
 }
 
-// i don't know... i have to think about markets more. maybe we just can always drop something off? maybe there's a drop off and the items get stored otherwise? so just a tile where you can drop off and access all at the market storable items...
-
-void add_to_market(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+void add_to_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -698,36 +696,45 @@ void add_to_market(const resource_type resource, const uint8_t amount, const siz
 
   local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
 
- (*pList)[resource] = modify_with_clamp((*pList)[resource], amount);
+  (*pList)[resource] = modify_with_clamp((*pList)[resource], amount);
 }
 
-// TODO: change to generall func for taking items 1) because as the one taking items we don't know its a market 2) it's not handled correctly everywhere else...
-uint8_t get_from_market(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint8_t amount)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
 
   gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
 
-  lsAssert(pTile->tileType == tT_market);
-  lsAssert(pTile->resourceCountIndex > -1);
+  if (pTile->resourceCountIndex == -1)
+  {
+    lsAssert(pTile->tileType == resource);
 
-  local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
-  uint8_t *pValue = local_list_get(pList, resource);
-  const uint8_t before = *pValue;
+    const uint8_t before = pTile->resourceCount;
 
-  if (before == 0)
-    return 0;
-  
-  *pValue = modify_with_clamp(*pValue, -amount);
+    if (before == 0)
+      return 0;
 
-  return before - *pValue;
+    pTile->resourceCount = modify_with_clamp(pTile->resourceCount, -amount);
+
+    return before - pTile->resourceCount;
+  }
+  else
+  {
+    lsAssert(pTile->tileType == tT_market);
+
+    local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+    uint8_t *pValue = local_list_get(pList, resource);
+    const uint8_t before = *pValue;
+
+    if (before == 0)
+      return 0;
+
+    *pValue = modify_with_clamp(*pValue, -amount);
+
+    return before - *pValue;
+  }
 }
-
-// markets:
-// for dropping off: target = resource type if not there: empty_market.
-// we could have ptts for each resource for drop offs, but like... that's a lot
-// otherwise: if at market and it's full: random dir until not empty market tile??? or empty_market as target. both meh
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -1214,6 +1221,7 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
+            get_from_tile(tileIdx, ..., AddedResourceAmount); // TODO hmm this is annoying as we don't know the exact tile type, maybe we still need to check if something is a market tile before... well we could simply use the type of the tile lol...
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
             // remove
