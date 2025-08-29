@@ -684,7 +684,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   return false;
 }
 
-void add_to_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+uint8_t add_to_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -696,7 +696,7 @@ void add_to_tile(const resource_type resource, const uint8_t amount, const size_
 
   local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
 
-  (*pList)[resource] = modify_with_clamp((*pList)[resource], amount);
+  return modify_with_clamp((*pList)[resource], amount);
 }
 
 uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint8_t amount)
@@ -709,30 +709,13 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
   if (pTile->resourceCountIndex == -1)
   {
     lsAssert(pTile->tileType == resource);
-
-    const uint8_t before = pTile->resourceCount;
-
-    if (before == 0)
-      return 0;
-
-    pTile->resourceCount = modify_with_clamp(pTile->resourceCount, -amount);
-
-    return before - pTile->resourceCount;
+    return modify_with_clamp(pTile->resourceCount, -amount);
   }
   else
   {
     lsAssert(pTile->tileType == tT_market);
-
     local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
-    uint8_t *pValue = local_list_get(pList, resource);
-    const uint8_t before = *pValue;
-
-    if (before == 0)
-      return 0;
-
-    *pValue = modify_with_clamp(*pValue, -amount);
-
-    return before - *pValue;
+    return modify_with_clamp(*local_list_get(pList, resource), -amount);
   }
 }
 
@@ -1221,11 +1204,8 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
-            get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount); // TODO we don't know the exact tile type we're looking for
+            get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount); // TODO we don't know the exact tile type we
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
-
-            // remove
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedResourceAmount);
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
