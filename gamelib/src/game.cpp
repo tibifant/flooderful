@@ -1221,7 +1221,7 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
-            get_from_tile(tileIdx, ..., AddedResourceAmount); // TODO hmm this is annoying as we don't know the exact tile type, maybe we still need to check if something is a market tile before... well we could simply use the type of the tile lol...
+            get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount); // TODO we don't know the exact tile type we're looking for
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
 
             // remove
