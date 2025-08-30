@@ -1204,8 +1204,7 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
-            get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount); // TODO we don't know the exact tile type we
-            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], AddedResourceAmount);
+            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount)); // we don't know the exact resource type here so we call `get_from_tile` with the actual tileType which is not the intended use.
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
@@ -1227,7 +1226,7 @@ void update_cook()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem || _Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
           break;
 
-        modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
+        modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount); // TODO: implement market use...
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
