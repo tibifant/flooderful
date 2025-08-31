@@ -285,6 +285,8 @@ void setMapBorder()
   }
 }
 
+// TODO: handle market -> set tileType, add to list, set index
+
 void setTerrainTo(const resource_type type)
 {
   lsAssert(type < tT_count);
@@ -873,7 +875,7 @@ void update_lifesupportActors()
               lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
               modify_with_clamp(pLifeSupport->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-              modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain);
+              modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain); // TODO
 
               //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               //  _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_grass, 1); // no `change_tile_to` usage because we check earlier
@@ -1168,11 +1170,11 @@ void update_cook()
       else if (!anyItemMissing) // if all items in inventory
       {
         pCook->state = caS_cook;
-        const pathfinding_target_type targetNutrient = (pathfinding_target_type)(_ptT_drop_off_first + (pCook->currentCookingItem - _tile_type_food_first));
+        //const pathfinding_target_type targetNutrient = (pathfinding_target_type)(_ptT_drop_off_first + (pCook->currentCookingItem - _tile_type_food_first));
 
-        lsAssert(targetNutrient >= _ptT_drop_off_first && targetNutrient <= _ptT_drop_off_last);
+        //lsAssert(targetNutrient >= _ptT_drop_off_first && targetNutrient <= _ptT_drop_off_last);
 
-        pActor->target = targetNutrient;
+        pActor->target = ptT_market; //targetNutrient;
         pActor->atDestination = false;
       }
 
@@ -1226,7 +1228,7 @@ void update_cook()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem || _Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
           break;
 
-        modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, (uint8_t)0, _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount); // TODO: implement market use...
+        add_to_tile(pCook->currentCookingItem, AddedCookedItemAmount, tileIdx);
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
@@ -1326,7 +1328,7 @@ void update_fireActor()
           if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
             modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedWood);
+            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedWood); // TODO
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
@@ -1359,7 +1361,7 @@ void update_fireActor()
               {
                 pFireActor->wood_inventory -= WoodPerFire;
                 _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
-                modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
+                modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount); // TODO
               }
               else
               {
