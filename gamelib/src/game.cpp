@@ -273,21 +273,32 @@ void setMapBorder()
   {
     for (size_t y = 0; y < _Game.levelInfo.map_size.y; y++)
     {
-      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);;
-      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1] = gameplay_element(tT_mountain, 0);;
+      _Game.levelInfo.pGameplayMap[y * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);
+      _Game.levelInfo.pGameplayMap[(y + 1) * _Game.levelInfo.map_size.x - 1] = gameplay_element(tT_mountain, 0);
     }
 
     for (size_t x = 0; x < _Game.levelInfo.map_size.x; x++)
     {
       _Game.levelInfo.pGameplayMap[x] = gameplay_element(tT_mountain, 0);
-      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);;
+      _Game.levelInfo.pGameplayMap[x + (_Game.levelInfo.map_size.y - 1) * _Game.levelInfo.map_size.x] = gameplay_element(tT_mountain, 0);
     }
   }
 }
 
-// TODO: handle market -> set tileType, add to list, set index
+void setToMarket(const size_t tileIndex)
+{
+  lsAssert(tileIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-void setTerrainTo(const resource_type type)
+  local_list<uint8_t, tT_count> l;
+  list_add(_Game.levelInfo.multiResourceCounts, l);
+
+  const size_t index = _Game.levelInfo.multiResourceCounts.count - 1; // do we actually *always* add to the end of the list?
+  lsAssert(list_get(&_Game.levelInfo.multiResourceCounts, index) == &l); // can i do that?
+
+  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element(index); // TODO: maybe a cleaner way?
+}
+
+void fillTerrain(const resource_type type)
 {
   lsAssert(type < tT_count);
 
@@ -474,7 +485,7 @@ void initializeLevel()
 {
   mapInit(16, 16);
   //setTerrain();
-  setTerrainTo(tT_grass);
+  fillTerrain(tT_grass);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable

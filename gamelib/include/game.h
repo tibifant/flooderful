@@ -151,6 +151,11 @@ struct gameplay_element
     lsAssert(type < tT_count);
     maxResourceCount = MaxResourceCounts[type];
   }
+
+  gameplay_element(const size_t multiTileIndex) : tileType(tT_market), resourceCount(0), resourceCountIndex(multiTileIndex)
+  {
+    maxResourceCount = MaxResourceCounts[tT_market];
+  }
 };
 
 // TODO: render element: texture, height, etc
