@@ -697,7 +697,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   return false;
 }
 
-uint8_t add_to_tile(const resource_type resource, const uint8_t amount, const size_t tileIdx)
+uint8_t add_to_tile(const resource_type resource, const int16_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -1338,8 +1338,7 @@ void update_fireActor()
         {
           if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
-            modify_with_clamp(pFireActor->wood_inventory, lsMin(AddedWood, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
-            modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -AddedWood); // TODO
+            modify_with_clamp(pFireActor->wood_inventory, add_to_tile(tT_wood, -AddedWood, tileIdx));
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
