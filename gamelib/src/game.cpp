@@ -697,7 +697,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   return false;
 }
 
-uint8_t add_to_tile(const resource_type resource, const int16_t amount, const size_t tileIdx)
+uint8_t add_to_market_tile(const resource_type resource, const int16_t amount, const size_t tileIdx)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -712,7 +712,7 @@ uint8_t add_to_tile(const resource_type resource, const int16_t amount, const si
   return modify_with_clamp((*pList)[resource], amount);
 }
 
-uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint8_t amount)
+uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const int16_t amount)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -722,7 +722,7 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
   if (pTile->resourceCountIndex == -1)
   {
     lsAssert(pTile->tileType == resource);
-    return modify_with_clamp(pTile->resourceCount, -amount);
+    return modify_with_clamp(pTile->resourceCount, amount);
   }
   else
   {
@@ -887,6 +887,7 @@ void update_lifesupportActors()
               modify_with_clamp(pLifeSupport->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
               modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain); // TODO
+              add_to_market_tile() // mm we need to know what food item.
 
               //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               //  _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_grass, 1); // no `change_tile_to` usage because we check earlier
@@ -1120,8 +1121,6 @@ void update_cook()
     { 1, 1, 1, 1 } // tT_meal
   };
 
-  // TODO: debug: setup with all food types and all food resources, fire and water and wood: food actor only gets stuck with multitypes as target instead of adding more food...
-
   for (const auto _actor : _CookActors)
   {
     cook_actor *pCook = _actor.pItem;
@@ -1217,7 +1216,7 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
-            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount)); // we don't know the exact resource type here so we call `get_from_tile` with the actual tileType which is not the intended use.
+            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount)); // todo: find out which exact resource we want. mmm this is bad news, because this is not how we handle meals when picking them up...
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
@@ -1239,7 +1238,7 @@ void update_cook()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem || _Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
           break;
 
-        add_to_tile(pCook->currentCookingItem, AddedCookedItemAmount, tileIdx);
+        add_to_market_tile(pCook->currentCookingItem, AddedCookedItemAmount, tileIdx);
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
@@ -1338,7 +1337,7 @@ void update_fireActor()
         {
           if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
-            modify_with_clamp(pFireActor->wood_inventory, add_to_tile(tT_wood, -AddedWood, tileIdx));
+            modify_with_clamp(pFireActor->wood_inventory, get_from_tile(tileIdx, tT_wood, AddedWood));
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
