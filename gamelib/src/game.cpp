@@ -886,8 +886,7 @@ void update_lifesupportActors()
               lsAssert(tileType - _tile_type_food_first >= 0 && tileType - _tile_type_food_first <= _tile_type_food_last);
               modify_with_clamp(pLifeSupport->lunchbox[tileType - _tile_type_food_first], FoodItemGain, MinFoodItemCount, MaxFoodItemCount);
 
-              modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain); // TODO
-              add_to_market_tile() // mm we need to know what food item.
+              modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, -FoodItemGain);
 
               //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               //  _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_grass, 1); // no `change_tile_to` usage because we check earlier
@@ -1180,11 +1179,11 @@ void update_cook()
       else if (!anyItemMissing) // if all items in inventory
       {
         pCook->state = caS_cook;
-        //const pathfinding_target_type targetNutrient = (pathfinding_target_type)(_ptT_drop_off_first + (pCook->currentCookingItem - _tile_type_food_first));
+        const pathfinding_target_type targetNutrient = (pathfinding_target_type)(_ptT_drop_off_first + (pCook->currentCookingItem - _tile_type_food_first));
 
-        //lsAssert(targetNutrient >= _ptT_drop_off_first && targetNutrient <= _ptT_drop_off_last);
+        lsAssert(targetNutrient >= _ptT_drop_off_first && targetNutrient <= _ptT_drop_off_last);
 
-        pActor->target = ptT_market; //targetNutrient;
+        pActor->target = targetNutrient;
         pActor->atDestination = false;
       }
 
@@ -1238,7 +1237,7 @@ void update_cook()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != pCook->currentCookingItem || _Game.levelInfo.pGameplayMap[tileIdx].resourceCount == _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount)
           break;
 
-        add_to_market_tile(pCook->currentCookingItem, AddedCookedItemAmount, tileIdx);
+        modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, AddedCookedItemAmount, uint8_t(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
 
         for (size_t i = 0; i < LS_ARRAYSIZE(pCook->inventory); i++)
         {
