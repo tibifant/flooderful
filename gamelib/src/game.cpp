@@ -285,17 +285,17 @@ void setMapBorder()
   }
 }
 
-void setToMarket(const size_t tileIndex)
+void setTileToMarket(const size_t tileIndex)
 {
   lsAssert(tileIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
   local_list<uint8_t, tT_count> l;
   list_add(_Game.levelInfo.multiResourceCounts, l);
 
-  const size_t index = _Game.levelInfo.multiResourceCounts.count - 1; // do we actually *always* add to the end of the list?
+  const size_t index = _Game.levelInfo.multiResourceCounts.count - 1;
   lsAssert(list_get(&_Game.levelInfo.multiResourceCounts, index) == &l); // can i do that?
 
-  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element(index); // TODO: maybe a cleaner way?
+  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element(index);
 }
 
 void fillTerrain(const resource_type type)
@@ -304,10 +304,21 @@ void fillTerrain(const resource_type type)
 
   rand_seed seed = rand_seed(2, 2);
 
-  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+  if (type == tT_market)
   {
-    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
-    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+    {
+      setTileToMarket(i);
+      _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+    }
+  }
+  else
+  {
+    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
+    {
+      _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
+      _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+    }
   }
 
   setMapBorder();
@@ -486,6 +497,9 @@ void initializeLevel()
   mapInit(16, 16);
   //setTerrain();
   fillTerrain(tT_grass);
+
+  // temporary:
+  setTileToMarket(32 * 32 + 8);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -924,9 +938,6 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
-// for market tile: 
-// pathfind towards ptT_market: if full: look for ptT_market_drop_off (meh this does not solve the issue, that it could just be full for *my* item... drop offs tile for every type could sovle that...)
-
 // TODO: we could add ranges to operate in for the actors so they won't cross eachother's paths so much - well this does not quite work 1) because we can only ever have a range from where we currently are. 2) because actors need to go to fire/food further away. - only if the actors alwyas return to the one same place after everu step (but then every actor would need his own resource type...
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
@@ -1016,7 +1027,7 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
+        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4)) // TODO test market tiles
           incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;

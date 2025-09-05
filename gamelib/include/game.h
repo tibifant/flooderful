@@ -142,7 +142,6 @@ struct gameplay_element
   uint8_t resourceCount;
   uint8_t maxResourceCount;
   int16_t resourceCountIndex = -1; // index for multiResourceCounts list.
-  // Several maxResourceCounts can be concluded from array when tileTypes are known
   //bool hasHouse;
 
   gameplay_element() = default;
@@ -283,6 +282,7 @@ struct level_info
   vec2i16 playerPos;
 
   list<local_list<uint8_t, tT_count>> multiResourceCounts; // We must *never* delete anything from this list, as the indizes would change otherwise!
+  // TODO: the list should propably only include the resource_types up until tT_multi_types as e.g. meals cannot be pathfound to anyways.
 
   pathfinding_element *pPathfindingMap = nullptr;
   gameplay_element *pGameplayMap = nullptr;
