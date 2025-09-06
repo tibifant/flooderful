@@ -226,6 +226,14 @@ struct lumberjack_actor : actor
 //////////////////////////////////////////////////////////////////////////
 
 // TODO: maybe he should get a harvest task to add all the harvested stuff at some drop off
+enum farmer_actor_state
+{
+  faaS_plant,
+  faaS_harvest,
+  faaS_drop_off,
+
+  faaS_count
+};
 
 struct farmer_actor : actor {};
 

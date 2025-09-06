@@ -942,7 +942,7 @@ void update_lifesupportActors()
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
 
-static constexpr pathfinding_target_type Lumberjack_targetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
+static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
 void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
 {
@@ -950,7 +950,7 @@ void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_
   lsAssert(target < ptT_Count);
 
   state = (lumberjack_actor_state)((state + 1) % laS_count);
-  target = Lumberjack_targetFromState[state];
+  target = Lumberjack_TargetFromState[state];
 }
 
 void update_lumberjack()
@@ -966,7 +966,7 @@ void update_lumberjack()
       if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
       {
         pActor->survivalActorActive = false;
-        pActor->target = Lumberjack_targetFromState[pLumberjack->state];
+        pActor->target = Lumberjack_TargetFromState[pLumberjack->state];
         pActor->atDestination = false;
         continue;
       }
@@ -1027,7 +1027,7 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4)) // TODO test market tiles
+        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
           incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
@@ -1069,31 +1069,48 @@ void update_farmer()
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-      if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+      switch (pFarmer->state)
       {
-        pathfinding_target_type plant = ptT_Count;
-
-        for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
+      case faaS_plant:
+      {
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
         {
-          const level_info::resource_info &info = _Game.levelInfo.resources[i];
+          pathfinding_target_type plant = ptT_Count;
 
-          if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
+          for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
           {
-            plant = (pathfinding_target_type)i; // TODO: Maybe we want to just increment the last plant and if its already there we choose another one that isn't
-            break;
+            const level_info::resource_info &info = _Game.levelInfo.resources[i];
+
+            if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
+            {
+              plant = (pathfinding_target_type)i; // TODO: Maybe we want to just increment the last plant and if its already there we choose another one that isn't
+              break;
+            }
           }
+
+          if (plant == ptT_Count)
+            plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
+
+          constexpr uint8_t AddedAmountToPlant = 12;
+
+          resource_type resource = (resource_type)plant;
+          lsAssert(resource >= _tile_type_food_resources_first && resource <= _tile_type_food_resources_last);
+          change_tile_to(resource, tT_soil, tileIdx, AddedAmountToPlant); // no `if` as we check above.
+
+          pActor->atDestination = false;
         }
+      }
+      case faaS_harvest:
+      {
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pFarmer->targetPlant)
+        {
+          // take if space in inventory
+          // change tile
+          pActor->target = ptT_market;
 
-        if (plant == ptT_Count)
-          plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
-
-        constexpr uint8_t AddedAmountToPlant = 12;
-
-        resource_type resource = (resource_type)plant;
-        lsAssert(resource >= _tile_type_food_resources_first && resource <= _tile_type_food_resources_last);
-        change_tile_to(resource, tT_soil, tileIdx, AddedAmountToPlant); // no if as we check above.
-
-        pActor->atDestination = false;
+          // todo: mm i have to add another ptt for the fruit for harvesting...
+        }
+      }
       }
     }
   }
