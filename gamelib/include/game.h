@@ -225,7 +225,7 @@ struct lumberjack_actor : actor
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: maybe he should get a harvest task to add all the harvested stuff at some drop off
+// TODO: maybe farmers should get a harvest task to add all the harvested stuff at some drop off
 enum farmer_actor_state
 {
   faaS_plant,

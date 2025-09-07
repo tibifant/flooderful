@@ -942,6 +942,9 @@ void update_lifesupportActors()
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
 
+// TODO: I really want to let things grow slowly, or have actors wait for x amount of time until a task is finished.
+// we could have a state var for tiles (uint8) which e.g. indicates the grow state, the plant is only recognized for pathfinding, when there the state is the matchting number - else it is just `ptt_none_interactable` or just `ptt_unripe_fruit`...
+
 static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
 
 void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
@@ -1027,7 +1030,7 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
+        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4)) // TODO: pathfind to market, add wood there
           incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
@@ -1069,10 +1072,10 @@ void update_farmer()
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-      switch (pFarmer->state)
-      {
-      case faaS_plant:
-      {
+      //switch (pFarmer->state)
+      //{
+      //case faaS_plant:
+      //{
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
         {
           pathfinding_target_type plant = ptT_Count;
@@ -1099,19 +1102,19 @@ void update_farmer()
 
           pActor->atDestination = false;
         }
-      }
-      case faaS_harvest:
-      {
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pFarmer->targetPlant)
-        {
-          // take if space in inventory
-          // change tile
-          pActor->target = ptT_market;
-
-          // todo: mm i have to add another ptt for the fruit for harvesting...
-        }
-      }
-      }
+      //}
+      //case faaS_harvest:
+      //{
+      //  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pFarmer->targetPlant)
+      //  {
+      //    // take if space in inventory
+      //    // change tile
+      //    pActor->target = ptT_market;
+      //
+      //    // todo: mm i have to add another ptt for the fruit for harvesting...
+      //  }
+      //}
+      //}
     }
   }
 }
