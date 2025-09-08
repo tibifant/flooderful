@@ -151,7 +151,7 @@ struct gameplay_element
     maxResourceCount = MaxResourceCounts[type];
   }
 
-  gameplay_element(const size_t multiTileIndex) : tileType(tT_market), resourceCount(0), resourceCountIndex(multiTileIndex)
+  gameplay_element(const int16_t multiTileIndex) : tileType(tT_market), resourceCount(0), resourceCountIndex(multiTileIndex)
   {
     maxResourceCount = MaxResourceCounts[tT_market];
   }
@@ -212,6 +212,7 @@ enum lumberjack_actor_state
   laS_water,
   laS_chop,
   laS_cut,
+  laS_drop_off,
 
   laS_count
 };

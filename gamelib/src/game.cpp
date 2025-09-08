@@ -31,175 +31,175 @@ template<>
 struct match_resource<pathfinding_target_type::ptT_grass>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_grass; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_grass) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_grass) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_soil>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_soil; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_soil) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_soil) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_water>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_water; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_water) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_water) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sand>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_sand; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_sand) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sand) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sapling>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_sapling; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_sapling) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sapling) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_tree>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_tree; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_tree) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tree) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_trunk>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_trunk; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_trunk) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_trunk) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_wood>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_wood; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_wood) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_wood) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_fire>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_fire; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_fire) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_fire) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_fire_pit>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_fire_pit; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_fire_pit) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_fire_pit) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_tomato_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_tomato_plant; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_tomato_plant) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tomato_plant) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_bean_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_bean_plant; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_bean_plant) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_bean_plant) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_wheat_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_wheat_plant; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_wheat_plant) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_wheat_plant) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sunflower_plant>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_sunflower_plant; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_sunflower_plant) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sunflower_plant) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_vitamin>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_tomato || (resourceType == tT_meal && count > 0); };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_protein>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_bean || (resourceType == tT_meal && count > 0); };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_bean) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_bean) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_carbohydrates>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_wheat || (resourceType == tT_meal && count > 0); };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_wheat) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_wheat) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_fat>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_sunflower || (resourceType == tT_meal && count > 0); };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_sunflower) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sunflower) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_tomato_drop_off>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_tomato; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_bean_drop_off>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_bean; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_bean) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_bean) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_wheat_drop_off>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_wheat; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_wheat) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_wheat) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_sunflower_drop_off>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_sunflower; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_sunflower) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sunflower) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_meal_drop_off>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_meal; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { return *local_list_get(pCounts, tT_meal) > 0; };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_market>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_market; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { (void)pCounts; return true; }; // Only correct as long as markets are the onlty multi resource tiles!
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { (void)pCounts; return true; }; // Only correct as long as markets are the onlty multi resource tiles!
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_collidable>
 {
   FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { (void)count; return resourceType == tT_mountain; };
-  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, ptT_Count> *pCounts) { (void)pCounts; return false; }; // Multi tiles should never be collidable 
+  FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { (void)pCounts; return false; }; // Multi tiles should never be collidable 
 };
 
 template<pathfinding_target_type p>
@@ -288,14 +288,17 @@ void setMapBorder()
 void setTileToMarket(const size_t tileIndex)
 {
   lsAssert(tileIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(_Game.levelInfo.multiResourceCounts.count < lsMaxValue<int16_t>());
 
   local_list<uint8_t, tT_count> l;
+  
+  for (size_t i = 0; i < tT_count; i++)
+    local_list_add(&l, (uint8_t)0);
+
   list_add(_Game.levelInfo.multiResourceCounts, l);
 
   const size_t index = _Game.levelInfo.multiResourceCounts.count - 1;
-  lsAssert(list_get(&_Game.levelInfo.multiResourceCounts, index) == &l); // can i do that?
-
-  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element(index);
+  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element((int16_t)index);
 }
 
 void fillTerrain(const resource_type type)
@@ -361,6 +364,10 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4);
   _Game.levelInfo.pGameplayMap[132] = gameplay_element(tT_fire_pit, 4);
   _Game.levelInfo.pGameplayMap[145] = gameplay_element(tT_fire_pit, 4);
+
+  // TODO: food drop off!
+
+  setTileToMarket(8 * 8 + 8);
 
   setMapBorder();
 }
@@ -495,11 +502,8 @@ epilogue:
 void initializeLevel()
 {
   mapInit(16, 16);
-  //setTerrain();
-  fillTerrain(tT_grass);
-
-  // temporary:
-  setTileToMarket(32 * 32 + 8);
+  setTerrain();
+  //fillTerrain(tT_grass);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -945,7 +949,7 @@ void update_lifesupportActors()
 // TODO: I really want to let things grow slowly, or have actors wait for x amount of time until a task is finished.
 // we could have a state var for tiles (uint8) which e.g. indicates the grow state, the plant is only recognized for pathfinding, when there the state is the matchting number - else it is just `ptt_none_interactable` or just `ptt_unripe_fruit`...
 
-static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk };
+static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_market };
 
 void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
 {
@@ -1030,13 +1034,30 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4)) // TODO: pathfind to market, add wood there
+        //if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
+          //incrementLumberjackState(pLumberjack->state, pActor->target);
+
+        // TODO: take wood to inventory or give the actor a carry flag
+        if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_trunk]))
           incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
 
         break;
       }
+      case laS_drop_off:
+      {
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
+        {
+          add_to_market_tile(tT_wood, 4, tileIdx);
+          incrementLumberjackState(pLumberjack->state, pActor->target);
+        }
+
+        pActor->atDestination = false;
+
+        break;
+      }
+
       default:
       {
         lsFail(); // not implemented.
@@ -1076,32 +1097,32 @@ void update_farmer()
       //{
       //case faaS_plant:
       //{
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+      if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
+      {
+        pathfinding_target_type plant = ptT_Count;
+
+        for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
         {
-          pathfinding_target_type plant = ptT_Count;
+          const level_info::resource_info &info = _Game.levelInfo.resources[i];
 
-          for (uint8_t i = _ptT_nutrient_sources_first; i <= _ptT_nutrient_sources_last; i++)
+          if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
           {
-            const level_info::resource_info &info = _Game.levelInfo.resources[i];
-
-            if (info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
-            {
-              plant = (pathfinding_target_type)i; // TODO: Maybe we want to just increment the last plant and if its already there we choose another one that isn't
-              break;
-            }
+            plant = (pathfinding_target_type)i; // TODO: Maybe we want to just increment the last plant and if its already there we choose another one that isn't
+            break;
           }
-
-          if (plant == ptT_Count)
-            plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
-
-          constexpr uint8_t AddedAmountToPlant = 12;
-
-          resource_type resource = (resource_type)plant;
-          lsAssert(resource >= _tile_type_food_resources_first && resource <= _tile_type_food_resources_last);
-          change_tile_to(resource, tT_soil, tileIdx, AddedAmountToPlant); // no `if` as we check above.
-
-          pActor->atDestination = false;
         }
+
+        if (plant == ptT_Count)
+          plant = (pathfinding_target_type)(lsGetRand() % (_ptT_nutrient_sources_last - _ptT_nutrient_sources_first) + _ptT_nutrient_sources_first);
+
+        constexpr uint8_t AddedAmountToPlant = 12;
+
+        resource_type resource = (resource_type)plant;
+        lsAssert(resource >= _tile_type_food_resources_first && resource <= _tile_type_food_resources_last);
+        change_tile_to(resource, tT_soil, tileIdx, AddedAmountToPlant); // no `if` as we check above.
+
+        pActor->atDestination = false;
+      }
       //}
       //case faaS_harvest:
       //{
@@ -1363,14 +1384,14 @@ void update_fireActor()
       {
         constexpr int16_t AddedWood = 6;
 
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_wood)
+        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
         {
-          if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
+          //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
             modify_with_clamp(pFireActor->wood_inventory, get_from_tile(tileIdx, tT_wood, AddedWood));
 
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
+            //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+            //  _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // No usage of `change_tile_to` because of check above.
 
             pFireActor->state = faS_start_fire;
             pActor->target = target_from_state[faS_start_fire];
