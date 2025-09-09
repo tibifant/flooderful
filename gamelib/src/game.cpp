@@ -366,6 +366,12 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[145] = gameplay_element(tT_fire_pit, 4);
 
   // TODO: food drop off!
+  _Game.levelInfo.pGameplayMap[213] = gameplay_element(tT_tomato, 4);
+  _Game.levelInfo.pGameplayMap[214] = gameplay_element(tT_bean, 4);
+  _Game.levelInfo.pGameplayMap[215] = gameplay_element(tT_wheat, 4);
+  _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
+  _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
+
 
   setTileToMarket(8 * 8 + 8);
 
