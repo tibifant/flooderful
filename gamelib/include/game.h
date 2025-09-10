@@ -145,15 +145,23 @@ struct gameplay_element
   //bool hasHouse;
 
   gameplay_element() = default;
-  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count)
+  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count), resourceCountIndex(-1)
   {
     lsAssert(type < tT_count);
     maxResourceCount = MaxResourceCounts[type];
   }
 
-  gameplay_element(const int16_t multiTileIndex) : tileType(tT_market), resourceCount(0), resourceCountIndex(multiTileIndex)
+  gameplay_element() : tileType(tT_market), resourceCount(0), maxResourceCount(MaxResourceCounts[tT_market]) // adds a market tile
   {
-    maxResourceCount = MaxResourceCounts[tT_market];
+    lsAssert(_Game.levelInfo.multiResourceCounts.count < lsMaxValue<int16_t>());
+
+    local_list<uint8_t, tT_count> l;
+
+    for (size_t i = 0; i < tT_count; i++)
+      local_list_add(&l, (uint8_t)0);
+
+    list_add(_Game.levelInfo.multiResourceCounts, l);
+    resourceCountIndex = _Game.levelInfo.multiResourceCounts.count - 1;
   }
 };
 

@@ -285,22 +285,6 @@ void setMapBorder()
   }
 }
 
-void setTileToMarket(const size_t tileIndex)
-{
-  lsAssert(tileIndex < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  lsAssert(_Game.levelInfo.multiResourceCounts.count < lsMaxValue<int16_t>());
-
-  local_list<uint8_t, tT_count> l;
-  
-  for (size_t i = 0; i < tT_count; i++)
-    local_list_add(&l, (uint8_t)0);
-
-  list_add(_Game.levelInfo.multiResourceCounts, l);
-
-  const size_t index = _Game.levelInfo.multiResourceCounts.count - 1;
-  _Game.levelInfo.pGameplayMap[tileIndex] = gameplay_element((int16_t)index);
-}
-
 void fillTerrain(const resource_type type)
 {
   lsAssert(type < tT_count);
@@ -372,13 +356,12 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
   _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
 
-
-  setTileToMarket(8 * 8 + 8);
+  _Game.levelInfo.pGameplayMap[8 * 8 + 8] = gameplay_element();
 
   setMapBorder();
 }
 
-lsResult spawnActors()
+lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, _Out_ index)`
 {
   lsResult result = lsR_Success;
 
