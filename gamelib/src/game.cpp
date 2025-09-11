@@ -291,21 +291,10 @@ void fillTerrain(const resource_type type)
 
   rand_seed seed = rand_seed(2, 2);
 
-  if (type == tT_market)
+  for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
   {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    {
-      setTileToMarket(i);
-      _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
-    }
-  }
-  else
-  {
-    for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    {
-      _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
-      _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
-    }
+    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
+    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
   }
 
   setMapBorder();
@@ -356,7 +345,7 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
   _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
 
-  _Game.levelInfo.pGameplayMap[8 * 8 + 8] = gameplay_element();
+  _Game.levelInfo.pGameplayMap[8 * 8 + 8] = gameplay_element(tT_market, 0);
 
   setMapBorder();
 }
