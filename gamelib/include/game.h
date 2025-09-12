@@ -133,7 +133,7 @@ struct pathfinding_element
 
 static constexpr uint8_t MaxFireResourceCount = 9;
 static constexpr uint8_t MaxFoodItemResourceCount = 255;
-static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*placeholder for markets not actually ahving a single count*/, 1 };
+static const uint8_t MaxResourceCounts[] = { 0, 0, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*placeholder for markets not actually ahving a single count*/, 1 };
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct gameplay_element
@@ -145,27 +145,10 @@ struct gameplay_element
   //bool hasHouse;
 
   gameplay_element() = default;
-  gameplay_element(const resource_type type, const uint8_t count) : tileType(type), resourceCount(count)
+  gameplay_element(const resource_type type, const uint8_t count, const int16_t resourceCountIndex = -1) : tileType(type), resourceCount(count), resourceCountIndex(resourceCountIndex)
   {
     lsAssert(type < tT_count);
     maxResourceCount = MaxResourceCounts[type];
-    
-    if (type == tT_market)
-    {
-      lsAssert(_Game.levelInfo.multiResourceCounts.count < lsMaxValue<int16_t>());
-
-      local_list<uint8_t, tT_count> l;
-
-      for (size_t i = 0; i < tT_count; i++)
-        local_list_add(&l, (uint8_t)0);
-
-      list_add(_Game.levelInfo.multiResourceCounts, l);
-      resourceCountIndex = _Game.levelInfo.multiResourceCounts.count - 1;
-    }
-    else
-    {
-      resourceCountIndex = -1;
-    }
   }
 };
 

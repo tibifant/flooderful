@@ -285,6 +285,38 @@ void setMapBorder()
   }
 }
 
+// TODO: use in `setTileTo` and function for changing tile by player input!
+// TODO: handle Error handling
+
+lsResult setTile(const size_t index, const resource_type type, const uint8_t elevationLevel)
+{
+  lsResult result = lsR_Success;
+
+  lsAssert(type < tT_count);
+  lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
+  int16_t resourceCountIndex = -1;
+
+  if (type == tT_market)
+  {
+    lsAssert(_Game.levelInfo.multiResourceCounts.count < lsMaxValue<int16_t>());
+
+    local_list<uint8_t, tT_count> l;
+
+    for (size_t i = 0; i < tT_count; i++)
+      LS_ERROR_CHECK(local_list_add(&l, (uint8_t)0));
+
+    LS_ERROR_CHECK(list_add(_Game.levelInfo.multiResourceCounts, l));
+    resourceCountIndex = _Game.levelInfo.multiResourceCounts.count - 1;
+  }
+
+  _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, MaxResourceCounts[type], resourceCountIndex);
+  _Game.levelInfo.pPathfindingMap[index].elevationLevel = elevationLevel;
+
+epilgoue:
+  return result;
+}
+
 void fillTerrain(const resource_type type)
 {
   lsAssert(type < tT_count);
@@ -292,10 +324,7 @@ void fillTerrain(const resource_type type)
   rand_seed seed = rand_seed(2, 2);
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-  {
-    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, MaxResourceCounts[type]);
-    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
-  }
+    setTile(i, type, lsGetRand(seed) % 3);
 
   setMapBorder();
 }
@@ -315,7 +344,7 @@ void setTerrain()
   }
 
   for (size_t i = 0; i < 20; i++)
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 1);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 0);
 
   for (size_t i = 0; i < 3; i++)
   {
@@ -345,7 +374,7 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
   _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
 
-  _Game.levelInfo.pGameplayMap[8 * 8 + 8] = gameplay_element(tT_market, 0);
+  setTile(8 * 8 + 8, tT_market);
 
   setMapBorder();
 }
@@ -1016,7 +1045,7 @@ void update_lumberjack()
           //incrementLumberjackState(pLumberjack->state, pActor->target);
 
         // TODO: take wood to inventory or give the actor a carry flag
-        if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_trunk]))
+        if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
           incrementLumberjackState(pLumberjack->state, pActor->target);
 
         pActor->atDestination = false;
