@@ -288,12 +288,21 @@ void setMapBorder()
 // TODO: use in `setTileTo` and function for changing tile by player input!
 // TODO: handle Error handling
 
-lsResult setTile(const size_t index, const resource_type type, const uint8_t elevationLevel)
+lsResult setTile(const size_t index, const resource_type type, const uint8_t resourceCount, const uint8_t elevationLevel)
+{
+  lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  _Game.levelInfo.pPathfindingMap[index].elevationLevel = elevationLevel;
+
+  return setGameplayTile(index, type, resourceCount);
+}
+
+lsResult setGameplayTile(const size_t index, const resource_type type, const uint8_t resourceCount)
 {
   lsResult result = lsR_Success;
 
   lsAssert(type < tT_count);
   lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  lsAssert(resourceCount < MaxResourceCounts[type]);
 
   int16_t resourceCountIndex = -1;
 
@@ -310,8 +319,7 @@ lsResult setTile(const size_t index, const resource_type type, const uint8_t ele
     resourceCountIndex = _Game.levelInfo.multiResourceCounts.count - 1;
   }
 
-  _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, MaxResourceCounts[type], resourceCountIndex);
-  _Game.levelInfo.pPathfindingMap[index].elevationLevel = elevationLevel;
+  _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, resourceCount, resourceCountIndex);
 
 epilgoue:
   return result;
@@ -324,7 +332,7 @@ void fillTerrain(const resource_type type)
   rand_seed seed = rand_seed(2, 2);
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    setTile(i, type, lsGetRand(seed) % 3);
+    setTile(i, type, MaxResourceCounts[type], lsGetRand(seed) % 3);
 
   setMapBorder();
 }
@@ -339,18 +347,16 @@ void setTerrain()
   {
     const resource_type type = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
     //_Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 1 ? tT_soil : _Game.levelInfo.pGameplayMap[i].tileType;
-    _Game.levelInfo.pGameplayMap[i] = gameplay_element(type, 1);
-    _Game.levelInfo.pPathfindingMap[i].elevationLevel = lsGetRand(seed) % 3;
+    setTile(i, type, 1, lsGetRand(seed) % 3);
   }
 
   for (size_t i = 0; i < 20; i++)
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 0);
+    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_soil, 0);
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)].tileType = tT_sand;
-    const size_t waterIdx = lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-    _Game.levelInfo.pGameplayMap[waterIdx] = gameplay_element(tT_water, 1);
+    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_sand, 0);
+    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_water, 1);
   }
 
   //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
@@ -363,7 +369,7 @@ void setTerrain()
 
   //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
   //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
-  _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4);
+  _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4); // TODO: do i even want to change these?
   _Game.levelInfo.pGameplayMap[132] = gameplay_element(tT_fire_pit, 4);
   _Game.levelInfo.pGameplayMap[145] = gameplay_element(tT_fire_pit, 4);
 
@@ -374,7 +380,7 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
   _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
 
-  setTile(8 * 8 + 8, tT_market);
+  setGameplayTile(8 * 8 + 8, tT_market, 0);
 
   setMapBorder();
 }
@@ -714,8 +720,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
   {
     // TODO what free assert did coc talk about?
-    _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(targetType, count);
-    lsAssert(count <= _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
+    setGameplayTile(tileIdx, targetType, count);
     return true;
   }
 
@@ -1552,7 +1557,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  _Game.levelInfo.pGameplayMap[idx] = gameplay_element(terrainType, MaxResourceCounts[terrainType]);
+  setGameplayTile(idx, terrainType, MaxResourceCounts[terrainType]);
 }
 
 void game_setPlayerMapIndex(const direction dir)
