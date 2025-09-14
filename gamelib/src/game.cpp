@@ -351,12 +351,12 @@ void setTerrain()
   }
 
   for (size_t i = 0; i < 20; i++)
-    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_soil, 0);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 0);
 
   for (size_t i = 0; i < 3; i++)
   {
-    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_sand, 0);
-    setGameplayTile(lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y), tT_water, 1);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_sand, 0);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_water, 0);
   }
 
   //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
