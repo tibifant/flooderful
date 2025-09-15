@@ -133,7 +133,7 @@ struct pathfinding_element
 
 static constexpr uint8_t MaxFireResourceCount = 9;
 static constexpr uint8_t MaxFoodItemResourceCount = 255;
-static const uint8_t MaxResourceCounts[] = { 0, 0, 1, 0, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*placeholder for markets not actually ahving a single count*/, 1 };
+static const uint8_t MaxResourceCounts[] = { 1, 1, 1, 1, 1, 1, 1, 4, MaxFireResourceCount, MaxFireResourceCount, 12, 12, 12, 12, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, MaxFoodItemResourceCount, 0 /*placeholder for markets not actually ahving a single count*/, 1 };
 static_assert(LS_ARRAYSIZE(MaxResourceCounts) == tT_count);
 
 struct gameplay_element

@@ -288,21 +288,13 @@ void setMapBorder()
 // TODO: use in `setTileTo` and function for changing tile by player input!
 // TODO: handle Error handling
 
-lsResult setTile(const size_t index, const resource_type type, const uint8_t resourceCount, const uint8_t elevationLevel)
-{
-  lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  _Game.levelInfo.pPathfindingMap[index].elevationLevel = elevationLevel;
-
-  return setGameplayTile(index, type, resourceCount);
-}
-
 lsResult setGameplayTile(const size_t index, const resource_type type, const uint8_t resourceCount)
 {
   lsResult result = lsR_Success;
 
   lsAssert(type < tT_count);
   lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-  lsAssert(resourceCount < MaxResourceCounts[type]);
+  lsAssert(resourceCount <= MaxResourceCounts[type]);
 
   int16_t resourceCountIndex = -1;
 
@@ -316,13 +308,21 @@ lsResult setGameplayTile(const size_t index, const resource_type type, const uin
       LS_ERROR_CHECK(local_list_add(&l, (uint8_t)0));
 
     LS_ERROR_CHECK(list_add(_Game.levelInfo.multiResourceCounts, l));
-    resourceCountIndex = _Game.levelInfo.multiResourceCounts.count - 1;
+    resourceCountIndex = (int16_t)_Game.levelInfo.multiResourceCounts.count - 1;
   }
 
   _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, resourceCount, resourceCountIndex);
 
-epilgoue:
+epilogue:
   return result;
+}
+
+lsResult setTile(const size_t index, const resource_type type, const uint8_t resourceCount, const uint8_t elevationLevel)
+{
+  lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+  _Game.levelInfo.pPathfindingMap[index].elevationLevel = elevationLevel;
+
+  return setGameplayTile(index, type, resourceCount);
 }
 
 void fillTerrain(const resource_type type)
@@ -351,12 +351,12 @@ void setTerrain()
   }
 
   for (size_t i = 0; i < 20; i++)
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 0);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_soil, 1);
 
   for (size_t i = 0; i < 3; i++)
   {
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_sand, 0);
-    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_water, 0);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_sand, 1);
+    _Game.levelInfo.pGameplayMap[lsGetRand(seed) % (_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y)] = gameplay_element(tT_water, 1);
   }
 
   //for (size_t i = _tile_type_food_first; i < _tile_type_food_last; i++) // without tt_meal for testing
@@ -1013,7 +1013,7 @@ void update_lumberjack()
           lsAssert(!pLumberjack->hasItem);
 
           pLumberjack->hasItem = true;
-          pLumberjack->item = tT_water;
+          pLumberjack->item = tT_water; // TODO: why even use this... we are literally just setting this from true to false and don't even reset the item...
 
           incrementLumberjackState(pLumberjack->state, pActor->target);
         }
@@ -1027,7 +1027,6 @@ void update_lumberjack()
         if (change_tile_to(tT_tree, tT_sapling, tileIdx, MaxResourceCounts[tT_tree]))
         {
           pLumberjack->hasItem = false;
-
           incrementLumberjackState(pLumberjack->state, pActor->target);
         }
 
@@ -1461,7 +1460,10 @@ void update_fireActor()
         {
           if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
-            modify_with_clamp(pFireActor->water_inventory, lsMin(AddedWater, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
+            //modify_with_clamp(pFireActor->water_inventory, lsMin(AddedWater, (int16_t)_Game.levelInfo.pGameplayMap[tileIdx].resourceCount));
+            lsAssert(pFireActor->water_inventory < 255);
+            pFireActor->water_inventory += AddedWater;
+
             pFireActor->state = faS_extinguish_fire;
             pActor->target = target_from_state[faS_extinguish_fire];
           }
