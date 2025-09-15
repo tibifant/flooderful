@@ -708,7 +708,7 @@ inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValu
   const int64_t val = (int64_t)value + diff;
   const T prevVal = value;
   value = (T)lsClamp<int64_t>(val, min, max);
-  return value - prevVal;
+  return (T)lsAbs((int64_t)value - prevVal);
 }
 
 bool change_tile_to(const resource_type targetType, const resource_type expectedCurrentType, const size_t tileIdx, const uint8_t count)
@@ -1024,6 +1024,8 @@ void update_lumberjack()
       }
       case laS_water:
       {
+        lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_water);
+
         if (change_tile_to(tT_tree, tT_sapling, tileIdx, MaxResourceCounts[tT_tree]))
         {
           pLumberjack->hasItem = false;
