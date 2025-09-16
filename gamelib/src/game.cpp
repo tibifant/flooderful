@@ -1047,12 +1047,14 @@ void update_lumberjack()
       }
       case laS_cut:
       {
-        //if (change_tile_to(tT_wood, tT_trunk, tileIdx, 4))
-          //incrementLumberjackState(pLumberjack->state, pActor->target);
+        lsAssert(!pLumberjack->hasItem);
 
-        // TODO: take wood to inventory or give the actor a carry flag
         if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
+        {
+          pLumberjack->hasItem = true;
+          pLumberjack->item = tT_wood;
           incrementLumberjackState(pLumberjack->state, pActor->target);
+        }
 
         pActor->atDestination = false;
 
@@ -1060,9 +1062,13 @@ void update_lumberjack()
       }
       case laS_drop_off:
       {
+        lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_wood);
+
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
         {
           add_to_market_tile(tT_wood, 4, tileIdx);
+          pLumberjack->hasItem = false;
+          
           incrementLumberjackState(pLumberjack->state, pActor->target);
         }
 
@@ -1339,7 +1345,7 @@ void update_cook()
 
 //////////////////////////////////////////////////////////////////////////
 
-void update_fireActor()
+void update_fireActor() // seems kinda sus - as if he's not always targeting all the fires but only starting some...
 {
   constexpr pathfinding_target_type target_from_state[faS_count] = { ptT_wood, ptT_fire_pit, ptT_water, ptT_fire };
 
