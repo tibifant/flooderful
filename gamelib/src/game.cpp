@@ -285,9 +285,6 @@ void setMapBorder()
   }
 }
 
-// TODO: use in `setTileTo` and function for changing tile by player input!
-// TODO: handle Error handling
-
 lsResult setGameplayTile(const size_t index, const resource_type type, const uint8_t resourceCount)
 {
   lsResult result = lsR_Success;
@@ -325,20 +322,27 @@ lsResult setTile(const size_t index, const resource_type type, const uint8_t res
   return setGameplayTile(index, type, resourceCount);
 }
 
-void fillTerrain(const resource_type type)
+lsResult fillTerrain(const resource_type type)
 {
+  lsResult result = lsR_Success;
+
   lsAssert(type < tT_count);
 
   rand_seed seed = rand_seed(2, 2);
 
   for (size_t i = 0; i < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y; i++)
-    setTile(i, type, MaxResourceCounts[type], lsGetRand(seed) % 3);
+    LS_ERROR_CHECK(setTile(i, type, MaxResourceCounts[type], lsGetRand(seed) % 3));
 
   setMapBorder();
+
+epilogue:
+  return result;
 }
 
-void setTerrain()
+lsResult setTerrain()
 {
+  lsResult result = lsR_Success;
+
   // TODO: Terrain Generation
 
   rand_seed seed = rand_seed(2, 2); // 2, 2 ist cool am anfang.
@@ -347,7 +351,7 @@ void setTerrain()
   {
     const resource_type type = (lsGetRand(seed) & 15) < 12 ? tT_grass : tT_mountain;
     //_Game.levelInfo.pGameplayMap[i].tileType = (lsGetRand(seed) & 15) < 1 ? tT_soil : _Game.levelInfo.pGameplayMap[i].tileType;
-    setTile(i, type, 1, lsGetRand(seed) % 3);
+    LS_ERROR_CHECK(setTile(i, type, 1, lsGetRand(seed) % 3));
   }
 
   for (size_t i = 0; i < 20; i++)
@@ -380,9 +384,12 @@ void setTerrain()
   _Game.levelInfo.pGameplayMap[216] = gameplay_element(tT_sunflower, 4);
   _Game.levelInfo.pGameplayMap[217] = gameplay_element(tT_meal, 4);
 
-  setGameplayTile(8 * 8 + 8, tT_market, 0);
+  LS_ERROR_CHECK(setGameplayTile(8 * 8 + 8, tT_market, 0));
 
   setMapBorder();
+
+epilogue:
+  return result;
 }
 
 lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, _Out_ index)`
@@ -515,7 +522,7 @@ epilogue:
 void initializeLevel()
 {
   mapInit(16, 16);
-  setTerrain();
+  lsAssert(setTerrain() == lsR_Success);
   //fillTerrain(tT_grass);
 
   // Set up floodfill queue and lookup
@@ -720,7 +727,7 @@ bool change_tile_to(const resource_type targetType, const resource_type expected
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == expectedCurrentType)
   {
     // TODO what free assert did coc talk about?
-    setGameplayTile(tileIdx, targetType, count);
+    lsAssert(setGameplayTile(tileIdx, targetType, count) == lsR_Success);
     return true;
   }
 
@@ -1567,7 +1574,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(idx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(terrainType < tT_count);
 
-  setGameplayTile(idx, terrainType, MaxResourceCounts[terrainType]);
+  lsAssert(setGameplayTile(idx, terrainType, MaxResourceCounts[terrainType]) == lsR_Success);
 }
 
 void game_setPlayerMapIndex(const direction dir)
