@@ -742,7 +742,7 @@ uint8_t add_to_market_tile(const resource_type resource, const int16_t amount, c
   return modify_with_clamp((*pList)[resource], amount);
 }
 
-uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const int16_t amount)
+uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint16_t amount)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
@@ -752,7 +752,7 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
   if (pTile->resourceCountIndex == -1)
   {
     lsAssert(pTile->tileType == resource);
-    return modify_with_clamp(pTile->resourceCount, amount);
+    return modify_with_clamp(pTile->resourceCount, -amount);
   }
   else
   {
@@ -1013,7 +1013,7 @@ void update_lumberjack()
           lsAssert(!pLumberjack->hasItem);
 
           pLumberjack->hasItem = true;
-          pLumberjack->item = tT_water; // TODO: why even use this... we are literally just setting this from true to false and don't even reset the item...
+          pLumberjack->item = tT_water;
 
           incrementLumberjackState(pLumberjack->state, pActor->target);
         }
@@ -1288,7 +1288,7 @@ void update_cook()
             constexpr int16_t AddedResourceAmount = 4;
             modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount)); // todo: find out which exact resource we want. mmm this is bad news, because this is not how we handle meals when picking them up...
 
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0) // TODO: why aren't we ever turning stuff back to soil???
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
 
             pCook->state = caS_check_inventory;
