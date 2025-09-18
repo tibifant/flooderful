@@ -373,11 +373,10 @@ lsResult setTerrain()
 
   //_Game.levelInfo.pGameplayMap[120].tileType = tT_fire;
   //_Game.levelInfo.pGameplayMap[120].ressourceCount = 255;
-  _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4); // TODO: do i even want to change these?
+  _Game.levelInfo.pGameplayMap[121] = gameplay_element(tT_fire_pit, 4);
   _Game.levelInfo.pGameplayMap[132] = gameplay_element(tT_fire_pit, 4);
   _Game.levelInfo.pGameplayMap[145] = gameplay_element(tT_fire_pit, 4);
 
-  // TODO: food drop off!
   _Game.levelInfo.pGameplayMap[213] = gameplay_element(tT_tomato, 4);
   _Game.levelInfo.pGameplayMap[214] = gameplay_element(tT_bean, 4);
   _Game.levelInfo.pGameplayMap[215] = gameplay_element(tT_wheat, 4);
@@ -1119,10 +1118,6 @@ void update_farmer()
     {
       const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-      //switch (pFarmer->state)
-      //{
-      //case faaS_plant:
-      //{
       if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_soil)
       {
         pathfinding_target_type plant = ptT_Count;
@@ -1149,19 +1144,6 @@ void update_farmer()
 
         pActor->atDestination = false;
       }
-      //}
-      //case faaS_harvest:
-      //{
-      //  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == pFarmer->targetPlant)
-      //  {
-      //    // take if space in inventory
-      //    // change tile
-      //    pActor->target = ptT_market;
-      //
-      //    // todo: mm i have to add another ptt for the fruit for harvesting...
-      //  }
-      //}
-      //}
     }
   }
 }
