@@ -402,84 +402,84 @@ lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, 
     actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
     //actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
     actor.pos = vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y));
-
+  
     //while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
     //  actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
-
+  
     size_t index;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
-
+  
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
     lj_actor.index = index;
     lj_actor.hasItem = false;
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
-
+  
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = index;
     ls_actor.type = eT_lumberjack;
     ls_actor.temperature = 255;
-
+  
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
   }
-
+  
   // Farmer
   {
     movement_actor actor;
     actor.target = ptT_soil;
     actor.pos = vec2f(12.f, 10.f);
-
+  
     size_t f_index;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
-
+  
     farmer_actor f;
     f.index = f_index;
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, f, f_index));
-
+  
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = f_index;
     ls_actor.type = eT_farmer;
     ls_actor.temperature = 255;
-
+  
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
   }
-
+  
   // Cook
   {
     movement_actor foodActor;
     foodActor.target = _ptT_nutrient_first;
     foodActor.pos = vec2f(12.f, 10.f);
-
+  
     size_t f_index;
     LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
-
+  
     cook_actor cook;
     cook.state = caS_check_inventory;
     cook.currentCookingItem = tT_tomato;
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-
+  
     cook.index = f_index;
-
+  
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
-
+  
     lifesupport_actor ls_actor;
     ls_actor.entityIndex = f_index;
     ls_actor.type = eT_cook;
     ls_actor.temperature = 255;
-
+  
     lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
     lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
+  
     LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
   }
 
@@ -521,8 +521,8 @@ epilogue:
 void initializeLevel()
 {
   mapInit(16, 16);
-  lsAssert(setTerrain() == lsR_Success);
-  //fillTerrain(tT_grass);
+  //lsAssert(setTerrain() == lsR_Success);
+  fillTerrain(tT_grass);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -1391,8 +1391,9 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
       case faS_get_wood:
       {
         constexpr int16_t AddedWood = 6;
+        const resource_type currentTileType = _Game.levelInfo.pGameplayMap[tileIdx].tileType;
 
-        if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
+        if (currentTileType == tT_market || currentTileType == tT_wood)
         {
           //if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
           {
@@ -1418,7 +1419,7 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
         {
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire_pit)
           {
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > WoodPerFire)
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > WoodPerFire) // TODO: A fire should propably not only loose wood, when someone was there.
             {
               _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
             }
