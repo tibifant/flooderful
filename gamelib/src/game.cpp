@@ -391,6 +391,82 @@ epilogue:
   return result;
 }
 
+lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pIndex = nullptr)
+{
+  lsResult result = lsR_Success;
+
+  lsAssert(pIndex == nullptr);
+  lsAssert(type < eT_count);
+  
+  lifesupport_actor ls_actor;
+
+  switch (type)
+  {
+  case eT_cook:
+  {
+    movement_actor actor;
+    actor.target = _ptT_nutrient_first;
+    actor.pos = pos;
+
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, pIndex));
+
+    cook_actor cook;
+    cook.state = caS_check_inventory;
+    cook.currentCookingItem = tT_tomato;
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+
+    cook.index = *pIndex;
+
+    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
+
+    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, *pIndex));
+
+    ls_actor.type = eT_cook;
+    
+    break;
+  }
+  case eT_farmer:
+  {
+    movement_actor actor;
+    actor.target = ptT_soil;
+    actor.pos = vec2f(12.f, 10.f);
+
+    size_t f_index;
+    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
+
+    farmer_actor f;
+    f.index = f_index;
+
+    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, f, f_index));
+
+    lifesupport_actor ls_actor;
+    ls_actor.entityIndex = f_index;
+    ls_actor.type = eT_farmer;
+    ls_actor.temperature = 255;
+
+    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+
+    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+    
+    break;
+  }
+  }
+
+  lsAssert(pIndex != nullptr);
+
+  ls_actor.entityIndex = *pIndex;
+  ls_actor.temperature = 255;
+
+  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+
+  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, *pIndex));
+
+epilogue: 
+  return result;
+}
+
 lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, _Out_ index)`
 {
   lsResult result = lsR_Success;
@@ -429,58 +505,11 @@ lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, 
   
   // Farmer
   {
-    movement_actor actor;
-    actor.target = ptT_soil;
-    actor.pos = vec2f(12.f, 10.f);
-  
-    size_t f_index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
-  
-    farmer_actor f;
-    f.index = f_index;
-  
-    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, f, f_index));
-  
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = f_index;
-    ls_actor.type = eT_farmer;
-    ls_actor.temperature = 255;
-  
-    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
   }
   
   // Cook
   {
-    movement_actor foodActor;
-    foodActor.target = _ptT_nutrient_first;
-    foodActor.pos = vec2f(12.f, 10.f);
-  
-    size_t f_index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, foodActor, &f_index));
-  
-    cook_actor cook;
-    cook.state = caS_check_inventory;
-    cook.currentCookingItem = tT_tomato;
-    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  
-    cook.index = f_index;
-  
-    lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
-  
-    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, f_index));
-  
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = f_index;
-    ls_actor.type = eT_cook;
-    ls_actor.temperature = 255;
-  
-    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+    spawnActor(eT_cook, vec2f(12.f, 10.f));
   }
 
   // Fire Actor
@@ -1275,9 +1304,9 @@ void update_cook()
           {
             // take item
             constexpr int16_t AddedResourceAmount = 4;
-            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount)); // todo: find out which exact resource we want. mmm this is bad news, because this is not how we handle meals when picking them up...
+            modify_with_clamp(pCook->inventory[pActor->target - _ptT_nutrient_sources_first], get_from_tile(tileIdx, _Game.levelInfo.pGameplayMap[tileIdx].tileType, AddedResourceAmount));
 
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0) // TODO: why aren't we ever turning stuff back to soil???
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
               _Game.levelInfo.pGameplayMap[tileIdx] = gameplay_element(tT_soil, 1); // no usage of `change_tile_to` due to earlier check of `resource_type`
 
             pCook->state = caS_check_inventory;
@@ -1419,7 +1448,7 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
         {
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire_pit)
           {
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > WoodPerFire) // TODO: A fire should propably not only loose wood, when someone was there.
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > WoodPerFire) // TODO: A fire should propably not only loose wood, when someone was there, but just slowly over time or when extinguished.
             {
               _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
             }
@@ -1430,7 +1459,7 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
               {
                 pFireActor->wood_inventory -= WoodPerFire;
                 _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
-                modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount); // TODO
+                modify_with_clamp(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount, WoodPerFire, (uint8_t)(0), _Game.levelInfo.pGameplayMap[tileIdx].maxResourceCount);
               }
               else
               {
