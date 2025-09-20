@@ -165,7 +165,6 @@ struct render_element
 enum entity_type
 {
   eT_lumberjack,
-  eT_stonemason,
   eT_farmer,
   eT_cook,
   eT_fire_actor,

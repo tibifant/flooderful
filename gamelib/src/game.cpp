@@ -397,19 +397,42 @@ lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pInde
 
   lsAssert(pIndex == nullptr);
   lsAssert(type < eT_count);
-  
+  lsAssert(pos.x > 0 && pos.x < _Game.levelInfo.map_size.x && pos.y > 0 && pos.y < _Game.levelInfo.map_size.y);
+
+  constexpr pathfinding_target_type TargetPerActor[] = { ptT_sapling, ptT_soil, _ptT_nutrient_first, ptT_fire_pit };
+  lsAssert(LS_ARRAYSIZE(TargetPerActor) == eT_count);
+
+  movement_actor actor;
+  actor.target = TargetPerActor[type];
+  actor.pos = pos;
+
+  LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, pIndex));
+
   lifesupport_actor ls_actor;
+  ls_actor.type = type;
+  ls_actor.entityIndex = *pIndex;
+  ls_actor.temperature = 255;
+
+  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
+  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
+
+  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, *pIndex));
 
   switch (type)
   {
+  case eT_lumberjack:
+  {
+    lumberjack_actor lj_actor;
+    lj_actor.state = laS_plant;
+    lj_actor.index = *pIndex;
+    lj_actor.hasItem = false;
+
+    LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, *pIndex));
+
+    break;
+  }
   case eT_cook:
   {
-    movement_actor actor;
-    actor.target = _ptT_nutrient_first;
-    actor.pos = pos;
-
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, pIndex));
-
     cook_actor cook;
     cook.state = caS_check_inventory;
     cook.currentCookingItem = tT_tomato;
@@ -421,127 +444,48 @@ lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pInde
 
     LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, *pIndex));
 
-    ls_actor.type = eT_cook;
-    
     break;
   }
   case eT_farmer:
   {
-    movement_actor actor;
-    actor.target = ptT_soil;
-    actor.pos = vec2f(12.f, 10.f);
+    farmer_actor farmer;
+    farmer.index = *pIndex;
 
-    size_t f_index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
+    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, farmer, *pIndex));
 
-    farmer_actor f;
-    f.index = f_index;
-
-    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, f, f_index));
-
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = f_index;
-    ls_actor.type = eT_farmer;
-    ls_actor.temperature = 255;
-
-    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
-    
     break;
   }
-  }
-
-  lsAssert(pIndex != nullptr);
-
-  ls_actor.entityIndex = *pIndex;
-  ls_actor.temperature = 255;
-
-  lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-  lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
-  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, *pIndex));
-
-epilogue: 
-  return result;
-}
-
-lsResult spawnActors() // TODO: clean up with a function `spawnActor(type, pos, _Out_ index)`
-{
-  lsResult result = lsR_Success;
-
-  // Lumberjacks
-  //for (size_t i = 0; i < 5; i++)
+  case eT_fire_actor:
   {
-    movement_actor actor;
-    actor.target = ptT_sapling; //(terrain_type)(lsGetRand() % (tT_Count - 1));
-    //actor.pos = vec2f((float_t)((1 + i * 3) % _Game.levelInfo.map_size.x), (float_t)((i * 3 + 1) % _Game.levelInfo.map_size.y));
-    actor.pos = vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y));
-  
-    //while (_Game.levelInfo.pGameplayMap[worldPosToTileIndex(actor.pos)].tileType == tT_mountain)
-    //  actor.pos.x = (float_t)(size_t(actor.pos.x + 1) % _Game.levelInfo.map_size.x);
-  
-    size_t index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, &actor, &index));
-  
-    lumberjack_actor lj_actor;
-    lj_actor.state = laS_plant;
-    lj_actor.index = index;
-    lj_actor.hasItem = false;
-  
-    LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
-  
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = index;
-    ls_actor.type = eT_lumberjack;
-    ls_actor.temperature = 255;
-  
-    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-  
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
-  }
-  
-  // Farmer
-  {
-  }
-  
-  // Cook
-  {
-    spawnActor(eT_cook, vec2f(12.f, 10.f));
-  }
-
-  // Fire Actor
-  {
-    movement_actor actor;
-    actor.target = _ptT_nutrient_first;
-    actor.pos = vec2f(13.f, 13.f);
-
-    size_t f_index;
-    LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &f_index));
-
     fire_actor fireActor;
     fireActor.state = faS_start_fire;
     fireActor.wood_inventory = 0;
     fireActor.water_inventory = 0;
 
-    fireActor.index = f_index;
+    fireActor.index = *pIndex;
 
-    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, f_index));
+    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, *pIndex));
 
-    lifesupport_actor ls_actor;
-    ls_actor.entityIndex = f_index;
-    ls_actor.type = eT_fire_actor;
-    ls_actor.temperature = 255;
-
-    lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
-    lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
-
-    LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, f_index));
+    break;
+  }
+  default:
+  {
+    lsFail(); // not implemented.
+  }
   }
 
-  goto epilogue;
+epilogue:
+  return result;
+}
+
+lsResult spawnActors()
+{
+  lsResult result = lsR_Success;
+
+  LS_ERROR_CHECK(spawnActor(eT_lumberjack, vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y))));
+  LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
+  LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
+  LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
 
 epilogue:
   return result;
@@ -1103,7 +1047,7 @@ void update_lumberjack()
         {
           add_to_market_tile(tT_wood, 4, tileIdx);
           pLumberjack->hasItem = false;
-          
+
           incrementLumberjackState(pLumberjack->state, pActor->target);
         }
 
