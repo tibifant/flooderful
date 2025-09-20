@@ -391,32 +391,33 @@ epilogue:
   return result;
 }
 
-lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pIndex = nullptr)
+lsResult spawnActor(const entity_type type, const vec2f pos)
 {
   lsResult result = lsR_Success;
 
-  lsAssert(pIndex == nullptr);
-  lsAssert(type < eT_count);
+  lsAssert(type >= 0 && type < eT_count);
   lsAssert(pos.x > 0 && pos.x < _Game.levelInfo.map_size.x && pos.y > 0 && pos.y < _Game.levelInfo.map_size.y);
 
   constexpr pathfinding_target_type TargetPerActor[] = { ptT_sapling, ptT_soil, _ptT_nutrient_first, ptT_fire_pit };
   lsAssert(LS_ARRAYSIZE(TargetPerActor) == eT_count);
 
+  size_t index;
+
   movement_actor actor;
   actor.target = TargetPerActor[type];
   actor.pos = pos;
 
-  LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, pIndex));
+  LS_ERROR_CHECK(pool_add(&_Game.movementActors, actor, &index));
 
   lifesupport_actor ls_actor;
   ls_actor.type = type;
-  ls_actor.entityIndex = *pIndex;
+  ls_actor.entityIndex = index;
   ls_actor.temperature = 255;
 
   lsZeroMemory(ls_actor.nutritions, LS_ARRAYSIZE(ls_actor.nutritions));
   lsZeroMemory(ls_actor.lunchbox, LS_ARRAYSIZE(ls_actor.lunchbox));
 
-  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, *pIndex));
+  LS_ERROR_CHECK(pool_insertAt(&_Game.lifesupportActors, &ls_actor, index));
 
   switch (type)
   {
@@ -424,10 +425,10 @@ lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pInde
   {
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
-    lj_actor.index = *pIndex;
+    lj_actor.index = index;
     lj_actor.hasItem = false;
 
-    LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, *pIndex));
+    LS_ERROR_CHECK(pool_insertAt(&_LumberjackActors, &lj_actor, index));
 
     break;
   }
@@ -438,20 +439,20 @@ lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pInde
     cook.currentCookingItem = tT_tomato;
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
 
-    cook.index = *pIndex;
+    cook.index = index;
 
     lsZeroMemory(cook.inventory, LS_ARRAYSIZE(cook.inventory));
 
-    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, *pIndex));
+    LS_ERROR_CHECK(pool_insertAt(&_CookActors, cook, index));
 
     break;
   }
   case eT_farmer:
   {
     farmer_actor farmer;
-    farmer.index = *pIndex;
+    farmer.index = index;
 
-    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, farmer, *pIndex));
+    LS_ERROR_CHECK(pool_insertAt(&_FarmerActors, farmer, index));
 
     break;
   }
@@ -462,9 +463,9 @@ lsResult spawnActor(const entity_type type, const vec2f pos, _Out_ size_t *pInde
     fireActor.wood_inventory = 0;
     fireActor.water_inventory = 0;
 
-    fireActor.index = *pIndex;
+    fireActor.index = index;
 
-    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, *pIndex));
+    LS_ERROR_CHECK(pool_insertAt(&_FireActors, fireActor, index));
 
     break;
   }
