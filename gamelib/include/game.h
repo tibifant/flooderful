@@ -21,6 +21,7 @@ enum pathfinding_target_type : uint8_t
   ptT_wood,
   ptT_fire,
   ptT_fire_pit,
+  ptT_market,
 
   _ptT_nutrient_sources_first, // nutrient sources match the corresponding nutritient! (e.g.: tomato plant + (nutrition first - nutrient sources first) = vitamin)
   ptT_tomato_plant = _ptT_nutrient_sources_first,
@@ -45,7 +46,6 @@ enum pathfinding_target_type : uint8_t
   ptT_meal_drop_off, // order matches resource_type food types
   _ptT_drop_off_last = ptT_meal_drop_off,
 
-  ptT_market,
   ptT_collidable, // ptT_collidable always has to be last!
 
   ptT_Count
@@ -64,6 +64,7 @@ enum resource_type : uint8_t
   tT_wood,
   tT_fire,
   tT_fire_pit,
+  tT_market,
 
   _tile_type_food_resources_first, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
   tT_tomato_plant = _tile_type_food_resources_first, // same order as the food
@@ -81,16 +82,11 @@ enum resource_type : uint8_t
   tT_meal, // insert meal types here
   _tile_type_food_last = tT_meal,
 
-  tT_market,
 
   tT_mountain,
 
   tT_count
 };
-
-// TODO: markets: (so cute) a place where all food items are dropped off so the food actor can collect them? - hmm seems not that straight forward - as we would maybe want a range of tiles for the market where we can drop off items, tiles that do not yet have items but can be used for drop off if the others are full and the tiles would need to hold several item counts for various items
-
-// tT_market: has to conclude to what ever ptT_resources sits there... so we need something like with drop offs -> where we check the resource amount...
 
 //////////////////////////////////////////////////////////////////////////
 
@@ -141,11 +137,12 @@ struct gameplay_element
   resource_type tileType;
   uint8_t resourceCount;
   uint8_t maxResourceCount;
-  int16_t resourceCountIndex = -1; // index for multiResourceCounts list.
+  int16_t multiResourceCountIndex = -1;
+  uint8_t tileStatus = 0; // can refer to different properties depending on the type of tile (e.g. growth status)
   //bool hasHouse;
 
   gameplay_element() = default;
-  gameplay_element(const resource_type type, const uint8_t count, const int16_t resourceCountIndex = -1) : tileType(type), resourceCount(count), resourceCountIndex(resourceCountIndex)
+  gameplay_element(const resource_type type, const uint8_t count, const int16_t multiResourceCountIndex = -1) : tileType(type), resourceCount(count), multiResourceCountIndex(multiResourceCountIndex)
   {
     lsAssert(type < tT_count);
     maxResourceCount = MaxResourceCounts[type];

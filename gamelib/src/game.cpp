@@ -202,6 +202,8 @@ struct match_resource<pathfinding_target_type::ptT_collidable>
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { (void)pCounts; return false; }; // Multi tiles should never be collidable 
 };
 
+// TODO handle types with tile states that are not path found towards
+
 template<pathfinding_target_type p>
 void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pathfindQueue, gameplay_element *pMap)
 {
@@ -211,7 +213,7 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     const gameplay_element e = pMap[i];
 
-    if ((e.resourceCountIndex > -1 && match_resource<p>::resourceAttribute_matches_resource(list_get(&_Game.levelInfo.multiResourceCounts, e.resourceCountIndex))) || (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount)))
+    if ((e.multiResourceCountIndex > -1 && match_resource<p>::resourceAttribute_matches_resource(list_get(&_Game.levelInfo.multiResourceCounts, e.multiResourceCountIndex))) || (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount)))
     {
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
@@ -293,7 +295,7 @@ lsResult setGameplayTile(const size_t index, const resource_type type, const uin
   lsAssert(index < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resourceCount <= MaxResourceCounts[type]);
 
-  int16_t resourceCountIndex = -1;
+  int16_t multiResourceCountIndex = -1;
 
   if (type == tT_market)
   {
@@ -305,10 +307,10 @@ lsResult setGameplayTile(const size_t index, const resource_type type, const uin
       LS_ERROR_CHECK(local_list_add(&l, (uint8_t)0));
 
     LS_ERROR_CHECK(list_add(_Game.levelInfo.multiResourceCounts, l));
-    resourceCountIndex = (int16_t)_Game.levelInfo.multiResourceCounts.count - 1;
+    multiResourceCountIndex = (int16_t)_Game.levelInfo.multiResourceCounts.count - 1;
   }
 
-  _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, resourceCount, resourceCountIndex);
+  _Game.levelInfo.pGameplayMap[index] = gameplay_element(type, resourceCount, multiResourceCountIndex);
 
 epilogue:
   return result;
@@ -715,9 +717,9 @@ uint8_t add_to_market_tile(const resource_type resource, const int16_t amount, c
   gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
 
   lsAssert(pTile->tileType == tT_market);
-  lsAssert(pTile->resourceCountIndex > -1);
+  lsAssert(pTile->multiResourceCountIndex > -1);
 
-  local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+  local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->multiResourceCountIndex);
 
   return modify_with_clamp((*pList)[resource], amount);
 }
@@ -729,7 +731,7 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
 
   gameplay_element *pTile = &_Game.levelInfo.pGameplayMap[tileIdx];
 
-  if (pTile->resourceCountIndex == -1)
+  if (pTile->multiResourceCountIndex == -1)
   {
     lsAssert(pTile->tileType == resource);
     return modify_with_clamp(pTile->resourceCount, -amount);
@@ -737,7 +739,7 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
   else
   {
     lsAssert(pTile->tileType == tT_market);
-    local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->resourceCountIndex);
+    local_list<uint8_t, tT_count> *pList = list_get(&_Game.levelInfo.multiResourceCounts, pTile->multiResourceCountIndex);
     return modify_with_clamp(*local_list_get(pList, resource), -amount);
   }
 }
