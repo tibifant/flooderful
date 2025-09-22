@@ -498,7 +498,7 @@ void initializeLevel()
 {
   mapInit(16, 16);
   //lsAssert(setTerrain() == lsR_Success);
-  fillTerrain(tT_grass);
+  lsAssert(fillTerrain(tT_grass) == lsR_Success);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -941,7 +941,8 @@ void update_lifesupportActors()
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
 
 // TODO: I really want to let things grow slowly, or have actors wait for x amount of time until a task is finished.
-// we could have a state var for tiles (uint8) which e.g. indicates the grow state, the plant is only recognized for pathfinding, when there the state is the matchting number - else it is just `ptt_none_interactable` or just `ptt_unripe_fruit`...
+// we could have a state var for tiles (uint8) which e.g. indicates the grow state, the plant is only recognized for pathfinding, when there the state is the matchting number - else it is just `unfillable`...
+// i'm not quite sure how this one number is best representing different things, enums? e.g. a specific plant state could mean 'unwatered' but there could also be something like: 0-7 means different grow states, allthough for the game logic (not rendering) the specific grow state is probably irrelevant, its just that it didn't grow enough yet, but if we don't save a specific number, we would need to have one that represents the same elsewhere to know when it's ready to enter the fully grown state.
 
 static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_market };
 
