@@ -82,7 +82,6 @@ enum resource_type : uint8_t
   tT_meal, // insert meal types here
   _tile_type_food_last = tT_meal,
 
-
   tT_mountain,
 
   tT_count
