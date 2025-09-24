@@ -21,7 +21,6 @@ enum pathfinding_target_type : uint8_t
   ptT_wood,
   ptT_fire,
   ptT_fire_pit,
-  ptT_market,
 
   _ptT_nutrient_sources_first, // nutrient sources match the corresponding nutritient! (e.g.: tomato plant + (nutrition first - nutrient sources first) = vitamin)
   ptT_tomato_plant = _ptT_nutrient_sources_first,
@@ -46,6 +45,7 @@ enum pathfinding_target_type : uint8_t
   ptT_meal_drop_off, // order matches resource_type food types
   _ptT_drop_off_last = ptT_meal_drop_off,
 
+  ptT_market,
   ptT_collidable, // ptT_collidable always has to be last!
 
   ptT_Count
@@ -64,7 +64,6 @@ enum resource_type : uint8_t
   tT_wood,
   tT_fire,
   tT_fire_pit,
-  tT_market,
 
   _tile_type_food_resources_first, // food resources match the corresponding food! (e.g.: tomato plant + (food first - food resources first) = tomato)
   tT_tomato_plant = _tile_type_food_resources_first, // same order as the food
@@ -82,6 +81,7 @@ enum resource_type : uint8_t
   tT_meal, // insert meal types here
   _tile_type_food_last = tT_meal,
 
+  tT_market,
   tT_mountain,
 
   tT_count
@@ -177,6 +177,8 @@ struct movement_actor
   size_t lastTickTileIdx = 0;
   bool enteredNewTileLastTick = false;
   bool survivalActorActive = false;
+  bool isWaiting = false;
+  uint64_t ticksToWait = 0;
 };
 
 struct lifesupport_actor
@@ -191,7 +193,6 @@ struct lifesupport_actor
 struct actor // TODO: add entity type here as well and let the ls actor inheret from it?
 {
   size_t index;
-  uint64_t timeStamp; // not sure if here or in the movementActor is nicer. if in the movement actor then we should have some bool for isWaiting in the actor and that sounds kinda like useless double checking...
 };
 
 //////////////////////////////////////////////////////////////////////////

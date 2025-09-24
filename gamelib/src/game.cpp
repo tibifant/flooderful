@@ -486,9 +486,9 @@ lsResult spawnActors()
   lsResult result = lsR_Success;
 
   LS_ERROR_CHECK(spawnActor(eT_lumberjack, vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y))));
-  LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
-  LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
-  LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
+  //LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
+  //LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
+  //LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
 
 epilogue:
   return result;
@@ -629,6 +629,16 @@ void movementActor_move()
     // Reset lastTile every so often to handle map changes.
     if ((_actor.index & 63) == r)
       _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
+
+    if (_actor.pItem->isWaiting)
+    {
+      if (_actor.pItem->ticksToWait > 0)
+        _actor.pItem->ticksToWait--;
+      else
+        _actor.pItem->isWaiting = false;
+
+      return;
+    }
 
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     const level_info::resource_info &info = _Game.levelInfo.resources[_actor.pItem->target];
@@ -1033,27 +1043,26 @@ void update_lumberjack()
       case laS_cut:
       {
         lsAssert(!pLumberjack->hasItem);
-        constexpr uint8_t woodCuttingTimeMs = 5000;
 
-        // set time for first time entering the tile. maybe always reset the time to 0, but sounds a little sketchy
-        if (pLumberjack->timeStamp == 0)
+        if (pActor->enteredNewTileLastTick) // TODO: nvm this is not how this works... 'LASTtick`...
         {
-          pLumberjack->timeStamp = lsGetCurrentTimeMs() + woodCuttingTimeMs;
+          pActor->isWaiting = true;
+          pActor->ticksToWait = 200;
+          
           break;
         }
-        else if (pLumberjack->timeStamp < lsGetCurrentTimeMs())
-        {
-          ...
-        }
 
-        if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
+        if (!pActor->isWaiting)
         {
-          pLumberjack->hasItem = true;
-          pLumberjack->item = tT_wood;
-          incrementLumberjackState(pLumberjack->state, pActor->target);
-        }
+          if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
+          {
+            pLumberjack->hasItem = true;
+            pLumberjack->item = tT_wood;
+            incrementLumberjackState(pLumberjack->state, pActor->target);
+          }
 
-        pActor->atDestination = false;
+          pActor->atDestination = false;
+        }
 
         break;
       }
