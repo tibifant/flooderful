@@ -944,8 +944,7 @@ void update_lifesupportActors()
 // we could have a state var for tiles (uint8) which e.g. indicates the grow state, the plant is only recognized for pathfinding, when there the state is the matchting number - else it is just `unfillable`...
 // i'm not quite sure how this one number is best representing different things, enums? e.g. a specific plant state could mean 'unwatered' but there could also be something like: 0-7 means different grow states, allthough for the game logic (not rendering) the specific grow state is probably irrelevant, its just that it didn't grow enough yet, but if we don't save a specific number, we would need to have one that represents the same elsewhere to know when it's ready to enter the fully grown state.
 
-
-// omg i don't know if i like that but i just had the idea (again? may be coc's idea) that an actor when not enough food, won't move anymore, but there could be helpers that provide first aid aka food
+// omg i don't know if i like that but i just had the idea (again? may be coc's idea) that an actor when not enough food, won't move anymore, but there could be helpers that provide first aid aka food (nvm they can't pathfind towards an actor (only if the actor turns the tile he stands on into something different?)
 
 static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_market };
 
@@ -1034,11 +1033,18 @@ void update_lumberjack()
       case laS_cut:
       {
         lsAssert(!pLumberjack->hasItem);
+        constexpr uint8_t woodCuttingTimeMs = 5000;
 
-        // waiting time for trunk beeing cut to wood, should logically depend on the actor. as he's the one cutting
-        // set waiting state
-        // do not reset `atDestination`
-        // either this could actually be a state here or is processed with the movement actor (blocking all movement until wait time is up, so we don't walk away to food just to not return to the same tile and wait there? or it depends on the tile, but the actor walking away wouldn't make much sense then...
+        // set time for first time entering the tile. maybe always reset the time to 0, but sounds a little sketchy
+        if (pLumberjack->timeStamp == 0)
+        {
+          pLumberjack->timeStamp = lsGetCurrentTimeMs() + woodCuttingTimeMs;
+          break;
+        }
+        else if (pLumberjack->timeStamp < lsGetCurrentTimeMs())
+        {
+          ...
+        }
 
         if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
         {

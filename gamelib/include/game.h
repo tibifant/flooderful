@@ -191,6 +191,7 @@ struct lifesupport_actor
 struct actor // TODO: add entity type here as well and let the ls actor inheret from it?
 {
   size_t index;
+  uint64_t timeStamp; // not sure if here or in the movementActor is nicer. if in the movement actor then we should have some bool for isWaiting in the actor and that sounds kinda like useless double checking...
 };
 
 //////////////////////////////////////////////////////////////////////////
