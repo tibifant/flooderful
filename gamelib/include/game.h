@@ -214,6 +214,7 @@ struct lumberjack_actor : actor
   lumberjack_actor_state state;
   bool hasItem; // Maybe change this to several inevntory spots if needed.
   resource_type item;
+  bool changedState = false;
 };
 
 //////////////////////////////////////////////////////////////////////////

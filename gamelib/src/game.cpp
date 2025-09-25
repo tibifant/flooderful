@@ -958,13 +958,11 @@ void update_lifesupportActors()
 
 static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_market };
 
-void incrementLumberjackState(lumberjack_actor_state &state, pathfinding_target_type &target)
+void incrementLumberjackState(lumberjack_actor *pLumberjack, movement_actor *pActor)
 {
-  lsAssert(state >= 0 && state < laS_count);
-  lsAssert(target < ptT_Count);
-
-  state = (lumberjack_actor_state)((state + 1) % laS_count);
-  target = Lumberjack_TargetFromState[state];
+  pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
+  pLumberjack->changedState = true; // TODO: this would be cleaner if we just save the state from lastTick and check if it changed...
+  pActor->target = Lumberjack_TargetFromState[pLumberjack->state];
 }
 
 void update_lumberjack()
@@ -994,8 +992,10 @@ void update_lumberjack()
       {
       case laS_plant:
       {
+        pLumberjack->changedState = false;
+
         if (change_tile_to(tT_sapling, tT_soil, tileIdx, MaxResourceCounts[tT_sapling]))
-          incrementLumberjackState(pLumberjack->state, pActor->target);
+          incrementLumberjackState(pLumberjack, pActor);
 
         pActor->atDestination = false;
 
@@ -1006,11 +1006,12 @@ void update_lumberjack()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water && _Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
         {
           lsAssert(!pLumberjack->hasItem);
+          pLumberjack->changedState = false;
 
           pLumberjack->hasItem = true;
           pLumberjack->item = tT_water;
 
-          incrementLumberjackState(pLumberjack->state, pActor->target);
+          incrementLumberjackState(pLumberjack, pActor);
         }
 
         pActor->atDestination = false;
@@ -1020,11 +1021,12 @@ void update_lumberjack()
       case laS_water:
       {
         lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_water);
+        pLumberjack->changedState = false;
 
         if (change_tile_to(tT_tree, tT_sapling, tileIdx, MaxResourceCounts[tT_tree]))
         {
           pLumberjack->hasItem = false;
-          incrementLumberjackState(pLumberjack->state, pActor->target);
+          incrementLumberjackState(pLumberjack, pActor);
         }
 
         pActor->atDestination = false;
@@ -1033,8 +1035,10 @@ void update_lumberjack()
       }
       case laS_chop:
       {
+        pLumberjack->changedState = false;
+
         if (change_tile_to(tT_trunk, tT_tree, tileIdx, MaxResourceCounts[tT_trunk]))
-          incrementLumberjackState(pLumberjack->state, pActor->target);
+          incrementLumberjackState(pLumberjack, pActor);
 
         pActor->atDestination = false;
 
@@ -1044,11 +1048,12 @@ void update_lumberjack()
       {
         lsAssert(!pLumberjack->hasItem);
 
-        if (pActor->enteredNewTileLastTick) // TODO: nvm this is not how this works... 'LASTtick`...
+        if (pLumberjack->changedState) // TODO: we need to know if we entered the new actor state recently
         {
           pActor->isWaiting = true;
           pActor->ticksToWait = 200;
-          
+
+          pLumberjack->changedState = false;
           break;
         }
 
@@ -1058,7 +1063,7 @@ void update_lumberjack()
           {
             pLumberjack->hasItem = true;
             pLumberjack->item = tT_wood;
-            incrementLumberjackState(pLumberjack->state, pActor->target);
+            incrementLumberjackState(pLumberjack, pActor);
           }
 
           pActor->atDestination = false;
@@ -1069,13 +1074,14 @@ void update_lumberjack()
       case laS_drop_off:
       {
         lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_wood);
+        pLumberjack->changedState = false;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
         {
           add_to_market_tile(tT_wood, 4, tileIdx);
           pLumberjack->hasItem = false;
 
-          incrementLumberjackState(pLumberjack->state, pActor->target);
+          incrementLumberjackState(pLumberjack, pActor);
         }
 
         pActor->atDestination = false;
