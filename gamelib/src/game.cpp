@@ -961,7 +961,6 @@ static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] =
 void incrementLumberjackState(lumberjack_actor *pLumberjack, movement_actor *pActor)
 {
   pLumberjack->state = (lumberjack_actor_state)((pLumberjack->state + 1) % laS_count);
-  pLumberjack->changedState = true; // TODO: this would be cleaner if we just save the state from lastTick and check if it changed...
   pActor->target = Lumberjack_TargetFromState[pLumberjack->state];
 }
 
@@ -992,8 +991,6 @@ void update_lumberjack()
       {
       case laS_plant:
       {
-        pLumberjack->changedState = false;
-
         if (change_tile_to(tT_sapling, tT_soil, tileIdx, MaxResourceCounts[tT_sapling]))
           incrementLumberjackState(pLumberjack, pActor);
 
@@ -1006,7 +1003,6 @@ void update_lumberjack()
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_water && _Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
         {
           lsAssert(!pLumberjack->hasItem);
-          pLumberjack->changedState = false;
 
           pLumberjack->hasItem = true;
           pLumberjack->item = tT_water;
@@ -1021,7 +1017,6 @@ void update_lumberjack()
       case laS_water:
       {
         lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_water);
-        pLumberjack->changedState = false;
 
         if (change_tile_to(tT_tree, tT_sapling, tileIdx, MaxResourceCounts[tT_tree]))
         {
@@ -1035,8 +1030,6 @@ void update_lumberjack()
       }
       case laS_chop:
       {
-        pLumberjack->changedState = false;
-
         if (change_tile_to(tT_trunk, tT_tree, tileIdx, MaxResourceCounts[tT_trunk]))
           incrementLumberjackState(pLumberjack, pActor);
 
@@ -1048,12 +1041,11 @@ void update_lumberjack()
       {
         lsAssert(!pLumberjack->hasItem);
 
-        if (pLumberjack->changedState) // TODO: we need to know if we entered the new actor state recently
+        if (pLumberjack->stateLastTick != pLumberjack->state) // TODO: we need to know if we entered the new actor state recently
         {
           pActor->isWaiting = true;
           pActor->ticksToWait = 200;
 
-          pLumberjack->changedState = false;
           break;
         }
 
@@ -1074,7 +1066,6 @@ void update_lumberjack()
       case laS_drop_off:
       {
         lsAssert(pLumberjack->hasItem && pLumberjack->item == tT_wood);
-        pLumberjack->changedState = false;
 
         if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_market)
         {
@@ -1095,6 +1086,8 @@ void update_lumberjack()
       }
       }
     }
+
+    pLumberjack->stateLastTick = pLumberjack->state;
   }
 }
 

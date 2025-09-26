@@ -212,9 +212,9 @@ enum lumberjack_actor_state
 struct lumberjack_actor : actor
 {
   lumberjack_actor_state state;
+  lumberjack_actor_state stateLastTick;
   bool hasItem; // Maybe change this to several inevntory spots if needed.
   resource_type item;
-  bool changedState = false;
 };
 
 //////////////////////////////////////////////////////////////////////////
