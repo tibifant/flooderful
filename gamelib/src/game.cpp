@@ -630,64 +630,67 @@ void movementActor_move()
     if ((_actor.index & 63) == r)
       _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
 
+    const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
+    lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
+
     if (_actor.pItem->isWaiting)
     {
       if (_actor.pItem->ticksToWait > 0)
         _actor.pItem->ticksToWait--;
       else
         _actor.pItem->isWaiting = false;
-
-      return;
     }
-
-    const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
-    const level_info::resource_info &info = _Game.levelInfo.resources[_actor.pItem->target];
-    const direction currentTileDirectionType = info.pDirectionLookup[1 - info.write_direction_idx][currentTileIdx].dir;
-
-    lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
-    lsAssert(_actor.pItem->pos.x > 0 && _actor.pItem->pos.x < _Game.levelInfo.map_size.x && _actor.pItem->pos.y > 0 && _actor.pItem->pos.y < _Game.levelInfo.map_size.y);
-
-    if (currentTileDirectionType == d_unreachable)
+    else
     {
-      continue;
-    }
-    else if (currentTileDirectionType == d_atDestination)
-    {
-      _actor.pItem->atDestination = true;
-      _actor.pItem->direction = vec2f(0);
-      continue;
-    }
+      const level_info::resource_info &info = _Game.levelInfo.resources[_actor.pItem->target];
+      const direction currentTileDirectionType = info.pDirectionLookup[1 - info.write_direction_idx][currentTileIdx].dir;
 
-    if (currentTileIdx != _actor.pItem->lastTickTileIdx)
-    {
-      if (currentTileDirectionType == d_unfillable)
+      lsAssert(_actor.pItem->pos.x > 0 && _actor.pItem->pos.x < _Game.levelInfo.map_size.x && _actor.pItem->pos.y > 0 && _actor.pItem->pos.y < _Game.levelInfo.map_size.y);
+
+      if (currentTileDirectionType == d_unreachable)
       {
-        _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
+        continue;
       }
-      else
+      else if (currentTileDirectionType == d_atDestination)
       {
+        _actor.pItem->atDestination = true;
+        _actor.pItem->direction = vec2f(0);
+        continue;
+      }
+
+      if (currentTileIdx != _actor.pItem->lastTickTileIdx)
+      {
+        if (currentTileDirectionType == d_unfillable)
+        {
+          _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
+        }
+        else
+        {
+          const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
+          const vec2f nonNormalizedDir = (tilePos - _actor.pItem->pos);
+          if (nonNormalizedDir != vec2f(0))
+            _actor.pItem->direction = nonNormalizedDir.Normalize();
+
+          _actor.pItem->enteredNewTileLastTick = true;
+        }
+      }
+      else if (_actor.pItem->enteredNewTileLastTick)
+      {
+        const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
         const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
-        const vec2f nonNormalizedDir = (tilePos - _actor.pItem->pos);
-        if (nonNormalizedDir != vec2f(0))
-          _actor.pItem->direction = nonNormalizedDir.Normalize();
+        const vec2f direction = directionLut[currentTileDirectionType - 1];
+        const vec2f destinationPos = tilePos + direction;
 
-        _actor.pItem->enteredNewTileLastTick = true;
+        lsAssert(destinationPos - _actor.pItem->pos != vec2f(0));
+        _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
+        _actor.pItem->enteredNewTileLastTick = false;
       }
-    }
-    else if (_actor.pItem->enteredNewTileLastTick)
-    {
-      const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
-      const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
-      const vec2f direction = directionLut[currentTileDirectionType - 1];
-      const vec2f destinationPos = tilePos + direction;
 
-      lsAssert(destinationPos - _actor.pItem->pos != vec2f(0));
-      _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
-      _actor.pItem->enteredNewTileLastTick = false;
+      _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     }
 
-    _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
     _actor.pItem->lastTickTileIdx = currentTileIdx;
+    _actor.pItem->lastTickTarget = _actor.pItem->target;
   }
 }
 
@@ -1041,16 +1044,16 @@ void update_lumberjack()
       {
         lsAssert(!pLumberjack->hasItem);
 
-        if (pLumberjack->stateLastTick != pLumberjack->state) // TODO: we need to know if we entered the new actor state recently
-        {
-          pActor->isWaiting = true;
-          pActor->ticksToWait = 200;
-
-          break;
-        }
-
         if (!pActor->isWaiting)
         {
+          if (pActor->lastTickTarget != pActor->target)
+          {
+            pActor->isWaiting = true;
+            pActor->ticksToWait = 200;
+
+            break;
+          }
+
           if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
           {
             pLumberjack->hasItem = true;
@@ -1086,8 +1089,6 @@ void update_lumberjack()
       }
       }
     }
-
-    pLumberjack->stateLastTick = pLumberjack->state;
   }
 }
 

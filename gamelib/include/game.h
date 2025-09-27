@@ -172,13 +172,14 @@ struct movement_actor
 {
   vec2f pos;
   pathfinding_target_type target;
+  pathfinding_target_type lastTickTarget;
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
   bool enteredNewTileLastTick = false;
   bool survivalActorActive = false;
   bool isWaiting = false;
-  uint64_t ticksToWait = 0;
+  uint16_t ticksToWait = 0;
 };
 
 struct lifesupport_actor
@@ -212,7 +213,6 @@ enum lumberjack_actor_state
 struct lumberjack_actor : actor
 {
   lumberjack_actor_state state;
-  lumberjack_actor_state stateLastTick;
   bool hasItem; // Maybe change this to several inevntory spots if needed.
   resource_type item;
 };
