@@ -86,7 +86,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
     game_setPlayerMapIndex(d_bottomRight);
 
-  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_M))
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_M)) // if more resource types follow, handle this like everything else and just make it shift/alt + num.
     game_playerSwitchTiles(tT_market);
 
   for (int32_t i = 0; i < 11; i++)

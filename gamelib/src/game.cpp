@@ -793,11 +793,11 @@ void update_lifesupportActors()
     }
 
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
+    const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-    if (pActor->target == ptT_fire_pit && pLifeSupport->type != eT_fire_actor) // acording to the debugger the cook had fire pit as target at some point?! not able to replicate it...
-      __debugbreak();
-
-    if (!pActor->survivalActorActive)
+    const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
+    
+    if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable) // TODO: test this. reset the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
       {
@@ -868,7 +868,7 @@ void update_lifesupportActors()
               int64_t score = value < EatingThreshold ? lsMaxValue<int16_t>() : MaxNutritionValue - value;
 
               const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
-              const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)];
+              const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][tileIdx];
 
               if (pathInfo.dir != d_unreachable && value > EatingThreshold)
                 score += maxDist - pathInfo.dist;
@@ -883,13 +883,12 @@ void update_lifesupportActors()
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrient_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
-            if ((pLifeSupport->type == eT_farmer || pLifeSupport->type == eT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][worldPosToTileIndex(pActor->pos)].dir == d_unreachable)
+            if ((pLifeSupport->type == eT_farmer || pLifeSupport->type == eT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
               continue;
 
             pActor->survivalActorActive = true;
             pActor->target = lowestNutrient;
             pActor->atDestination = false;
-
           }
         }
       }
@@ -898,8 +897,6 @@ void update_lifesupportActors()
     {
       if (pActor->atDestination)
       {
-        const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-
         if (pActor->target >= _ptT_nutrient_first && pActor->target <= _ptT_nutrient_last)
         {
           // add food to lunchbox
@@ -1049,7 +1046,7 @@ void update_lumberjack()
           if (pActor->lastTickTarget != pActor->target)
           {
             pActor->isWaiting = true;
-            pActor->ticksToWait = 50;
+            pActor->ticksToWait = 100;
 
             break;
           }
