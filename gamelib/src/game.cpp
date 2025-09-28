@@ -1049,7 +1049,7 @@ void update_lumberjack()
           if (pActor->lastTickTarget != pActor->target)
           {
             pActor->isWaiting = true;
-            pActor->ticksToWait = 200;
+            pActor->ticksToWait = 50;
 
             break;
           }

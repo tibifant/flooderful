@@ -86,6 +86,9 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
   else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_X))
     game_setPlayerMapIndex(d_bottomRight);
 
+  if (lsKeyboardState_KeyPress(&pAppState->keyboardState, SDL_SCANCODE_M))
+    game_playerSwitchTiles(tT_market);
+
   for (int32_t i = 0; i < 11; i++)
   {
     // resource type 0 - 9
@@ -97,7 +100,7 @@ lsResult gameView_update(lsAppView *pSelf, lsAppView **ppNext, lsAppState *pAppS
     // resource type 10 - 19
     else if (lsKeyboardState_KeyPress(&pAppState->keyboardState, i + SDL_SCANCODE_KP_1))
     {
-      game_playerSwitchTiles((resource_type)(i + 10));
+      game_playerSwitchTiles((resource_type)(i + 1 + 10)); // + 1 to compensate for tT_market having a seperate key
       break;
     }
   }

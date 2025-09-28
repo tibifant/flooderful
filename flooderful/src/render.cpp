@@ -280,6 +280,7 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     vec4f(0.5f, 0.42f, 0.4f, 0), // tT_wood
     vec4f(0.6f, 0.1f, 0.f, 0), // tT_fire
     vec4f(0.5f, 0.08f, 0.0f, 0), // tT_fire_pit
+    vec4f(1.f, 1.f, 0, 0), // tT_market
     vec4f(0.3f, 0, 0.6f, 0), // tT_tomato_plant
     vec4f(0.4f, 0, 0.5f, 0), // tT_bean_plant
     vec4f(0.5f, 0, 0.4f, 0), // tT_wheat_plant
@@ -289,7 +290,6 @@ void render_drawMap(const level_info &levelInfo, lsAppState *pAppState, const pa
     vec4f(0.4f, 0, 0.3f, 0), // tT_wheat 
     vec4f(0.5f, 0, 0.1f, 0), // tT_sunflower 
     vec4f(0.6f, 0, 0.05f, 0), // tT_meal
-    vec4f(1.f, 1.f, 0, 0), // tT_market
     vec4f(0.25f, 0.25f, 0.25f, 0), // tT_mountain
   };
 
