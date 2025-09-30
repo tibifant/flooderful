@@ -797,7 +797,7 @@ void update_lifesupportActors()
 
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
     
-    if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // TODO: test this. reset the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
+    if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
       {
@@ -870,7 +870,7 @@ void update_lifesupportActors()
               const level_info::resource_info &info = _Game.levelInfo.resources[nutrient];
               const pathfinding_info pathInfo = info.pDirectionLookup[1 - info.write_direction_idx][tileIdx];
 
-              if (pathInfo.dir != d_unreachable && value > EatingThreshold)
+              if (pathInfo.dir != d_unreachable && value < EatingThreshold)
                 score += maxDist - pathInfo.dist;
 
               if (score > bestTargetScore)
