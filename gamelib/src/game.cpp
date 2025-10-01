@@ -671,10 +671,10 @@ void movementActor_move()
           if (nonNormalizedDir != vec2f(0))
             _actor.pItem->direction = nonNormalizedDir.Normalize();
 
-          _actor.pItem->enteredNewTileLastTick = true;
+          _actor.pItem->enteredDifferentTileLastTick = true;
         }
       }
-      else if (_actor.pItem->enteredNewTileLastTick)
+      else if (_actor.pItem->enteredDifferentTileLastTick)
       {
         const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
         const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
@@ -683,7 +683,7 @@ void movementActor_move()
 
         lsAssert(destinationPos - _actor.pItem->pos != vec2f(0));
         _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
-        _actor.pItem->enteredNewTileLastTick = false;
+        _actor.pItem->enteredDifferentTileLastTick = false;
       }
 
       _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
@@ -796,7 +796,7 @@ void update_lifesupportActors()
     const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
-    
+
     if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
@@ -922,8 +922,14 @@ void update_lifesupportActors()
         else if (pActor->target == ptT_fire)
         {
           // warm up at fire
-          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire && !pActor->isWaiting)
           {
+            if (pActor->enteredDifferentTileLastTick)
+            {
+              pActor->isWaiting = true;
+              pActor->ticksToWait = 50;
+            }
+
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
               modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
 
