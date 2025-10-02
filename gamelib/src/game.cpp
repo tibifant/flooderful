@@ -924,7 +924,7 @@ void update_lifesupportActors()
           // warm up at fire
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire && !pActor->isWaiting)
           {
-            if (pActor->enteredDifferentTileLastTick)
+            if (pActor->lastTickTarget != pActor->target)
             {
               pActor->isWaiting = true;
               pActor->ticksToWait = 50;
@@ -1551,6 +1551,15 @@ void game_update()
 
 //////////////////////////////////////////////////////////////////////////
 
+void print_resouceType(const resource_type type)
+{
+  const char *types[] = { "tT_grass", "tT_soil", "tT_water", "tT_sand", "tT_sapling", "tT_tree", "tT_trunk", "tT_wood", "tT_fire", "tT_fire_pit", "tT_market",
+  "tT_tomato_plant", "tT_bean_plant", "tT_wheat_plant", "tT_sunflower_plant", "tT_tomato", "tT_bean", "tT_wheat", "tT_sunflower", "tT_meal", "tT_mountain" };
+
+  lsAssert(LS_ARRAYSIZE(types) == tT_count);
+  print(types[type], '\n');
+}
+
 void game_playerSwitchTiles(const resource_type terrainType)
 {
   lsAssert(_Game.levelInfo.playerPos.x >= 1 && _Game.levelInfo.playerPos.x <= _Game.levelInfo.map_size.x - 2 && _Game.levelInfo.playerPos.y >= 0 && _Game.levelInfo.playerPos.y <= _Game.levelInfo.map_size.y - 2);
@@ -1561,6 +1570,12 @@ void game_playerSwitchTiles(const resource_type terrainType)
   lsAssert(terrainType < tT_count);
 
   lsAssert(setGameplayTile(idx, terrainType, MaxResourceCounts[terrainType]) == lsR_Success);
+
+#ifdef DEBUG
+  print("Changed tile (", _Game.levelInfo.playerPos.x, ", ", _Game.levelInfo.playerPos.y, ") to: ");
+  print_resouceType(terrainType);
+#endif
+
 }
 
 void game_setPlayerMapIndex(const direction dir)
