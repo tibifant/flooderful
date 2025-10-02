@@ -176,7 +176,7 @@ struct movement_actor
   bool atDestination = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
-  bool enteredNewTileLastTick = false;
+  bool enteredDifferentTileLastTick = false;
   bool survivalActorActive = false;
   bool isWaiting = false;
   uint16_t ticksToWait = 0;
