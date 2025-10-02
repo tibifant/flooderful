@@ -797,6 +797,7 @@ void update_lifesupportActors()
 
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
 
+    // TODO: something wrong here!
     if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
@@ -1571,7 +1572,7 @@ void game_playerSwitchTiles(const resource_type terrainType)
 
   lsAssert(setGameplayTile(idx, terrainType, MaxResourceCounts[terrainType]) == lsR_Success);
 
-#ifdef DEBUG
+#ifdef _DEBUG
   print("Changed tile (", _Game.levelInfo.playerPos.x, ", ", _Game.levelInfo.playerPos.y, ") to: ");
   print_resouceType(terrainType);
 #endif
