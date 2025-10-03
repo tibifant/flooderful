@@ -128,10 +128,7 @@ struct match_resource<pathfinding_target_type::ptT_sunflower_plant>
 template<>
 struct match_resource<pathfinding_target_type::ptT_vitamin>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) 
-  { 
-    return resourceType == tT_tomato || (resourceType == tT_meal && count > 0); 
-  };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_tomato || (resourceType == tT_meal && count > 0); };
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
@@ -216,20 +213,8 @@ void fill_resource_info(pathfinding_info *pDirectionLookup, queue<fill_step> &pa
   {
     const gameplay_element e = pMap[i];
 
-    if (e.tileType == tT_meal && p == ptT_vitamin)
-    {
-      print(e.tileType, '\n');
-      __debugbreak();
-    }
-
     if ((e.multiResourceCountIndex > -1 && match_resource<p>::resourceAttribute_matches_resource(list_get(&_Game.levelInfo.multiResourceCounts, e.multiResourceCountIndex))) || (match_resource<p>::resourceAttribute_matches_resource(e.tileType, e.resourceCount)))
     {
-      if (e.tileType == tT_meal)
-      {
-        print("ptt: ", p, '\n');
-        __debugbreak();
-      }
-
       queue_pushBack(&pathfindQueue, fill_step(i, 0));
       pDirectionLookup[i].dir = d_atDestination;
     }
@@ -810,10 +795,10 @@ void update_lifesupportActors()
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
     const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
-    //const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
+    const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
 
     // TODO: something wrong here!
-    if (!pActor->survivalActorActive)// || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
+    if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
       {
