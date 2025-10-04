@@ -630,12 +630,14 @@ void movementActor_move()
     if ((_actor.index & 63) == r)
       _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
 
+    _actor.pItem->atDestinationLastTick = _actor.pItem->atDestination; // Has to be at this poition, as it otherwise wouldn't catch the value changing from the actor being on the right tile already but with a different target last tick. It's therefor completly useless for this function!
+
     const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
     lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
     if (_actor.pItem->isWaiting)
     {
-      if (_actor.pItem->ticksToWait > 0)
+      if (_actor.pItem->ticksToWait)
         _actor.pItem->ticksToWait--;
       else
         _actor.pItem->isWaiting = false;
@@ -690,7 +692,6 @@ void movementActor_move()
     }
 
     _actor.pItem->lastTickTileIdx = currentTileIdx;
-    _actor.pItem->lastTickTarget = _actor.pItem->target;
   }
 }
 
@@ -797,7 +798,6 @@ void update_lifesupportActors()
 
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
 
-    // TODO: something wrong here!
     if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
     {
       if (_Game.levelInfo.isNight)
@@ -894,7 +894,7 @@ void update_lifesupportActors()
         }
       }
     }
-    else // TODO: do we want actors to go to fire if stuck with no food
+    else
     {
       if (pActor->atDestination)
       {
@@ -925,10 +925,11 @@ void update_lifesupportActors()
           // warm up at fire
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire && !pActor->isWaiting)
           {
-            if (pActor->lastTickTarget != pActor->target)
+            if (!pActor->atDestinationLastTick)
             {
               pActor->isWaiting = true;
               pActor->ticksToWait = 50;
+              continue;
             }
 
             if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
@@ -981,13 +982,13 @@ void update_lumberjack()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
+      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
       {
         pActor->survivalActorActive = false;
         pActor->target = Lumberjack_TargetFromState[pLumberjack->state];
         pActor->atDestination = false;
-        continue;
       }
+      continue;
     }
 
     if (pActor->atDestination)
@@ -1050,7 +1051,7 @@ void update_lumberjack()
 
         if (!pActor->isWaiting)
         {
-          if (pActor->lastTickTarget != pActor->target)
+          if (!pActor->atDestinationLastTick)
           {
             pActor->isWaiting = true;
             pActor->ticksToWait = 100;

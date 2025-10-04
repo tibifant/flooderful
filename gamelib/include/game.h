@@ -172,8 +172,8 @@ struct movement_actor
 {
   vec2f pos;
   pathfinding_target_type target;
-  pathfinding_target_type lastTickTarget;
   bool atDestination = false;
+  bool atDestinationLastTick = false;
   vec2f direction = vec2f(0);
   size_t lastTickTileIdx = 0;
   bool enteredDifferentTileLastTick = false;
