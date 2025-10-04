@@ -923,24 +923,27 @@ void update_lifesupportActors()
         else if (pActor->target == ptT_fire)
         {
           // warm up at fire
-          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire && !pActor->isWaiting)
+          if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire)
           {
-            if (!pActor->atDestinationLastTick)
+            if (!pActor->isWaiting)
             {
-              pActor->isWaiting = true;
-              pActor->ticksToWait = 50;
-              continue;
+              if (!pActor->atDestinationLastTick)
+              {
+                pActor->isWaiting = true;
+                pActor->ticksToWait = 50;
+                continue;
+              }
+
+              if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
+                modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
+
+              // for testing: remove from fire & remove fire when empty
+              lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0);
+              _Game.levelInfo.pGameplayMap[tileIdx].resourceCount--;
+
+              if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+                _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire_pit; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
             }
-
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
-              modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
-
-            // for testing: remove from fire & remove fire when empty
-            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0);
-            _Game.levelInfo.pGameplayMap[tileIdx].resourceCount--;
-
-            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
-              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire_pit; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
           }
           else
           {
@@ -1109,7 +1112,7 @@ void update_farmer()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
+      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
       {
         pActor->survivalActorActive = false;
         pActor->target = ptT_soil;
@@ -1193,7 +1196,7 @@ void update_cook()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
+      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
       {
         pActor->survivalActorActive = false;
         pCook->state = caS_check_inventory;
@@ -1351,7 +1354,7 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (pActor->atDestination || _Game.levelInfo.isNight)
+      if (!pActor->isWaiting && (pActor->atDestination || _Game.levelInfo.isNight))
       {
         pActor->survivalActorActive = false;
         pActor->target = target_from_state[pFireActor->state];
