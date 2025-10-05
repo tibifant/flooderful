@@ -957,6 +957,21 @@ void update_lifesupportActors()
 
 //////////////////////////////////////////////////////////////////////////
 
+bool resetAfterSurvival(movement_actor *pActor)
+{
+  if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
+  {
+    pActor->survivalActorActive = false;
+    pActor->atDestination = false;
+    
+    return true;
+  }
+
+  return false;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 // TODO: we could add ranges to operate in for the actors so they won't cross eachother's paths so much - well this does not quite work 1) because we can only ever have a range from where we currently are. 2) because actors need to go to fire/food further away. - only if the actors alwyas return to the one same place after everu step (but then every actor would need his own resource type...
 
 // TODO: houses: add houses that conclude to several pathfindingtypes at once (e.g. a kitchen where all food drop offs and nutrient types are...). in a further step: render houses that can be bigger than just one tile.
@@ -985,13 +1000,10 @@ void update_lumberjack()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
-      {
-        pActor->survivalActorActive = false;
+      if (resetAfterSurvival(pActor))
         pActor->target = Lumberjack_TargetFromState[pLumberjack->state];
-        pActor->atDestination = false;
-      }
-      continue;
+
+      continue; // maybe the continue needs to be inside the if above, that's where it was before, but I don't know if there's a reason for it and I needed the continue to be executed when the survival actor is active and waiting.
     }
 
     if (pActor->atDestination)
@@ -1112,12 +1124,8 @@ void update_farmer()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
-      {
-        pActor->survivalActorActive = false;
+      if (resetAfterSurvival(pActor))
         pActor->target = ptT_soil;
-        pActor->atDestination = false;
-      }
 
       continue;
     }
@@ -1196,12 +1204,8 @@ void update_cook()
     // Handle Survival
     if (pActor->survivalActorActive)
     {
-      if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
-      {
-        pActor->survivalActorActive = false;
+      if (resetAfterSurvival(pActor))
         pCook->state = caS_check_inventory;
-        pActor->atDestination = false;
-      }
 
       continue;
     }
