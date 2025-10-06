@@ -959,11 +959,13 @@ void update_lifesupportActors()
 
 bool resetAfterSurvival(movement_actor *pActor)
 {
-  if (!pActor->isWaiting && (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire)))
+  lsAssert(!pActor->isWaiting); // Should be handled by the actors already
+
+  if (pActor->atDestination || (!_Game.levelInfo.isNight && pActor->target == ptT_fire))
   {
     pActor->survivalActorActive = false;
     pActor->atDestination = false;
-    
+
     return true;
   }
 
@@ -982,6 +984,8 @@ bool resetAfterSurvival(movement_actor *pActor)
 
 // omg i don't know if i like that but i just had the idea (again? may be coc's idea) that an actor when not enough food, won't move anymore, but there could be helpers that provide first aid aka food (nvm they can't pathfind towards an actor (only if the actor turns the tile he stands on into something different?)
 
+// I'm thinking I may want to simplify the actors and have every actor just do one or two tasks. like the lumberjack just planting trees and maybe watering them, whilst there is a woodworker which cuts and chops the wood. so the game is more about the right amount of actors? maybe I could simplify actors in general and make it much nicer to programm, as they just get generic interfaces.
+
 static constexpr pathfinding_target_type Lumberjack_TargetFromState[laS_count] = { ptT_soil, ptT_water, ptT_sapling, ptT_tree, ptT_trunk, ptT_market };
 
 void incrementLumberjackState(lumberjack_actor *pLumberjack, movement_actor *pActor)
@@ -996,6 +1000,9 @@ void update_lumberjack()
   {
     lumberjack_actor *pLumberjack = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pLumberjack->index);
+
+    if (pActor->isWaiting)
+      continue;
 
     // Handle Survival
     if (pActor->survivalActorActive)
@@ -1064,25 +1071,22 @@ void update_lumberjack()
       {
         lsAssert(!pLumberjack->hasItem);
 
-        if (!pActor->isWaiting)
+        if (!pActor->atDestinationLastTick)
         {
-          if (!pActor->atDestinationLastTick)
-          {
-            pActor->isWaiting = true;
-            pActor->ticksToWait = 100;
+          pActor->isWaiting = true;
+          pActor->ticksToWait = 100;
 
-            break;
-          }
-
-          if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
-          {
-            pLumberjack->hasItem = true;
-            pLumberjack->item = tT_wood;
-            incrementLumberjackState(pLumberjack, pActor);
-          }
-
-          pActor->atDestination = false;
+          break;
         }
+
+        if (change_tile_to(tT_soil, tT_trunk, tileIdx, MaxResourceCounts[tT_soil]))
+        {
+          pLumberjack->hasItem = true;
+          pLumberjack->item = tT_wood;
+          incrementLumberjackState(pLumberjack, pActor);
+        }
+
+        pActor->atDestination = false;
 
         break;
       }
@@ -1120,6 +1124,9 @@ void update_farmer()
   {
     farmer_actor *pFarmer = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pFarmer->index);
+
+    if (pActor->isWaiting)
+      continue;
 
     // Handle Survival
     if (pActor->survivalActorActive)
@@ -1200,6 +1207,9 @@ void update_cook()
   {
     cook_actor *pCook = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pCook->index);
+
+    if (pActor->isWaiting)
+      continue;
 
     // Handle Survival
     if (pActor->survivalActorActive)
@@ -1354,6 +1364,9 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
   {
     fire_actor *pFireActor = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pFireActor->index);
+
+    if (pActor->isWaiting)
+      continue;
 
     // Handle Survival
     if (pActor->survivalActorActive)
