@@ -796,6 +796,9 @@ void update_lifesupportActors()
     movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
     const size_t tileIdx = worldPosToTileIndex(pActor->pos);
 
+    if (pActor->isWaiting)
+      continue;
+
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
 
     if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
@@ -853,6 +856,10 @@ void update_lifesupportActors()
 
             // remove from lunchbox
             modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+
+            //lsAssert(!pActor->isWaiting); // we need to eat after waiting else we just are hungry again. or dont eat when waiting?
+            //pActor->isWaiting = true;
+            //pActor->ticksToWait = 50;
           }
           else // if no item: set actor target
           {
@@ -925,25 +932,24 @@ void update_lifesupportActors()
           // warm up at fire
           if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == tT_fire)
           {
-            if (!pActor->isWaiting)
+            lsAssert(!pActor->isWaiting);
+
+            if (!pActor->atDestinationLastTick)
             {
-              if (!pActor->atDestinationLastTick)
-              {
-                pActor->isWaiting = true;
-                pActor->ticksToWait = 50;
-                continue;
-              }
-
-              if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
-                modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
-
-              // for testing: remove from fire & remove fire when empty
-              lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0);
-              _Game.levelInfo.pGameplayMap[tileIdx].resourceCount--;
-
-              if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
-                _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire_pit; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
+              pActor->isWaiting = true;
+              pActor->ticksToWait = 50;
+              continue;
             }
+
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0)
+              modify_with_clamp(pLifeSupport->temperature, (int16_t)(200), (uint8_t)(0), MaxTemperature);
+
+            // for testing: remove from fire & remove fire when empty
+            lsAssert(_Game.levelInfo.pGameplayMap[tileIdx].resourceCount > 0);
+            _Game.levelInfo.pGameplayMap[tileIdx].resourceCount--;
+
+            if (_Game.levelInfo.pGameplayMap[tileIdx].resourceCount == 0)
+              _Game.levelInfo.pGameplayMap[tileIdx].tileType = tT_fire_pit; // No usage of `change_tile_to` because of check above. Actually okay to just change the tileType as we want to keep `count` and `maxResourceCount` between `tT_fire` and `tT_fire_pit` are the same.
           }
           else
           {
@@ -1534,7 +1540,7 @@ void update_fireActor() // seems kinda sus - as if he's not always targeting all
 
 //////////////////////////////////////////////////////////////////////////
 
-// TODO: handle nutrition loss? maybe ok in movement actor, but maybe some more thoughtthrough way
+// TODO: handle nutrition loss? maybe ok in survival actor, but maybe some more thoughtthrough way
 
 static size_t ticksSincelastDayNightSwitch = 0;
 
