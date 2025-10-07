@@ -780,6 +780,10 @@ void update_lifesupportActors()
   for (auto _actor : _Game.lifesupportActors)
   {
     lifesupport_actor *pLifeSupport = _actor.pItem;
+    movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
+
+    if (pActor->isWaiting) // We won't loose any nutrients or 
+      continue;
 
     // TODO think about actual system to nutrition and temperature usage
     // just for testing!!!!
@@ -793,12 +797,7 @@ void update_lifesupportActors()
         modify_with_clamp(pLifeSupport->nutritions[j], (int16_t)-1, (uint8_t)0, MaxNutritionValue);
     }
 
-    movement_actor *pActor = pool_get(_Game.movementActors, pLifeSupport->entityIndex);
     const size_t tileIdx = worldPosToTileIndex(pActor->pos);
-
-    if (pActor->isWaiting)
-      continue;
-
     const level_info::resource_info &nfo = _Game.levelInfo.resources[pActor->target];
 
     if (!pActor->survivalActorActive || nfo.pDirectionLookup[1 - nfo.write_direction_idx][tileIdx].dir == d_unreachable) // Resetting the target in case the food is currently unreachable (actors will still be stuck if there is no food at all, but won't be stuck if there is *some* food, just not the one their target is set to.
@@ -855,11 +854,11 @@ void update_lifesupportActors()
               modify_with_clamp(pLifeSupport->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
 
             // remove from lunchbox
-            modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
+            modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount); // TODO: seems off how often we eat (even without waiting) but maybe we should really just adpot how eating works
 
-            //lsAssert(!pActor->isWaiting); // we need to eat after waiting else we just are hungry again. or dont eat when waiting?
-            //pActor->isWaiting = true;
-            //pActor->ticksToWait = 50;
+            lsAssert(!pActor->isWaiting); // we need to eat after waiting else we just are hungry again. or dont eat when waiting?
+            pActor->isWaiting = true;
+            pActor->ticksToWait = 50;
           }
           else // if no item: set actor target
           {
