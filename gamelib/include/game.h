@@ -138,6 +138,7 @@ struct gameplay_element
   uint8_t maxResourceCount;
   int16_t multiResourceCountIndex = -1;
   uint8_t tileStatus = 0; // can refer to different properties depending on the type of tile (e.g. growth status)
+    
   //bool hasHouse;
 
   gameplay_element() = default;
@@ -147,6 +148,15 @@ struct gameplay_element
     maxResourceCount = MaxResourceCounts[type];
   }
 };
+
+// TODO: maybe we want to have a struct like: 
+// struct tileTransition
+// {
+//   uint16_t timeUntilTransition;
+//   size_t tileIndex;
+// }
+//
+// that we put into a list if it needs to be processed, then we call a function that will handle the waiting and increment the tiles state once the wait time is 0
 
 // TODO: render element: texture, height, etc
 struct render_element
