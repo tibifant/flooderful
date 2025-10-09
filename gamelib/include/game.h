@@ -150,13 +150,18 @@ struct gameplay_element
 };
 
 // TODO: maybe we want to have a struct like: 
-// struct tileTransition
+// struct transition
 // {
-//   uint16_t timeUntilTransition;
 //   size_t tileIndex;
+//   uint16_t ticksUntilTransition;
 // }
 //
 // that we put into a list if it needs to be processed, then we call a function that will handle the waiting and increment the tiles state once the wait time is 0
+// never mind it won't always be for incrementing a state but to e.g. remove wood from the fire resourceCount... so we would need to reference what needs to be done? it could just be by a big ol switch case which defines what happens for which tile, or by giving it a function as to what needs to be done. or fire just has different states?
+
+// how to make clear which tileType and tileStatus mean what?
+// enum plantState
+// ah i'm not even sure anymore that we want tileStates. it would be way easier to read if we just add more resourceTypes
 
 // TODO: render element: texture, height, etc
 struct render_element
