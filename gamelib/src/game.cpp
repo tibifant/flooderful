@@ -486,9 +486,9 @@ lsResult spawnActors()
   lsResult result = lsR_Success;
 
   LS_ERROR_CHECK(spawnActor(eT_lumberjack, vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y))));
-  //LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
-  //LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
-  //LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
+  LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
+  LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
+  LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
 
 epilogue:
   return result;
@@ -497,8 +497,8 @@ epilogue:
 void initializeLevel()
 {
   mapInit(16, 16);
-  //lsAssert(setTerrain() == lsR_Success);
-  lsAssert(fillTerrain(tT_grass) == lsR_Success);
+  lsAssert(setTerrain() == lsR_Success);
+  //lsAssert(fillTerrain(tT_grass) == lsR_Success);
 
   // Set up floodfill queue and lookup
   for (size_t i = 0; i < ptT_Count - 1; i++) // Skip ptT_collidable
@@ -626,28 +626,30 @@ void movementActor_move()
 
   for (auto _actor : _Game.movementActors)
   {
+    movement_actor *pActor = _actor.pItem;
+
     // Reset lastTile every so often to handle map changes.
     if ((_actor.index & 63) == r)
-      _actor.pItem->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
+      pActor->lastTickTileIdx = (size_t)(_Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y * 0.5);
 
-    _actor.pItem->atDestinationLastTick = _actor.pItem->atDestination; // Has to be at this poition, as it otherwise wouldn't catch the value changing from the actor being on the right tile already but with a different target last tick. It's therefor completly useless for this function!
+    pActor->atDestinationLastTick = pActor->atDestination; // Has to be at this position, as it otherwise wouldn't catch the value changing from the actor being on the right tile already but with a different target last tick. It's therefor completly useless for this function!
 
-    const size_t currentTileIdx = worldPosToTileIndex(_actor.pItem->pos);
+    const size_t currentTileIdx = worldPosToTileIndex(pActor->pos);
     lsAssert(currentTileIdx != 0 && currentTileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
 
-    if (_actor.pItem->isWaiting)
+    if (pActor->isWaiting)
     {
-      if (_actor.pItem->ticksToWait)
-        _actor.pItem->ticksToWait--;
+      if (pActor->ticksToWait)
+        pActor->ticksToWait--;
       else
-        _actor.pItem->isWaiting = false;
+        pActor->isWaiting = false;
     }
     else
     {
-      const level_info::resource_info &info = _Game.levelInfo.resources[_actor.pItem->target];
+      const level_info::resource_info &info = _Game.levelInfo.resources[pActor->target];
       const direction currentTileDirectionType = info.pDirectionLookup[1 - info.write_direction_idx][currentTileIdx].dir;
 
-      lsAssert(_actor.pItem->pos.x > 0 && _actor.pItem->pos.x < _Game.levelInfo.map_size.x && _actor.pItem->pos.y > 0 && _actor.pItem->pos.y < _Game.levelInfo.map_size.y);
+      lsAssert(pActor->pos.x > 0 && pActor->pos.x < _Game.levelInfo.map_size.x && pActor->pos.y > 0 && pActor->pos.y < _Game.levelInfo.map_size.y);
 
       if (currentTileDirectionType == d_unreachable)
       {
@@ -655,43 +657,43 @@ void movementActor_move()
       }
       else if (currentTileDirectionType == d_atDestination)
       {
-        _actor.pItem->atDestination = true;
-        _actor.pItem->direction = vec2f(0);
+        pActor->atDestination = true;
+        pActor->direction = vec2f(0);
         continue;
       }
 
-      if (currentTileIdx != _actor.pItem->lastTickTileIdx)
+      if (currentTileIdx != pActor->lastTickTileIdx)
       {
         if (currentTileDirectionType == d_unfillable)
         {
-          _actor.pItem->direction = (tileIndexToWorldPos(_actor.pItem->lastTickTileIdx) - _actor.pItem->pos).Normalize();
+          pActor->direction = (tileIndexToWorldPos(pActor->lastTickTileIdx) - pActor->pos).Normalize();
         }
         else
         {
           const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
-          const vec2f nonNormalizedDir = (tilePos - _actor.pItem->pos);
+          const vec2f nonNormalizedDir = (tilePos - pActor->pos);
           if (nonNormalizedDir != vec2f(0))
-            _actor.pItem->direction = nonNormalizedDir.Normalize();
+            pActor->direction = nonNormalizedDir.Normalize();
 
-          _actor.pItem->enteredDifferentTileLastTick = true;
+          pActor->enteredDifferentTileLastTick = true;
         }
       }
-      else if (_actor.pItem->enteredDifferentTileLastTick)
+      else if (pActor->enteredDifferentTileLastTick)
       {
         const vec2f directionLut[6] = { vec2f(-0.5, 1), vec2f(-1, 0), vec2f(-0.5, -1), vec2f(0.5, -1), vec2f(1, 0), vec2f(0.5, 1) };
         const vec2f tilePos = tileIndexToWorldPos(currentTileIdx);
         const vec2f direction = directionLut[currentTileDirectionType - 1];
         const vec2f destinationPos = tilePos + direction;
 
-        lsAssert(destinationPos - _actor.pItem->pos != vec2f(0));
-        _actor.pItem->direction = (destinationPos - _actor.pItem->pos).Normalize();
-        _actor.pItem->enteredDifferentTileLastTick = false;
+        lsAssert(destinationPos - pActor->pos != vec2f(0));
+        pActor->direction = (destinationPos - pActor->pos).Normalize();
+        pActor->enteredDifferentTileLastTick = false;
       }
 
-      _actor.pItem->pos += vec2f(0.1) * _actor.pItem->direction;
+      pActor->pos += vec2f(0.1) * pActor->direction;
     }
 
-    _actor.pItem->lastTickTileIdx = currentTileIdx;
+    pActor->lastTickTileIdx = currentTileIdx;
   }
 }
 
@@ -858,7 +860,7 @@ void update_lifesupportActors()
 
             lsAssert(!pActor->isWaiting); // we need to eat after waiting else we just are hungry again. or dont eat when waiting?
             pActor->isWaiting = true;
-            pActor->ticksToWait = 50;
+            pActor->ticksToWait = 20;
           }
           else // if no item: set actor target
           {

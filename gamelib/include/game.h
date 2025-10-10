@@ -161,7 +161,7 @@ struct gameplay_element
 
 // how to make clear which tileType and tileStatus mean what?
 // enum plantState
-// ah i'm not even sure anymore that we want tileStates. it would be way easier to read if we just add more resourceTypes
+// ah i'm not even sure anymore that we want tileStates. it would be way easier to read if we just add more resource_types. and waiting is just for something like fires where resources will be removed...
 
 // TODO: render element: texture, height, etc
 struct render_element
