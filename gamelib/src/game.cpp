@@ -128,28 +128,28 @@ struct match_resource<pathfinding_target_type::ptT_sunflower_plant>
 template<>
 struct match_resource<pathfinding_target_type::ptT_vitamin>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_tomato || (resourceType == tT_meal && count > 0); };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return (resourceType == tT_tomato || resourceType == tT_meal) && count > 0; };
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_tomato) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_protein>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_bean || (resourceType == tT_meal && count > 0); };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return (resourceType == tT_bean || resourceType == tT_meal) && count > 0; };
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_bean) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_carbohydrates>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return (resourceType == tT_wheat || resourceType == tT_meal) && count > 0; }; // TODO update this everywhere
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return (resourceType == tT_wheat || resourceType == tT_meal) && count > 0; };
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_wheat) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
 template<>
 struct match_resource<pathfinding_target_type::ptT_fat>
 {
-  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return resourceType == tT_sunflower || (resourceType == tT_meal && count > 0); };
+  FORCEINLINE static bool resourceAttribute_matches_resource(const resource_type resourceType, const uint8_t count) { return (resourceType == tT_sunflower || resourceType == tT_meal) && count > 0; };
   FORCEINLINE static bool resourceAttribute_matches_resource(const local_list<uint8_t, tT_count> *pCounts) { return *local_list_get(pCounts, tT_sunflower) > 0 || *local_list_get(pCounts, tT_meal) > 0; };
 };
 
@@ -1124,7 +1124,7 @@ void update_lumberjack()
 
 void update_farmer()
 {
-  for (const auto _actor : _FarmerActors) // TODO: seems like we are stuck when the farmer has no food, alr
+  for (const auto _actor : _FarmerActors)
   {
     farmer_actor *pFarmer = _actor.pItem;
     movement_actor *pActor = pool_get(_Game.movementActors, pFarmer->index);
