@@ -150,12 +150,13 @@ struct gameplay_element
 };
 
 // TODO: maybe we want to have a struct like: 
-// struct transition
-// {
-//   size_t tileIndex;
-//   uint16_t ticksUntilTransition;
-// }
-//
+struct gamplay_element_transition
+{
+  size_t tileIndex;
+  uint16_t ticksUntilTransition;
+  // a lambda for what to do when the timer ran out? ask coc...
+};
+
 // that we put into a list if it needs to be processed, then we call a function that will handle the waiting and increment the tiles state once the wait time is 0
 // never mind it won't always be for incrementing a state but to e.g. remove wood from the fire resourceCount... so we would need to reference what needs to be done? it could just be by a big ol switch case which defines what happens for which tile, or by giving it a function as to what needs to be done. or fire just has different states?
 
