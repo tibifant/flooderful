@@ -212,6 +212,13 @@ struct actor // TODO: add entity type here as well and let the ls actor inheret 
   size_t index;
 };
 
+// TODO: simplify actor's:
+// minimal actors that ideally all operate on the same system ((best case) one simple function to handle all) -> type of action, state: do xxx, change state. -> actors just have states correlated to specific types of actions, bound to specific items. e.g. for drop off action: item, targetTile, or
+// current actions:
+// drop off x at tile y
+// get x
+// change tile y to z
+
 //////////////////////////////////////////////////////////////////////////
 
 enum lumberjack_actor_state
