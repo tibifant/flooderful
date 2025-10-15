@@ -219,6 +219,47 @@ struct actor // TODO: add entity type here as well and let the ls actor inheret 
 // get x                -> could be action: item (target tile type is defined by item (ptt)
 // change tile y to z   -> could be action: oridingTileType, targetTileType (that schould be changed to)
 
+// If I want to predefine everything it sadly won't work with how things go at the moment, as I can't tell upfront which cooking ingridient the cook needs to get next, or wether or not the fire actor needs to get wood... (the cook is solvable if he only ever gets as much ingridients as he needs, so he always has to get all for the current meal)
+
+// but what I was thinking:
+struct action {};
+struct drop_off_action : action
+{
+  const resource_type destTileType;
+  const resource_type item; // or ptt?
+};
+
+struct get_action : action
+{
+  const resource_type item;
+  const uint16_t amount;
+};
+
+struct change_tile_action : action
+{
+  const resource_type currentTileType;
+  const resource_type targetTileType;
+};
+
+struct actor
+{
+  const actor_type type;
+  const action actions[];
+  uint8_t currentAction = 0;
+  resource_type inventory[tT_count];
+};
+
+// something lik this, not quite sure...
+
+void actors_do()
+{
+  for all actors
+  {
+    switch currentAction
+    // do...
+  }
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 enum lumberjack_actor_state
