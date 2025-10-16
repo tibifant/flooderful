@@ -241,24 +241,25 @@ struct change_tile_action : action
   const resource_type targetTileType;
 };
 
+// constexpr action actions[] for all types of actors
+
 struct actor
 {
   const actor_type type;
-  const action actions[];
   uint8_t currentAction = 0;
   resource_type inventory[tT_count];
 };
 
-// something lik this, not quite sure...
-
-void actors_do()
-{
-  for all actors
-  {
-    switch currentAction
-    // do...
-  }
-}
+// something like this, not quite sure...
+//
+//void actors_do()
+//{
+//  for all actors
+//  {
+//    switch currentAction
+//    // do...
+//  }
+//}
 
 //////////////////////////////////////////////////////////////////////////
 
