@@ -246,6 +246,7 @@ constexpr action actions[] = { ... }; // for all types of actors. this would pro
 // I think the best possibility is to still have seperate actor structs, and handle state transitions sperately but still use the generalized actions only and have functions for performing each action. but this would still keep a lot of the complexity I want to reduce...
 
 // a lot of compelxity and individuality is currently needed for the cook. how about making the cook cleaner. have an actor for each meal. that maybe even plants, waters, cooks
+// farmers/cooks can be spwaned in groups, so the player would not need to spawn a farmer fore each food type.
 
 struct actor
 {
