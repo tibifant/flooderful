@@ -232,7 +232,7 @@ struct drop_off_action : action
 struct get_action : action
 {
   const resource_type item;
-  const uint16_t amount;
+  const uint8_t amount;
 };
 
 struct change_tile_action : action

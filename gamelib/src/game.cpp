@@ -740,7 +740,7 @@ uint8_t add_to_market_tile(const resource_type resource, const int16_t amount, c
   return modify_with_clamp((*pList)[resource], amount);
 }
 
-uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint16_t amount)
+uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const uint8_t amount)
 {
   lsAssert(tileIdx >= 0 && tileIdx < _Game.levelInfo.map_size.x * _Game.levelInfo.map_size.y);
   lsAssert(resource < tT_count);
