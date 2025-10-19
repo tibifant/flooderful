@@ -393,15 +393,15 @@ epilogue:
   return result;
 }
 
-lsResult spawnActor(const entity_type type, const vec2f pos)
+lsResult spawnActor(const actor_type type, const vec2f pos)
 {
   lsResult result = lsR_Success;
 
-  lsAssert(type >= 0 && type < eT_count);
+  lsAssert(type >= 0 && type < aT_count);
   lsAssert(pos.x > 0 && pos.x < _Game.levelInfo.map_size.x && pos.y > 0 && pos.y < _Game.levelInfo.map_size.y);
 
   constexpr pathfinding_target_type TargetPerActor[] = { ptT_sapling, ptT_soil, _ptT_nutrient_first, ptT_fire_pit };
-  lsAssert(LS_ARRAYSIZE(TargetPerActor) == eT_count);
+  lsAssert(LS_ARRAYSIZE(TargetPerActor) == aT_count);
 
   size_t index;
 
@@ -423,7 +423,7 @@ lsResult spawnActor(const entity_type type, const vec2f pos)
 
   switch (type)
   {
-  case eT_lumberjack:
+  case aT_lumberjack:
   {
     lumberjack_actor lj_actor;
     lj_actor.state = laS_plant;
@@ -434,7 +434,7 @@ lsResult spawnActor(const entity_type type, const vec2f pos)
 
     break;
   }
-  case eT_cook:
+  case aT_cook:
   {
     cook_actor cook;
     cook.state = caS_check_inventory;
@@ -449,7 +449,7 @@ lsResult spawnActor(const entity_type type, const vec2f pos)
 
     break;
   }
-  case eT_farmer:
+  case aT_farmer:
   {
     farmer_actor farmer;
     farmer.index = index;
@@ -458,7 +458,7 @@ lsResult spawnActor(const entity_type type, const vec2f pos)
 
     break;
   }
-  case eT_fire_actor:
+  case aT_fire_actor:
   {
     fire_actor fireActor;
     fireActor.state = faS_start_fire;
@@ -485,10 +485,10 @@ lsResult spawnActors()
 {
   lsResult result = lsR_Success;
 
-  LS_ERROR_CHECK(spawnActor(eT_lumberjack, vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y))));
-  LS_ERROR_CHECK(spawnActor(eT_farmer, vec2f(10.f, 8.f)));
-  LS_ERROR_CHECK(spawnActor(eT_cook, vec2f(12.f, 10.f)));
-  LS_ERROR_CHECK(spawnActor(eT_fire_actor, vec2f(13.f, 13.f)));
+  LS_ERROR_CHECK(spawnActor(aT_lumberjack, vec2f((float_t)(4 % _Game.levelInfo.map_size.x), (float_t)(4 % _Game.levelInfo.map_size.y))));
+  LS_ERROR_CHECK(spawnActor(aT_farmer, vec2f(10.f, 8.f)));
+  LS_ERROR_CHECK(spawnActor(aT_cook, vec2f(12.f, 10.f)));
+  LS_ERROR_CHECK(spawnActor(aT_fire_actor, vec2f(13.f, 13.f)));
 
 epilogue:
   return result;
@@ -806,7 +806,7 @@ void update_lifesupportActors()
     {
       if (_Game.levelInfo.isNight)
       {
-        if (pLifeSupport->type != eT_fire_actor && pLifeSupport->temperature < ColdThreshold)
+        if (pLifeSupport->type != aT_fire_actor && pLifeSupport->temperature < ColdThreshold)
         {
           pActor->survivalActorActive = true;
           pActor->target = ptT_fire;
@@ -892,7 +892,7 @@ void update_lifesupportActors()
             lsAssert(bestTargetScore > -1 && lowestNutrient <= _ptT_nutrient_last);
 
             const level_info::resource_info &info = _Game.levelInfo.resources[lowestNutrient];
-            if ((pLifeSupport->type == eT_farmer || pLifeSupport->type == eT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
+            if ((pLifeSupport->type == aT_farmer || pLifeSupport->type == aT_cook) && info.pDirectionLookup[1 - info.write_direction_idx][tileIdx].dir == d_unreachable)
               continue;
 
             pActor->survivalActorActive = true;

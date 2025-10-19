@@ -174,14 +174,14 @@ struct render_element
 
 //////////////////////////////////////////////////////////////////////////
 
-enum entity_type
+enum actor_type
 {
-  eT_lumberjack,
-  eT_farmer,
-  eT_cook,
-  eT_fire_actor,
+  aT_lumberjack,
+  aT_farmer,
+  aT_cook,
+  aT_fire_actor,
 
-  eT_count
+  aT_count
 };
 
 struct movement_actor
@@ -200,7 +200,7 @@ struct movement_actor
 
 struct lifesupport_actor
 {
-  entity_type type;
+  actor_type type;
   size_t entityIndex;
   uint8_t nutritions[(_ptT_nutrient_last + 1) - _ptT_nutrient_first];
   uint8_t lunchbox[(_tile_type_food_last + 1) - _tile_type_food_first];
