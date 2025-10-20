@@ -856,7 +856,7 @@ void update_lifesupportActors()
               modify_with_clamp(pLifeSupport->nutritions[j], FoodToNutrition[bestIndex][j], MinFoodItemCount, MaxFoodItemCount);
 
             // remove from lunchbox
-            modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount); // TODO: seems off how often we eat (even without waiting) but maybe we should really just adpot how eating works
+            modify_with_clamp(pLifeSupport->lunchbox[bestIndex], (int64_t)-1, MinFoodItemCount, MaxFoodItemCount);
 
             lsAssert(!pActor->isWaiting); // we need to eat after waiting else we just are hungry again. or dont eat when waiting?
             pActor->isWaiting = true;
