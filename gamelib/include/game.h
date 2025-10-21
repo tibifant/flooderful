@@ -241,6 +241,15 @@ struct get_action : action
   get_action(const resource_type item, const uint8_t amount) : item(item), amount(amount) {};
 };
 
+struct use_action : action
+{
+  const resource_type item;
+  const uint8_t amount;
+
+  use_action() = default;
+  use_action(const resource_type item, const uint8_t amount) : item(item), amount(amount) {};
+};
+
 struct change_tile_action : action
 {
   const resource_type currentTileType;
@@ -250,6 +259,9 @@ struct change_tile_action : action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType) : currentTileType(currentTileType), targetTileType(targetTileType) {};
 };
 
+template<>
+void do_action(const action actn, actor *pActor);
+
 //constexpr action actions[] = { ... }; // for all types of actors. this would provide the problem that only ever these actions in this order can be done, if I want to handle all in one simple function. If I have sperate functions for each actor like right now, it would ofc be possible.
 // *IF* I do not want to restrict myself to no individual handling, I also can't have any custom variables like 'currentCookingItem' etc. per actor type.
 // I think the best possibility is to still have seperate actor structs, and handle state transitions sperately but still use the generalized actions only and have functions for performing each action. but this would still keep a lot of the complexity I want to reduce...
@@ -257,14 +269,14 @@ struct change_tile_action : action
 // a lot of compelxity and individuality is currently needed for the cook. how about making the cook cleaner. have an actor for each meal. that maybe even plants, waters, cooks
 // farmers/cooks can be spwaned in groups, so the player would not need to spawn a farmer fore each food type.
 
-const action LumberjackActions[] = { change_tile_action(tT_soil, tT_sapling), get_action(tT_water, 1), change_tile_action(tT_sapling, tT_tree), ... }
+//const action LumberjackActions[] = { change_tile_action(tT_soil, tT_sapling), get_action(tT_water, 1), change_tile_action(tT_sapling, tT_tree), // maybe skip chop idk}
 
-struct actor
-{
-  const actor_type type;
-  uint8_t currentAction = 0;
-  resource_type inventory[tT_count];
-};
+//struct actor
+//{
+//  const actor_type type;
+//  uint8_t currentAction = 0;
+//  uint8_t inventory[tT_count];
+//};
 
 // something like this, not quite sure...
 //
