@@ -699,6 +699,13 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
+void do_action(const drop_off_action &actn, actor *pActor)
+{
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+
 template <typename T>
   requires (std::is_integral_v<T> && (sizeof(T) < sizeof(int64_t) || std::is_same_v<T, int64_t>))
 inline T modify_with_clamp(T &value, const int64_t diff, const T min = lsMinValue<T>(), const T max = lsMaxValue<T>())
