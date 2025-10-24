@@ -699,9 +699,19 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
-void do_action(const drop_off_action &actn, actor *pActor)
+bool do_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor)
 {
+  const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
 
+  // check if we are at right tiletype
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == actn.destTileType)
+  {
+
+  }
+  // check if we have enough of the item
+  // drop off
+
+  // nvm this actually *actually* only does work, if we have one generic actor vrsion. obviously lol... 
 }
 
 //////////////////////////////////////////////////////////////////////////

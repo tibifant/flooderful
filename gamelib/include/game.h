@@ -251,9 +251,11 @@ struct change_tile_action : action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType) : currentTileType(currentTileType), targetTileType(targetTileType) {};
 };
 
-void do_action(const drop_off_action &actn, actor *pActor);
-void do_action(const get_action &actn, actor *pActor);
-void do_action(const change_tile_action &actn, actor *pActor);
+bool do_action(const drop_off_action &actn, actor *pActor);
+bool do_action(const get_action &actn, actor *pActor);
+bool do_action(const change_tile_action &actn, actor *pActor);
+
+void increment_action(const actor *pActor);
 
 //constexpr action actions[] = { ... }; // for all types of actors. this would provide the problem that only ever these actions in this order can be done, if I want to handle all in one simple function. If I have sperate functions for each actor like right now, it would ofc be possible.
 // *IF* I do not want to restrict myself to no individual handling, I also can't have any custom variables like 'currentCookingItem' etc. per actor type.
@@ -262,12 +264,13 @@ void do_action(const change_tile_action &actn, actor *pActor);
 // a lot of compelxity and individuality is currently needed for the cook. how about making the cook cleaner. have an actor for each meal. that maybe even plants, waters, cooks
 // farmers/cooks can be spwaned in groups, so the player would not need to spawn a farmer fore each food type.
 
-//struct actor
-//{
-//  const actor_type type;
-//  uint8_t currentAction = 0;
-//  uint8_t inventory[tT_count];
-//};
+struct actor
+{
+  const actor_type type;
+  const size_t index;
+  uint8_t currentAction = 0;
+  uint8_t inventory[tT_count];
+};
 
 // something like this, not quite sure...
 //
