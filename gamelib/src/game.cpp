@@ -704,14 +704,16 @@ bool do_action(const drop_off_action &actn, actor *pActor, const movement_actor 
   const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
 
   // check if we are at right tiletype
-  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType == actn.destTileType)
-  {
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != actn.destTileType)
+    return false;
 
-  }
-  // check if we have enough of the item
   // drop off
+  if (actn.destTileType == tT_market)
+    modify_with_clamp(pActor->inventory[actn.item], -add_to_market_tile(actn.item, actn.amount, tileIdx));
+  else
+    modify_with_clamp(pActor->inventory[actn.item], -actn.amount);
 
-  // nvm this actually *actually* only does work, if we have one generic actor vrsion. obviously lol... 
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
