@@ -227,7 +227,7 @@ struct drop_off_action : action
 {
   const resource_type destTileType;
   const resource_type item; // or ptt?
-  const uint8_t amount;
+  uint8_t amount;
 
   drop_off_action() = default;
   drop_off_action(const resource_type destTileType, const resource_type item) : destTileType(destTileType), item(item) {};
@@ -251,9 +251,9 @@ struct change_tile_action : action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType) : currentTileType(currentTileType), targetTileType(targetTileType) {};
 };
 
-bool do_action(const drop_off_action &actn, actor *pActor);
-bool do_action(const get_action &actn, actor *pActor);
-bool do_action(const change_tile_action &actn, actor *pActor);
+bool execute_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor);
+bool execute_action(const get_action &actn, actor *pActor, const movement_actor *pMoveActor);
+bool execute_action(const change_tile_action &actn, actor *pActor, const movement_actor *pMoveActor);
 
 void increment_action(const actor *pActor);
 

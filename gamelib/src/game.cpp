@@ -699,20 +699,36 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
-bool do_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor)
+bool execute_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor)
 {
   const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
+  gameplay_element *pElement = &_Game.levelInfo.pGameplayMap[tileIdx];
 
-  // check if we are at right tiletype
-  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != actn.destTileType)
+  if (pElement->tileType != actn.destTileType)
     return false;
 
   // drop off
   if (actn.destTileType == tT_market)
     modify_with_clamp(pActor->inventory[actn.item], -add_to_market_tile(actn.item, actn.amount, tileIdx));
   else
-    modify_with_clamp(pActor->inventory[actn.item], -actn.amount);
+    modify_with_clamp(pElement->resourceCount, modify_with_clamp(pActor->inventory[actn.item], -actn.amount), uint8_t(0), pElement->maxResourceCount);
 
+  return true;
+}
+
+bool execute_action(const get_action &actn, actor *pActor, const movement_actor *pMoveActor)
+{
+  const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
+
+  if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != actn.item && _Game.levelInfo.pGameplayMap[tileIdx].tileType != tT_market)
+    return false;
+
+  uint8_t returnedAmount = get_from_tile(tileIdx, actn.item, actn.amount);
+
+  //if (!returnedAmount)
+  //  return false;
+
+  modify_with_clamp(pActor->inventory[actn.item], returnedAmount);
   return true;
 }
 
