@@ -251,9 +251,9 @@ struct change_tile_action : action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType) : currentTileType(currentTileType), targetTileType(targetTileType) {};
 };
 
-bool execute_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor);
-bool execute_action(const get_action &actn, actor *pActor, const movement_actor *pMoveActor);
-bool execute_action(const change_tile_action &actn, actor *pActor, const movement_actor *pMoveActor);
+bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx);
+bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx);
+bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx);
 
 void increment_action(const actor *pActor);
 

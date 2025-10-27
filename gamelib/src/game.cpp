@@ -699,9 +699,8 @@ void movementActor_move()
 
 //////////////////////////////////////////////////////////////////////////
 
-bool execute_action(const drop_off_action &actn, actor *pActor, const movement_actor *pMoveActor)
+bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx)
 {
-  const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
   gameplay_element *pElement = &_Game.levelInfo.pGameplayMap[tileIdx];
 
   if (pElement->tileType != actn.destTileType)
@@ -716,10 +715,8 @@ bool execute_action(const drop_off_action &actn, actor *pActor, const movement_a
   return true;
 }
 
-bool execute_action(const get_action &actn, actor *pActor, const movement_actor *pMoveActor)
+bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx)
 {
-  const size_t tileIdx = worldPosToTileIndex(pMoveActor->pos);
-
   if (_Game.levelInfo.pGameplayMap[tileIdx].tileType != actn.item && _Game.levelInfo.pGameplayMap[tileIdx].tileType != tT_market)
     return false;
 
@@ -730,6 +727,11 @@ bool execute_action(const get_action &actn, actor *pActor, const movement_actor 
 
   modify_with_clamp(pActor->inventory[actn.item], returnedAmount);
   return true;
+}
+
+bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx)
+{
+
 }
 
 //////////////////////////////////////////////////////////////////////////
