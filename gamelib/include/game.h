@@ -227,10 +227,10 @@ struct drop_off_action : action
 {
   const resource_type destTileType;
   const resource_type item; // or ptt?
-  uint8_t amount;
+  const uint8_t amount;
 
   drop_off_action() = default;
-  drop_off_action(const resource_type destTileType, const resource_type item) : destTileType(destTileType), item(item) {};
+  drop_off_action(const resource_type destTileType, const resource_type item, const uint8_t amount) : destTileType(destTileType), item(item), amount(amount) {};
 };
 
 struct get_action : action
@@ -246,9 +246,10 @@ struct change_tile_action : action
 {
   const resource_type currentTileType;
   const resource_type targetTileType;
+  const uint8_t amount;
 
   change_tile_action() = default;
-  change_tile_action(const resource_type currentTileType, const resource_type targetTileType) : currentTileType(currentTileType), targetTileType(targetTileType) {};
+  change_tile_action(const resource_type currentTileType, const resource_type targetTileType, const uint8_t amount) : currentTileType(currentTileType), targetTileType(targetTileType), amount(amount) {};
 };
 
 bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx);

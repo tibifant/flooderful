@@ -731,7 +731,10 @@ bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx)
 
 bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx)
 {
+  if (change_tile_to(actn.targetTileType, actn.currentTileType, tileIdx, actn.amount))
+    return true;
 
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
