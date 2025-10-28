@@ -252,6 +252,8 @@ struct change_tile_action : action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType, const uint8_t amount) : currentTileType(currentTileType), targetTileType(targetTileType), amount(amount) {};
 };
 
+// TODO: how will we save the actions? maybe just save the type of action and always create new ones
+
 bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx);
