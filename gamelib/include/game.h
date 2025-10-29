@@ -271,7 +271,7 @@ struct actor
 {
   const actor_type type;
   const size_t index;
-  uint8_t currentAction = 0;
+  //uint8_t currentAction = 0; // this won't work like i wanted...
   uint8_t inventory[tT_count];
 };
 
@@ -300,11 +300,12 @@ enum lumberjack_actor_state
   laS_count
 };
 
+// TODO: use the actions and functions in the current system. I really should talk to coc
 struct lumberjack_actor : actor
 {
   lumberjack_actor_state state;
-  bool hasItem; // Maybe change this to several inevntory spots if needed.
-  resource_type item;
+  //bool hasItem; // Maybe change this to several inevntory spots if needed.
+  //resource_type item;
 };
 
 //////////////////////////////////////////////////////////////////////////
