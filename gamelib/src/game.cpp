@@ -790,7 +790,7 @@ uint8_t get_from_tile(const size_t tileIdx, const resource_type resource, const 
   if (pTile->multiResourceCountIndex == -1)
   {
     lsAssert(pTile->tileType == resource);
-    if (pTile->tileType == tT_water)
+    if (pTile->maxResourceCount == 1)
       return (uint8_t)1;
     
     return modify_with_clamp(pTile->resourceCount, -amount);

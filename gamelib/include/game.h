@@ -135,7 +135,7 @@ struct gameplay_element
 {
   resource_type tileType;
   uint8_t resourceCount;
-  uint8_t maxResourceCount;
+  uint8_t maxResourceCount; // A maximum Count of 1 means it is a infinte source.
   int16_t multiResourceCountIndex = -1;
   uint8_t tileStatus = 0; // can refer to different properties depending on the type of tile (e.g. growth status)
     
