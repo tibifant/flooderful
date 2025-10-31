@@ -162,7 +162,7 @@ struct gamplay_element_transition
 
 // how to make clear which tileType and tileStatus mean what?
 // enum plantState
-// ah i'm not even sure anymore that we want tileStates. it would be way easier to read if we just add more resource_types. and waiting is just for something like fires where resources will be removed...
+// ah i'm not even sure anymore that we want tileStates. it would be way easier to read if we just add more resource_types. and waiting is just for something like fires where resources will be removed... -> even then we need to change the tile type after waiting for x amount
 
 // TODO: render element: texture, height, etc
 struct render_element
@@ -222,8 +222,7 @@ struct actor // TODO: add entity type here as well and let the ls actor inheret 
 // If I want to predefine everything it sadly won't work with how things go at the moment, as I can't tell upfront which cooking ingridient the cook needs to get next, or wether or not the fire actor needs to get wood... (the cook is solvable if he only ever gets as much ingridients as he needs, so he always has to get all for the current meal)
 
 // but what I was thinking:
-struct action {};
-struct drop_off_action : action
+struct drop_off_action
 {
   const resource_type destTileType;
   const resource_type item; // or ptt?
@@ -233,7 +232,7 @@ struct drop_off_action : action
   drop_off_action(const resource_type destTileType, const resource_type item, const uint8_t amount) : destTileType(destTileType), item(item), amount(amount) {};
 };
 
-struct get_action : action
+struct get_action
 {
   const resource_type item;
   const uint8_t amount;
@@ -242,7 +241,7 @@ struct get_action : action
   get_action(const resource_type item, const uint8_t amount) : item(item), amount(amount) {};
 };
 
-struct change_tile_action : action
+struct change_tile_action
 {
   const resource_type currentTileType;
   const resource_type targetTileType;
@@ -257,8 +256,6 @@ struct change_tile_action : action
 bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx);
-
-void increment_action(const actor *pActor);
 
 //constexpr action actions[] = { ... }; // for all types of actors. this would provide the problem that only ever these actions in this order can be done, if I want to handle all in one simple function. If I have sperate functions for each actor like right now, it would ofc be possible.
 // *IF* I do not want to restrict myself to no individual handling, I also can't have any custom variables like 'currentCookingItem' etc. per actor type.
