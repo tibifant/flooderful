@@ -138,7 +138,7 @@ struct gameplay_element
   uint8_t maxResourceCount; // A maximum Count of 1 means it is a infinte source.
   int16_t multiResourceCountIndex = -1;
   uint8_t tileStatus = 0; // can refer to different properties depending on the type of tile (e.g. growth status)
-    
+
   //bool hasHouse;
 
   gameplay_element() = default;
@@ -155,6 +155,7 @@ struct gamplay_element_transition
   size_t tileIndex;
   uint16_t ticksUntilTransition;
   // a lambda for what to do when the timer ran out? ask coc...
+  // -> enum, additional helper value?
 };
 
 // that we put into a list if it needs to be processed, then we call a function that will handle the waiting and increment the tiles state once the wait time is 0
@@ -251,11 +252,43 @@ struct change_tile_action
   change_tile_action(const resource_type currentTileType, const resource_type targetTileType, const uint8_t amount) : currentTileType(currentTileType), targetTileType(targetTileType), amount(amount) {};
 };
 
+struct action
+{
+  enum
+  {
+    t_invalid,
+    t_drop_off,
+    t_get,
+    t_change_tile,
+  } type = t_invalid;
+
+#pragma warning(push)
+#pragma warning(disable: 4201) // support unnamed union
+  union
+  {
+    drop_off_action drop_off;
+    get_action get;
+    change_tile_action change_tile;
+  };
+#pragma warning(pop)
+};
+
 // TODO: how will we save the actions? maybe just save the type of action and always create new ones
 
 bool execute_action(const drop_off_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const get_action &actn, actor *pActor, const size_t tileIdx);
 bool execute_action(const change_tile_action &actn, actor *pActor, const size_t tileIdx);
+
+inline bool execute_action(const action &actn, actor *pActor, const size_t tileIdx)
+{
+  switch (actn.type)
+  {
+  case action::t_drop_off: return execute_action(actn.drop_off, pActor, tileIdx);
+  case action::t_get: return execute_action(actn.get, pActor, tileIdx);
+  case action::t_change_tile: return execute_action(actn.change_tile, pActor, tileIdx);
+  default: lsFail(); return false;
+  }
+}
 
 //constexpr action actions[] = { ... }; // for all types of actors. this would provide the problem that only ever these actions in this order can be done, if I want to handle all in one simple function. If I have sperate functions for each actor like right now, it would ofc be possible.
 // *IF* I do not want to restrict myself to no individual handling, I also can't have any custom variables like 'currentCookingItem' etc. per actor type.
@@ -268,7 +301,7 @@ struct actor
 {
   const actor_type type;
   const size_t index;
-  //uint8_t currentAction = 0; // this won't work like i wanted...
+  uint8_t currentAction = 0; // either only the index or the array/local list is saved in the actor
   uint8_t inventory[tT_count];
 };
 
